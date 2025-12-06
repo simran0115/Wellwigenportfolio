@@ -28,7 +28,7 @@ const Hero = () => {
                         className="space-y-8"
                         style={{ transform: `translate(${mousePosition.x * -1}px, ${mousePosition.y * -1}px)` }}
                     >
-                        <div className="inline-block bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100">
+                        <div className="inline-block mt-5 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100">
                             <span className="text-primary font-bold">#1</span> Fitness Platform in India 🇮🇳
                         </div>
                         <h1 className="text-5xl md:text-7xl font-black text-dark leading-tight">
