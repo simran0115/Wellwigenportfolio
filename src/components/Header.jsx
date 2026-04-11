@@ -29,10 +29,10 @@ const Header = () => {
 
           {/* LOGO */}
           <div className="flex items-center gap-2 text-white font-semibold text-lg">
-            <div className="bg-blue-500 w-8 h-8 flex items-center justify-center rounded-lg font-bold">
+            <div className="bg-teal-500 w-8 h-8 flex items-center justify-center rounded-lg font-bold">
               W
             </div>
-            WellWigen <span className="text-blue-400">Fitness</span>
+            WellWigen <span className="text-teal-400">Fitness</span>
           </div>
 
           {/* NAV BAR */}

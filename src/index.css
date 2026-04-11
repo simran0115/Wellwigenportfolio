@@ -1,11 +1,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 /* ================= GLOBAL ================= */
 body {
-  background: radial-gradient(circle at 20% 20%, #0f172a, #020617);
-  color: white;
+  margin: 0;
+  padding: 0;
+  background-color: #ffffff;
+  color: #111827; /* dark text */
   font-family: 'Inter', sans-serif;
   overflow-x: hidden;
 }

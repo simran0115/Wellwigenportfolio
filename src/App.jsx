@@ -3,108 +3,218 @@ import { Helmet } from 'react-helmet-async';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 
-import Header from './components/Header';
-import Hero from './components/Hero';
-// import WhatLookingFor from './components/WhatLookingFor';
-// import Statistics from './components/Statistics';
-// import GoalsExpertise from './components/GoalsExpertise';
-// import Services from './components/Services';
-import Testimonials from './components/Testimonials';
-import Metrics from './components/Metrics';
-// import CallToAction from './components/CallToAction';
-// import About from './components/About';
-// import Trainer from './components/Trainer';
-// import ConsultationForm from './components/ConsultationForm';
-import Footer from './components/Footer';
-// import FloatingSocials from './components/FloatingSocials';
-import TermsAndConditions from './components/TermsAndConditions';
-// import AdminPanel from './components/AdminPanel';
-// import TrainerForm from './components/TrainerForm';
-import SectionWrapper from './components/SectionWrapper';
-import ContactUs from './components/ContactUs';
-import NotFound from './components/NotFound';
-import Ecosystem from "./components/Ecosystem";
+import Navbar from "./components/common/Navbar";
+import ParticlesBackground from "./components/ui/ParticlesBackground";
+import AdminLayout from "./components/layout/AdminLayout";
 
-import ParticlesBackground from "./components/ParticlesBackground";
-import Navbar from "./components/Navbar";
-import Pricing from "./components/Pricing";
-import Dashboard from "./components/Dashboard";
-import Diet from "./components/Diet";
+// Home / Website Pages
+import Hero from './components/home/Hero';
+import Ecosystem from "./components/home/Ecosystem";
+import Pricing from "./components/subscription/Pricing";
+import Dashboard from "./components/dashboard/Dashboard";
+import Diet from "./components/dashboard/Diet";
+import Testimonials from './components/Testimonials';
+import Metrics from './components/home/Metrics';
+import ContactUs from './components/home/ContactUs';
+import Footer from './components/common/Footer';
+import TermsAndConditions from './components/TermsAndConditions';
+import ConsultationForm from './components/auth/ConsultationForm';
+import Login from './components/auth/Login';
+
+// Admin Pages
+import UserDashboard from "./components/dashboard/pages/UserDashboard";
+// import Patients from "./components/dashboard/pages/Patients";
+import MedicalRecords from "./components/dashboard/pages/MedicalRecords";
+import Prescriptions from "./components/dashboard/pages/Prescriptions";
+import Insurance from "./components/dashboard/pages/Insurance";
+import Appointments from "./components/dashboard/pages/Appointments";
+import Doctors from "./components/dashboard/pages/Doctors";
+// import Reports from "./components/dashboard/pages/Reports";
+import Settings from "./components/dashboard/pages/Settings";
+import Cart from "./pages/Cart";
+
+
+
 
 function App() {
   const location = useLocation();
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white">
+    <div className="min-h-screen bg-white text-black">
 
+      {/* Background */}
       <ParticlesBackground />
-      <Navbar />
+
+      {/* Hide Navbar on Admin Routes */}
+      {!location.pathname.startsWith("/admin") && <Navbar />}
 
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
 
-          {/* ADMIN */}
-          {/* <Route path="/admin" element={<AdminPanel />} />
-          <Route path="/admin-dashboard" element={<AdminPanel />} /> */}
+          {/* ================= ADMIN ROUTES ================= */}
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/admin" element={<AdminLayout />}>
 
-          {/* TRAINER */}
-          <Route path="/join-as-trainer" element={
-            <PageWrapper>
-              <Helmet>
-                <title>Join as a Trainer | Wellwigen</title>
-              </Helmet>
-              <Header />
-              {/* <TrainerForm /> */}
-              <Footer />
-            </PageWrapper>
-          } />
+            <Route index element={<UserDashboard />} />
 
-          {/* TERMS */}
-          <Route path="/terms-and-conditions" element={
-            <PageWrapper>
-              {/* <Header /> */}
-              <TermsAndConditions />
-              <Footer />
-            </PageWrapper>
-          } />
+            {/* <Route path="patients" element={<Patients />} /> */}
 
-          {/* HOME */}
-          <Route path="/" element={
-            <PageWrapper>
-              <Helmet>
-                <title>Wellwigen | AI Health System</title>
-              </Helmet>
+            <Route path="medical-records" element={<MedicalRecords />} />
 
-              {/* <Header /> */}
+            <Route path="prescriptions" element={<Prescriptions />} />
 
-              <main>
-                <Hero />
-                <SectionWrapper><Ecosystem /></SectionWrapper>
-                <SectionWrapper><Pricing /></SectionWrapper>
-                <SectionWrapper><Dashboard /></SectionWrapper>
-                 <SectionWrapper><Diet /></SectionWrapper>
+            <Route path="insurance" element={<Insurance />} />
 
-                {/* <SectionWrapper><WhatLookingFor /></SectionWrapper> */}
-                {/* <SectionWrapper><Statistics /></SectionWrapper> */}
-                {/* <SectionWrapper><GoalsExpertise /></SectionWrapper> */}
-                {/* <SectionWrapper><Services /></SectionWrapper> */}
-                <SectionWrapper><Testimonials /></SectionWrapper>
-                <SectionWrapper><Metrics /></SectionWrapper>
-                {/* <SectionWrapper><CallToAction /></SectionWrapper> */}
-                {/* <SectionWrapper><About /></SectionWrapper> */}
-                {/* <SectionWrapper><Trainer /></SectionWrapper> */}
-                {/* <SectionWrapper><TrainerForm /></SectionWrapper> */}
-                {/* <SectionWrapper><ConsultationForm /></SectionWrapper> */}
-                <SectionWrapper><ContactUs /></SectionWrapper>
-              </main>
+            <Route path="appointments" element={<Appointments />} />
 
-              <Footer />
-              {/* <FloatingSocials /> */}
-            </PageWrapper>
-          } />
+            <Route path="doctors" element={<Doctors />} />
 
-          {/* 404 */}
-          <Route path="*" element={<NotFound />} />
+            {/* <Route path="reports" element={<Reports />} /> */}
+
+            <Route path="settings" element={<Settings />} />
+
+          </Route>
+
+
+          {/* ================= TERMS ================= */}
+          <Route
+            path="/terms-and-conditions"
+            element={
+              <PageWrapper>
+                <TermsAndConditions />
+                <Footer />
+              </PageWrapper>
+            }
+          />
+
+
+          {/* ================= HOME ================= */}
+          <Route
+            path="/"
+            element={
+              <PageWrapper>
+                <Helmet>
+                  <title>Wellwigen | AI Health System</title>
+                </Helmet>
+
+                <main>
+                  <Hero />
+
+                  <ResponsiveSection>
+                    <Ecosystem />
+                  </ResponsiveSection>
+
+                  <ResponsiveSection>
+                    <Pricing />
+                  </ResponsiveSection>
+
+                  <ResponsiveSection>
+                    <Dashboard />
+                  </ResponsiveSection>
+
+                  <ResponsiveSection>
+                    <Diet />
+                  </ResponsiveSection>
+
+                  <ResponsiveSection>
+                    <Testimonials />
+                  </ResponsiveSection>
+
+                  <ResponsiveSection>
+                    <Metrics />
+                  </ResponsiveSection>
+
+                  <ResponsiveSection>
+                    <ContactUs />
+                  </ResponsiveSection>
+                </main>
+
+                <Footer />
+              </PageWrapper>
+            }
+          />
+
+
+          {/* ================= OTHER ROUTES ================= */}
+          <Route
+            path="/ecosystem"
+            element={
+              <PageWrapper>
+                <Ecosystem />
+                <Footer />
+              </PageWrapper>
+            }
+          />
+
+          <Route
+            path="/pricing"
+            element={
+              <PageWrapper>
+                <Pricing />
+                <Footer />
+              </PageWrapper>
+            }
+          />
+
+          <Route
+            path="/dashboard"
+            element={
+              <PageWrapper>
+                <Dashboard />
+                <Footer />
+              </PageWrapper>
+            }
+          />
+
+          <Route
+            path="/testimonial"
+            element={
+              <PageWrapper>
+                <Testimonials />
+                <Footer />
+              </PageWrapper>
+            }
+          />
+
+          <Route
+            path="/contactus"
+            element={
+              <PageWrapper>
+                <ContactUs />
+                <Footer />
+              </PageWrapper>
+            }
+          />
+
+
+          {/* ================= REGISTER ================= */}
+          <Route
+            path="/register"
+            element={
+              <PageWrapper>
+                <ResponsiveSection>
+                  <ConsultationForm />
+                </ResponsiveSection>
+
+                <Footer />
+              </PageWrapper>
+            }
+          />
+
+
+          {/* ================= LOGIN ================= */}
+          <Route
+            path="/login"
+            element={
+              <PageWrapper>
+                <ResponsiveSection>
+                  <Login />
+                </ResponsiveSection>
+
+                <Footer />
+              </PageWrapper>
+            }
+          />
 
         </Routes>
       </AnimatePresence>
@@ -115,11 +225,7 @@ function App() {
 export default App;
 
 
-
-
-
 /* ================= PAGE WRAPPER ================= */
-
 function PageWrapper({ children }) {
   return (
     <motion.div
@@ -130,5 +236,15 @@ function PageWrapper({ children }) {
     >
       {children}
     </motion.div>
+  );
+}
+
+
+/* ================= RESPONSIVE SECTION ================= */
+function ResponsiveSection({ children }) {
+  return (
+    <div className="py-12 px-4 sm:px-6 md:px-12 lg:px-16 max-w-full md:max-w-7xl mx-auto">
+      {children}
+    </div>
   );
 }
