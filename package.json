@@ -1,0 +1,27 @@
+{
+  "name": "wellwigen-backend",
+  "version": "1.0.0",
+  "description": "Backend for Wellwigen registration",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dns": "^0.2.2",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "mongodb": "4.1",
+    "mongoose": "^9.3.3",
+    "morgan": "^1.10.1",
+    "winston": "^3.19.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
