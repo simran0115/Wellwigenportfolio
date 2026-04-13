@@ -1,14 +1,17 @@
-import create from 'zustand';
-import { loginUser, registerUser } from '../services/authService';
-import { createSubscription as createSubscriptionService } from '../services/subscriptionService';
+import { create } from "zustand";
+import { loginUser, registerUser } from "../services/authService";
+import { createSubscription as createSubscriptionService } from "../services/subscriptionService";
 
 const useAppStore = create((set) => ({
+  // ================= AUTH =================
   auth: {
     user: null,
     loading: false,
     error: null,
     success: null,
   },
+
+  // ================= SUBSCRIPTION =================
   subscription: {
     selectedPlan: null,
     loading: false,
@@ -16,6 +19,7 @@ const useAppStore = create((set) => ({
     success: null,
   },
 
+  // ================= PLAN =================
   setSelectedPlan: (plan) =>
     set((state) => ({
       subscription: {
@@ -26,6 +30,7 @@ const useAppStore = create((set) => ({
       },
     })),
 
+  // ================= CLEAR AUTH STATUS =================
   clearAuthStatus: () =>
     set((state) => ({
       auth: {
@@ -35,6 +40,7 @@ const useAppStore = create((set) => ({
       },
     })),
 
+  // ================= CLEAR SUBSCRIPTION STATUS =================
   clearSubscriptionStatus: () =>
     set((state) => ({
       subscription: {
@@ -44,6 +50,7 @@ const useAppStore = create((set) => ({
       },
     })),
 
+  // ================= LOGIN =================
   login: async (credentials) => {
     set((state) => ({
       auth: {
@@ -56,22 +63,24 @@ const useAppStore = create((set) => ({
 
     try {
       const user = await loginUser(credentials);
+
       set((state) => ({
         auth: {
           ...state.auth,
           user,
           loading: false,
           error: null,
-          success: 'Login successful',
+          success: "Login successful",
         },
       }));
+
       return user;
     } catch (error) {
       set((state) => ({
         auth: {
           ...state.auth,
           loading: false,
-          error: error.message || 'Login failed',
+          error: error?.message || "Login failed",
           success: null,
         },
       }));
@@ -79,16 +88,18 @@ const useAppStore = create((set) => ({
     }
   },
 
+  // ================= LOGOUT =================
   logout: () =>
-    set(() => ({
+    set({
       auth: {
         user: null,
         loading: false,
         error: null,
         success: null,
       },
-    })),
+    }),
 
+  // ================= REGISTER =================
   register: async (payload) => {
     set((state) => ({
       auth: {
@@ -101,21 +112,23 @@ const useAppStore = create((set) => ({
 
     try {
       const data = await registerUser(payload);
+
       set((state) => ({
         auth: {
           ...state.auth,
           loading: false,
           error: null,
-          success: data.message || 'Registration successful',
+          success: data?.message || "Registration successful",
         },
       }));
+
       return data;
     } catch (error) {
       set((state) => ({
         auth: {
           ...state.auth,
           loading: false,
-          error: error.message || 'Registration failed',
+          error: error?.message || "Registration failed",
           success: null,
         },
       }));
@@ -123,6 +136,7 @@ const useAppStore = create((set) => ({
     }
   },
 
+  // ================= SUBSCRIPTION =================
   submitSubscription: async (payload) => {
     set((state) => ({
       subscription: {
@@ -135,21 +149,23 @@ const useAppStore = create((set) => ({
 
     try {
       const data = await createSubscriptionService(payload);
+
       set((state) => ({
         subscription: {
           ...state.subscription,
           loading: false,
           error: null,
-          success: data.message || 'Subscription created successfully',
+          success: data?.message || "Subscription created successfully",
         },
       }));
+
       return data;
     } catch (error) {
       set((state) => ({
         subscription: {
           ...state.subscription,
           loading: false,
-          error: error.message || 'Subscription failed',
+          error: error?.message || "Subscription failed",
           success: null,
         },
       }));

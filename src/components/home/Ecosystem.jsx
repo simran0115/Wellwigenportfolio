@@ -10,7 +10,7 @@ const fadeUp = {
     transition: { delay: i * 0.1, duration: 0.6 },
   }),
 };
-
+// sdfsd
 const Ecosystem = () => {
   return (
     <section className="w-full min-h-screen bg-white px-4 sm:px-6 md:px-12 lg:px-16 py-16 relative overflow-hidden">
@@ -91,9 +91,8 @@ const Ecosystem = () => {
                       initial={{ height: 0 }}
                       animate={{ height: `${h}%` }}
                       transition={{ duration: 0.8, delay: i * 0.1 }}
-                      className={`w-5 sm:w-6 md:w-8 rounded-lg ${
-                        i === 2 ? "bg-teal-500" : i === 6 ? "bg-green-400" : "bg-gray-400"
-                      } shadow-sm`}
+                      className={`w-5 sm:w-6 md:w-8 rounded-lg ${i === 2 ? "bg-teal-500" : i === 6 ? "bg-green-400" : "bg-gray-400"
+                        } shadow-sm`}
                     />
                   </div>
                 ))}
@@ -240,9 +239,9 @@ const Ecosystem = () => {
               <p className="text-xs sm:text-sm text-gray-600 mb-3">ENGINE STATUS</p>
               <div className="flex flex-col items-center justify-center gap-4">
                 <div className="relative flex items-center justify-center">
-                  <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 8, ease: "linear" }} className="absolute w-12 h-12 sm:w-15 sm:h-15 md:w-16 md:h-16 rounded-full border border-teal-300/40"/>
-                  <motion.div animate={{ rotate: -360 }} transition={{ repeat: Infinity, duration: 6, ease: "linear" }} className="absolute w-14 h-14 sm:w-16 sm:h-16 md:w-18 md:h-18 rounded-full border-2 border-teal-400/50"/>
-                  <motion.div animate={{ scale: [1, 1.15, 1] }} transition={{ repeat: Infinity, duration: 2 }} className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-teal-300 to-blue-400 shadow-lg"/>
+                  <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 8, ease: "linear" }} className="absolute w-12 h-12 sm:w-15 sm:h-15 md:w-16 md:h-16 rounded-full border border-teal-300/40" />
+                  <motion.div animate={{ rotate: -360 }} transition={{ repeat: Infinity, duration: 6, ease: "linear" }} className="absolute w-14 h-14 sm:w-16 sm:h-16 md:w-18 md:h-18 rounded-full border-2 border-teal-400/50" />
+                  <motion.div animate={{ scale: [1, 1.15, 1] }} transition={{ repeat: Infinity, duration: 2 }} className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-teal-300 to-blue-400 shadow-lg" />
                   <div className="absolute w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full bg-teal-200/20 blur-xl"></div>
                 </div>
                 <div className="text-center">

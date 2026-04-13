@@ -1,4 +1,5 @@
 import React from 'react';
+import "./App.css";
 import { Helmet } from 'react-helmet-async';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
