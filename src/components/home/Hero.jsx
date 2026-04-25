@@ -112,7 +112,7 @@ export default function Hero() {
                 </div>
 
                 {/* BOTTOM FADE */}
-                <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-white/90 to-transparent pointer-events-none rounded-b-2xl"></div>
+                {/* <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-white/90 to-transparent pointer-events-none rounded-b-2xl"></div> */}
               </div>
             );
           })}

@@ -1,4 +1,5 @@
 import React from "react";
+import { Link, useLocation } from "react-router-dom";
 import {
   Squares2X2Icon,
   CalendarDaysIcon,
@@ -12,17 +13,20 @@ import {
 } from "@heroicons/react/24/outline";
 
 export default function Sidebar() {
+  const location = useLocation();
+
   const navItems = [
-    { name: "Dashboard", icon: Squares2X2Icon, active: true },
-    { name: "Appointments", icon: CalendarDaysIcon },
-    { name: "Records", icon: DocumentTextIcon },
-    { name: "Facilities", icon: BuildingOffice2Icon },
-    { name: "Insurance", icon: ShieldCheckIcon },
-    { name: "Settings", icon: Cog6ToothIcon },
+    { name: "Dashboard", icon: Squares2X2Icon, route: "/admin" },
+    { name: "Appointments", icon: CalendarDaysIcon, route: "/admin/appointments" },
+    { name: "Records", icon: DocumentTextIcon, route: "/admin/medical-records" },
+    { name: "Facilities", icon: BuildingOffice2Icon, route: "/admin/facilities" },
+    { name: "Insurance", icon: ShieldCheckIcon, route: "/admin/insurance" },
+    { name: "Vendors", icon: BuildingOffice2Icon, route: "/admin/vendors" },
+    { name: "Settings", icon: Cog6ToothIcon, route: "/admin/settings" },
   ];
 
   return (
-    <aside className="w-[260px] min-h-screen bg-[#E8EEF0] px-[20px] py-[28px] border-r border-[#DFE6E8] flex flex-col justify-between">
+    <aside className="w-[260px] min-h-screen bg-[#E8EEF0] px-[20px] py-[28px] border-r border-[#DFE6E8] flex flex-col justify-between whitespace-nowrap">
       <div>
         <div className="mb-[36px]">
           <h1 className="text-[26px] font-[800] text-[#0B5B77]">Wellwigen</h1>
@@ -30,12 +34,17 @@ export default function Sidebar() {
         </div>
 
         <div className="space-y-[10px]">
-          {navItems.map((item, i) => (
-            <div key={i} className={`flex items-center gap-3 px-[14px] py-[14px] rounded-[18px] cursor-pointer ${item.active ? "bg-white shadow-sm" : "hover:bg-white/60"}`}>
-              <item.icon className="w-[18px] h-[18px] text-[#5E7285]" />
-              <span className="text-[15px] font-[500] text-[#4B5563]">{item.name}</span>
-            </div>
-          ))}
+          {navItems.map((item, i) => {
+            const isActive = location.pathname === item.route;
+            return (
+              <Link to={item.route} key={i}>
+                <div className={`flex mt-[10px] items-center gap-3 px-[14px] py-[14px] rounded-[18px] cursor-pointer transition-colors ${isActive ? "bg-white shadow-sm" : "hover:bg-white/60"}`}>
+                  <item.icon className="w-[18px] h-[18px] text-[#5E7285]" />
+                  <span className="text-[15px] font-[500] text-[#4B5563]">{item.name}</span>
+                </div>
+              </Link>
+            )
+          })}
         </div>
       </div>
 
