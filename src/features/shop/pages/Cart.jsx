@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import useAppStore from '../store/useAppStore';
+import useAppStore from '../../../store/useAppStore';
 
 function Cart() {
   const location = useLocation();

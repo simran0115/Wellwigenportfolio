@@ -1,9 +1,9 @@
 // ContactUs.jsx
 import React, { useState } from 'react';
 import { Mail, Phone, MapPin, Send } from 'lucide-react';
-import { db } from '../../firebase';
+import { db } from '../../../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import Modal from '../common/Modal';
+import Modal from '../../../components/common/Modal';
 
 const ContactUs = () => {
     const [formData, setFormData] = useState({

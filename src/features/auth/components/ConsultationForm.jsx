@@ -1,8 +1,8 @@
 // ConsultationForm.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Modal from '../common/Modal';
-import useAppStore from '../../store/useAppStore';
+import Modal from '../../../components/common/Modal';
+import useAppStore from '../../../store/useAppStore';
 
 const ConsultationForm = () => {
     const navigate = useNavigate();

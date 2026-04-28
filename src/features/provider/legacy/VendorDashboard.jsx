@@ -9,7 +9,7 @@ import {
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell
 } from "recharts";
-import socket from "../socket"; 
+import socket from "../../../socket"; 
 import { useNavigate } from "react-router-dom";
 
 export default function VendorDashboard() {

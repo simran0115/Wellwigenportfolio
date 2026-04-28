@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Modal from '../common/Modal';
+import Modal from '../../../components/common/Modal';
 import { Eye, EyeOff } from 'lucide-react';
-import useAppStore from '../../store/useAppStore';
+import useAppStore from '../../../store/useAppStore';
 
 const Login = () => {
     const navigate = useNavigate();

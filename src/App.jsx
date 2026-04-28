@@ -8,39 +8,42 @@ import { AnimatePresence, motion } from 'framer-motion';
 
 import Navbar from "./components/common/Navbar";
 import ParticlesBackground from "./components/ui/ParticlesBackground";
-import AdminLayout from "./components/layout/AdminLayout";
+import AdminLayout from "./features/dashboard/layout/AdminLayout";
 
 // Home / Website Pages
-import Hero from './components/home/Hero';
-import Ecosystem from "./components/home/Ecosystem";
-import Pricing from "./components/subscription/Pricing";
-import Dashboard from "./components/dashboard/Dashboard";
-import Diet from "./components/dashboard/Diet";
+import Hero from './features/home/components/Hero';
+import Ecosystem from "./features/home/components/Ecosystem";
+// Pricing is now imported from features
+import Dashboard from "./features/dashboard/components/Dashboard";
+import Diet from "./features/dashboard/components/Diet";
 import Testimonials from './components/Testimonials';
-import Metrics from './components/home/Metrics';
-import ContactUs from './components/home/ContactUs';
+import Metrics from './features/home/components/Metrics';
+import ContactUs from './features/home/components/ContactUs';
 import Footer from './components/common/Footer';
 import TermsAndConditions from './components/TermsAndConditions';
-import ConsultationForm from './components/auth/ConsultationForm';
-import Login from './components/auth/Login';
+import ConsultationForm from './features/auth/components/ConsultationForm';
+import Login from './features/auth/components/Login';
 
 // Admin Pages
-import UserDashboard from "./components/dashboard/pages/UserDashboard";
-import MedicalRecords from "./components/dashboard/pages/MedicalRecords";
-import Prescriptions from "./components/dashboard/pages/Prescriptions";
-import Insurance from "./components/dashboard/pages/Insurance";
-import Appointments from "./components/dashboard/pages/Appointments";
-import Doctors from "./components/dashboard/pages/Doctors";
-import Settings from "./components/dashboard/pages/Settings";
-import AdminVendors from "./components/dashboard/pages/AdminVendors";
+import UserDashboard from "./features/dashboard/components/pages/UserDashboard";
+import MedicalRecords from "./features/dashboard/components/pages/MedicalRecords";
+import Prescriptions from "./features/dashboard/components/pages/Prescriptions";
+import Insurance from "./features/dashboard/components/pages/Insurance";
+import Appointments from "./features/dashboard/components/pages/Appointments";
+import Doctors from "./features/dashboard/components/pages/Doctors";
+import Settings from "./features/dashboard/components/pages/Settings";
+import AdminVendors from "./features/dashboard/components/pages/AdminVendors";
 
-import Cart from "./pages/Cart";
+import Cart from "./features/shop/pages/Cart";
 
-// ✅ Vendor Imports
-import Register from "./vendor/Register";
-import VendorLogin from "./vendor/Login";
-import VendorDashboard from "./vendor/VendorDashboard";
-import AddProduct from "./vendor/AddProduct";
+// ✅ Feature Imports
+import Pricing from "./features/subscription/pages/PricingPage";
+import Register from "./features/provider/pages/VendorRegister";
+
+// Legacy Vendor Imports (to be migrated)
+import VendorLogin from "./features/provider/legacy/Login";
+import VendorDashboard from "./features/provider/legacy/VendorDashboard";
+import AddProduct from "./features/provider/legacy/AddProduct";
 // import MyStore from "./vendor/MyStore";
 
 function App() {

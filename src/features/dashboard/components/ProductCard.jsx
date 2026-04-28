@@ -1,5 +1,5 @@
 import { Heart } from "lucide-react";
-import Badge from "../ui/Badge";
+import Badge from "../../../components/ui/Badge";
 
 const ProductCard = ({ name, price, img, status }) => {
   return (
