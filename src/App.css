@@ -70,8 +70,7 @@ html {
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
+  opacity: 0.9;
 }
 
 .btn-glass {
@@ -89,8 +88,7 @@ html {
 }
 
 .card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 0 50px rgba(59, 130, 246, 0.25);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 /* ================= TEXT ================= */
@@ -100,33 +98,6 @@ html {
   -webkit-text-fill-color: transparent;
 }
 
-/* ================= ANIMATION ================= */
-.fade-up {
-  opacity: 0;
-  transform: translateY(20px);
-  animation: fadeUp 0.8s ease forwards;
-}
-
-@keyframes fadeUp {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ================= FLOAT ================= */
-.float {
-  animation: float 4s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-6px);
-  }
-}
 
 /* ================= BORDER GLOW ================= */
 .border-glow {

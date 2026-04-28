@@ -14,10 +14,7 @@ const About = () => {
                                 className="w-full h-full object-cover"
                             />
                         </div>
-                        {/* Decorative element */}
-                        <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-primary rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-                        <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-                    </div>
+                        </div>
 
                     <div className="order-1 lg:order-2">
                         <h2 className="text-3xl sm:text-4xl font-bold text-dark mb-6">

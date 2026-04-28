@@ -3,11 +3,8 @@ import "./App.css";
 import "./index.css";
 import { Helmet } from 'react-helmet-async';
 import { Routes, Route, useLocation } from 'react-router-dom';
-// eslint-disable-next-line no-unused-vars
-import { AnimatePresence, motion } from 'framer-motion';
 
 import Navbar from "./components/common/Navbar";
-import ParticlesBackground from "./components/ui/ParticlesBackground";
 import AdminLayout from "./features/dashboard/layout/AdminLayout";
 
 // Home / Website Pages
@@ -53,13 +50,10 @@ function App() {
   return (
     <div className="min-h-screen bg-white text-black">
 
-      <ParticlesBackground />
-
       {/* ✅ Hide Navbar for Admin + Vendor Dashboard Pages */}
       {!location.pathname.startsWith("/admin") &&
        !location.pathname.startsWith("/vendor") && <Navbar />}
 
-      <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
 
           {/* ================= ADMIN ROUTES ================= */}
@@ -138,13 +132,9 @@ function App() {
                 <main>
                   <Hero />
 
-                  <ResponsiveSection>
-                    <Ecosystem />
-                  </ResponsiveSection>
+                  <Ecosystem />
 
-                  <ResponsiveSection>
-                    <Pricing />
-                  </ResponsiveSection>
+                  <Pricing />
 
                   <ResponsiveSection>
                     <Dashboard />
@@ -158,13 +148,9 @@ function App() {
                     <Testimonials />
                   </ResponsiveSection>
 
-                  <ResponsiveSection>
-                    <Metrics />
-                  </ResponsiveSection>
+                  <Metrics />
 
-                  <ResponsiveSection>
-                    <ContactUs />
-                  </ResponsiveSection>
+                  <ContactUs />
                 </main>
 
                 <Footer />
@@ -200,7 +186,6 @@ function App() {
           } />
 
         </Routes>
-      </AnimatePresence>
     </div>
   );
 }
@@ -210,14 +195,7 @@ export default App;
 /* ================= PAGE WRAPPER ================= */
 function PageWrapper({ children }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -30 }}
-      transition={{ duration: 0.6 }}
-    >
-      {children}
-    </motion.div>
+    <div>{children}</div>
   );
 }
 

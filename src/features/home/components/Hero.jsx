@@ -1,121 +1,214 @@
-import React, { useState, useEffect } from "react";
-import {
-  Activity,
-  Brain,
-  BriefcaseMedical,
-  Utensils,
-  HeartPulse
-} from "lucide-react";
+import React from "react";
+import { Activity, Brain, BriefcaseMedical, Utensils, HeartPulse } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-const cardsData = [
-  { step: "STEP 01", title: "Track your health", subtitle: "Wearables & real-time data sync", gradient: "from-blue-200 to-blue-300", icon: Activity },
-  { step: "STEP 02", title: "AI analyzes your body", subtitle: "Advanced clinical intelligence", gradient: "from-green-200 to-green-300", icon: Brain },
-  { step: "STEP 03", title: "Doctors & labs support", subtitle: "24/7 expert monitoring", gradient: "from-purple-200 to-purple-300", icon: BriefcaseMedical },
-  { step: "STEP 04", title: "Nutrition auto-adjusts", subtitle: "Personalized diet optimization", gradient: "from-orange-200 to-orange-300", icon: Utensils },
-  { step: "STEP 05", title: "Continuous monitoring", subtitle: "Real-time adaptive tracking", gradient: "from-indigo-200 to-indigo-300", icon: HeartPulse }
+const steps = [
+  { step: "01", title: "Track Health", subtitle: "Wearables & real-time sync", icon: Activity },
+  { step: "02", title: "AI Analysis", subtitle: "Advanced clinical intelligence", icon: Brain },
+  { step: "03", title: "Expert Support", subtitle: "24/7 doctor monitoring", icon: BriefcaseMedical },
+  { step: "04", title: "Nutrition Plan", subtitle: "Personalized diet optimization", icon: Utensils },
+  { step: "05", title: "Monitoring", subtitle: "Real-time adaptive tracking", icon: HeartPulse },
 ];
 
 export default function Hero() {
-  const [windowWidth, setWindowWidth] = useState(
-    typeof window !== "undefined" ? window.innerWidth : 1200
-  );
-
-  useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Responsive sizes
-  const cardHeight =
-    windowWidth < 640 ? 180 : windowWidth < 1024 ? 220 : 250;
-
-  const verticalOffset = windowWidth < 640 ? 8 : 15;
-
-  // Balanced container height
-  const containerHeight = cardHeight + verticalOffset * 2 + 60;
-
-  // Fit all cards horizontally
-  const cardWidth = Math.floor((windowWidth * 0.9) / cardsData.length);
+  const navigate = useNavigate();
 
   return (
-    <section className="w-full bg-white flex flex-col items-center justify-center pt-20 pb-24 overflow-hidden relative">
+    <section
+      className="w-full relative overflow-hidden"
+      style={{
+        backgroundColor: "#f8fafc",
+        backgroundImage: "radial-gradient(circle, rgba(148,163,184,0.2) 1px, transparent 1px)",
+        backgroundSize: "24px 24px",
+      }}
+    >
+      {/* === SVG HEALTH VECTORS (decorative watermarks) === */}
 
-      {/* BACKGROUND BLOBS */}
-      <div className="absolute top-[-80px] left-[-100px] w-[400px] h-[300px] bg-blue-300 rounded-full blur-[120px] opacity-40"/>
-      <div className="absolute bottom-[-80px] right-[-80px] w-[350px] h-[250px] bg-blue-300 rounded-full blur-[120px] opacity-40"/>
+      {/* ECG / Heartbeat line — top right */}
+      <svg
+        className="absolute top-20 right-0 w-80 opacity-[0.07] pointer-events-none"
+        viewBox="0 0 320 60"
+        fill="none"
+      >
+        <path
+          d="M0,30 L55,30 L70,6 L85,54 L100,14 L115,46 L130,30 L320,30"
+          stroke="#0d9488"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
 
-      {/* SOCIAL PROOF */}
-      <div className="flex items-center gap-2 mb-6 relative z-10">
-        <div className="flex -space-x-2">
-          <img className="w-8 h-8 rounded-full border-2 border-skyblue" src="https://i.pravatar.cc/32?img=1" alt="user1"/>
-          <img className="w-8 h-8 rounded-full border-2 border-teal teal" src="https://i.pravatar.cc/32?img=2" alt="user2"/>
-          <img className="w-8 h-8 rounded-full border-2 border-blue" src="https://i.pravatar.cc/32?img=3" alt="user3"/>
+      {/* Medical cross — top left */}
+      <svg
+        className="absolute top-28 left-14 opacity-[0.08] pointer-events-none"
+        width="30"
+        height="30"
+        viewBox="0 0 30 30"
+        fill="none"
+      >
+        <rect x="11" y="2" width="8" height="26" rx="2" fill="#0d9488" />
+        <rect x="2" y="11" width="26" height="8" rx="2" fill="#0d9488" />
+      </svg>
+
+      {/* Small cross — mid left */}
+      <svg
+        className="absolute top-1/2 left-8 opacity-[0.06] pointer-events-none"
+        width="18"
+        height="18"
+        viewBox="0 0 18 18"
+        fill="none"
+      >
+        <rect x="7" y="1" width="4" height="16" rx="1.5" fill="#0d9488" />
+        <rect x="1" y="7" width="16" height="4" rx="1.5" fill="#0d9488" />
+      </svg>
+
+      {/* Small cross — bottom right area */}
+      <svg
+        className="absolute bottom-32 right-28 opacity-[0.06] pointer-events-none"
+        width="14"
+        height="14"
+        viewBox="0 0 18 18"
+        fill="none"
+      >
+        <rect x="7" y="1" width="4" height="16" rx="1.5" fill="#0d9488" />
+        <rect x="1" y="7" width="16" height="4" rx="1.5" fill="#0d9488" />
+      </svg>
+
+      {/* Shield with checkmark — right side */}
+      <svg
+        className="absolute top-1/3 right-14 opacity-[0.06] pointer-events-none w-20"
+        viewBox="0 0 80 96"
+        fill="none"
+      >
+        <path
+          d="M40 6L10 18V44C10 62 23 79 40 88C57 79 70 62 70 44V18L40 6Z"
+          stroke="#0d9488"
+          strokeWidth="2"
+          fill="none"
+        />
+        <path
+          d="M26 46l10 10 18-20"
+          stroke="#0d9488"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+
+      {/* Heart outline — bottom left */}
+      <svg
+        className="absolute bottom-36 left-20 opacity-[0.06] pointer-events-none w-14"
+        viewBox="0 0 56 52"
+        fill="none"
+      >
+        <path
+          d="M28 48C28 48 4 34 4 18C4 10 10 4 18 4C22.5 4 27 7 28 12C29 7 33.5 4 38 4C46 4 52 10 52 18C52 34 28 48 28 48Z"
+          stroke="#0d9488"
+          strokeWidth="2"
+          fill="none"
+        />
+      </svg>
+
+      {/* DNA ellipses — far left */}
+      <svg
+        className="absolute left-4 top-40 opacity-[0.05] pointer-events-none w-10"
+        viewBox="0 0 40 130"
+        fill="none"
+      >
+        {[14, 38, 62, 86, 110].map((cy, i) => (
+          <ellipse key={i} cx="20" cy={cy} rx="16" ry="7" stroke="#0d9488" strokeWidth="1.2" fill="none" />
+        ))}
+        <line x1="4" y1="14" x2="4" y2="110" stroke="#0d9488" strokeWidth="1.2" />
+        <line x1="36" y1="14" x2="36" y2="110" stroke="#0d9488" strokeWidth="1.2" />
+      </svg>
+
+      {/* Tiny plus — mid area */}
+      <svg
+        className="absolute top-44 left-1/3 opacity-[0.04] pointer-events-none"
+        width="12"
+        height="12"
+        viewBox="0 0 18 18"
+        fill="none"
+      >
+        <rect x="7" y="1" width="4" height="16" rx="1.5" fill="#0d9488" />
+        <rect x="1" y="7" width="16" height="4" rx="1.5" fill="#0d9488" />
+      </svg>
+
+      {/* === MAIN CONTENT === */}
+      <div className="pt-32 pb-14 px-4 flex flex-col items-center text-center max-w-4xl mx-auto relative z-10">
+
+        {/* Platform badge */}
+        <div className="inline-flex items-center gap-2 bg-white border border-teal-100 text-teal-700 text-xs font-semibold px-4 py-1.5 rounded-full mb-7 shadow-sm">
+          <span className="w-1.5 h-1.5 bg-teal-500 rounded-full" />
+          AI-Powered Health Platform
         </div>
-        <span className="bg-gray-100 text-gray-800 text-xs px-3 py-1 rounded-full font-medium">
-          Join 6,000+ users
-        </span>
-      </div>
 
-      {/* TEXT (reduced spacing) */}
-      <div className="text-center mb-6 md:mb-8 px-6 max-w-3xl relative z-10">
-        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
-          Handover Your Health <br /> to Wellwigen
+        {/* Headline */}
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 leading-tight mb-5">
+          Handover Your Health<br />
+          <span className="text-teal-600">to Wellwigen</span>
         </h1>
-        <p className="text-gray-600 mt-4 text-lg">
+
+        {/* Subtext */}
+        <p className="text-gray-500 text-lg md:text-xl max-w-2xl mb-9 leading-relaxed">
           A premium clinical ecosystem that monitors, guides, and adapts to your biology for total peace of mind.
         </p>
+
+        {/* CTA Buttons */}
+        <div className="flex flex-wrap gap-3 justify-center mb-10">
+          <button
+            onClick={() => navigate("/register")}
+            className="px-7 py-3 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors shadow-sm"
+          >
+            Get Started Free
+          </button>
+          <button
+            onClick={() => navigate("/ecosystem")}
+            className="px-7 py-3 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            See How It Works →
+          </button>
+        </div>
+
+        {/* Social proof */}
+        <div className="flex items-center gap-3">
+          <div className="flex -space-x-2">
+            {[1, 2, 3].map((i) => (
+              <img
+                key={i}
+                className="w-8 h-8 rounded-full border-2 border-white shadow-sm"
+                src={`https://i.pravatar.cc/32?img=${i}`}
+                alt={`user${i}`}
+              />
+            ))}
+          </div>
+          <span className="text-sm text-gray-500">
+            Join <strong className="text-gray-800">6,000+</strong> users already on Wellwigen
+          </span>
+        </div>
       </div>
 
-      {/* CONTAINER (pulled up slightly) */}
-      <div className="w-full max-w-[1200px] px-4 mx-auto -mt-4 md:-mt-12">
-        <div
-          className="flex items-center justify-center gap-1 relative z-15 overflow-hidden"
-          style={{ height: `${containerHeight}px` }}
-        >
-          {cardsData.map((card, index) => {
-            const Icon = card.icon;
-            const offsetY =
-              index % 2 === 0 ? -verticalOffset : verticalOffset;
-
-            return (
-              <div
-                key={index}
-                className={`relative rounded-2xl p-5 flex flex-col justify-between text-gray-900 overflow-hidden bg-gradient-to-br ${card.gradient}`}
-                style={{
-                  width: `${cardWidth}px`,
-                  height: `${cardHeight}px`,
-                  transform: `translateY(${offsetY}px)`,
-                  marginTop: `${verticalOffset}px`,
-                  boxShadow: "0 15px 40px rgba(0,0,0,0.1)",
-                  willChange: "transform"
-                }}
-              >
-                {/* CONTENT */}
-                <div>
-                  <p className="text-xs tracking-wider text-gray-700/80 mb-1 font-medium">
-                    {card.step}
-                  </p>
-                  <h2 className="text-lg font-semibold leading-snug">
-                    {card.title}
-                  </h2>
-                  <p className="text-sm text-gray-700/90 mt-1">
-                    {card.subtitle}
-                  </p>
-                </div>
-
-                {/* PREMIUM ICON */}
-                <div className="flex justify-center items-center flex-1 mt-2">
-                  <div className="bg-white/60 backdrop-blur-md p-3 rounded-xl flex justify-center items-center border border-white/40 shadow-sm">
-                    <Icon size={30} className="text-gray-800" />
-                  </div>
-                </div>
-
-                {/* BOTTOM FADE */}
-                {/* <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-white/90 to-transparent pointer-events-none rounded-b-2xl"></div> */}
+      {/* === STEPS GRID === */}
+      <div className="w-full max-w-6xl mx-auto px-4 pb-16 relative z-10">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {steps.map(({ step, title, subtitle, icon: Icon }, index) => (
+            <div
+              key={index}
+              className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex flex-col gap-3"
+            >
+              <span className="text-[10px] text-gray-400 font-semibold tracking-widest uppercase">
+                Step {step}
+              </span>
+              <div className="w-9 h-9 bg-teal-50 rounded-lg flex items-center justify-center">
+                <Icon size={18} className="text-teal-600" />
               </div>
-            );
-          })}
+              <div>
+                <p className="text-sm font-semibold text-gray-800">{title}</p>
+                <p className="text-xs text-gray-500 mt-0.5 leading-snug">{subtitle}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
