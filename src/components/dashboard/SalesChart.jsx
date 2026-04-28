@@ -1,3 +1,5 @@
+// eslint-disable-next-line no-unused-vars
+import { motion } from "framer-motion";
 import {
   BarChart,
   Bar,
@@ -6,7 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer
 } from "recharts";
-import { motion } from "framer-motion";
+
 
 const data = [
   { name: "Jan", sales: 4000 },

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { MessageCircle, X, Send, Mic } from "lucide-react";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 
 const FloatingSocials = () => {
@@ -84,7 +85,7 @@ const FloatingSocials = () => {
 
   const handleNavigation = (option) => {
     if (option === "View Pricing") {
-      window.location.href = "/pricing";
+      window.location.assign("/pricing");
     } else if (option === "Talk to Expert") {
       window.open("https://wa.me/919598506627", "_blank");
     }

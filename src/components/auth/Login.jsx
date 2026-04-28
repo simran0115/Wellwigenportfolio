@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Modal from '../common/Modal';
 import { Eye, EyeOff } from 'lucide-react';
@@ -30,7 +30,7 @@ const Login = () => {
         try {
             await login(formData);
             setTimeout(() => navigate('/dashboard', { replace: true }), 1200);
-        } catch (error) {
+        } catch {
             // Error state is managed by zustand store.
         }
     };

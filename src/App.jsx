@@ -3,6 +3,7 @@ import "./App.css";
 import "./index.css";
 import { Helmet } from 'react-helmet-async';
 import { Routes, Route, useLocation } from 'react-router-dom';
+// eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion } from 'framer-motion';
 
 import Navbar from "./components/common/Navbar";
@@ -44,6 +45,7 @@ import AddProduct from "./vendor/AddProduct";
 
 function App() {
   const location = useLocation();
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   return (
     <div className="min-h-screen bg-white text-black">

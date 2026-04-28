@@ -4,7 +4,7 @@ const Admin = () => {
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/consultation")
+    fetch(`${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"}/consultation`)
       .then((res) => res.json())
       .then((result) => {
         console.log(result);

@@ -1,0 +1,62 @@
+
+> snapnfit-clone@0.0.0 lint
+> eslint .
+
+
+<--- Last few GCs --->
+
+[7008:0000020C5A1DD000]    13894 ms: Scavenge (interleaved) 114.8 (174.2) -> 71.7 (177.8) MB, pooled: 0 MB, 33.82 / 0.00 ms  (average mu = 0.994, current mu = 0.997) allocation failure; 
+[7008:0000020C5A1DD000]    14329 ms: Scavenge (interleaved) 121.5 (179.0) -> 74.5 (185.8) MB, pooled: 0 MB, 19.38 / 0.00 ms  (average mu = 0.994, current mu = 0.997) allocation failure; 
+
+FATAL ERROR: Zone Allocation failed - process out of memory
+----- Native stack trace -----
+
+
+<--- Last few GCs --->
+
+[7008:0000020C5A1DD000]    13894 ms: Scavenge (interleaved) 114.8 (174.2) -> 71.7 (177.8) MB, pooled: 0 MB, 33.82 / 0.00 ms  (average mu = 0.994, current mu = 0.997) allocation failure; 
+[7008:0000020C5A1DD000]    14329 ms: Scavenge (interleaved) 121.5 (179.0) -> 74.5 (185.8) MB, pooled: 0 MB, 19.38 / 0.00 ms  (average mu = 0.994, current mu = 0.997) allocation failure; 
+
+FATAL ERROR: Zone Allocation failed - process out of memory
+FATAL ERROR: Zone Allocation failed - process out of memory
+----- Native stack trace -----
+
+----- Native stack trace -----
+
+ 1: 00007FF79C87C36F 
+ 1: 00007FF79C87C36F 
+ 2: 00007FF79D4C4D77 
+ 2: 00007FF79D4C4D77 
+ 3: 00007FF79CE3FBD6 
+ 3: 00007FF79CE3FBD6 
+ 4: 00007FF79DE63EB0 
+ 5: 00007FF79DC7D989 
+ 6: 00007FF79CD37D96 
+ 7: 00007FF79CD1568F 
+ 8: 00007FF79D441023 
+ 9: 00007FF79D4430FA 
+10: 00007FF79CEC6271 
+11: 00007FF79CEC436F 
+12: 00007FF79E60F57A 
+13: 00007FF79E56733F 
+14: 00007FF79E6E8D68 
+15: 00007FF79E6EB3EA 
+16: 00007FF79E6EC69D 
+17: 0000020C007D0A2C 
+ 4: 00007FF79D3BE23F 
+ 5: 00007FF79D3BD72E 
+ 6: 00007FF79CD3D029 
+ 7: 00007FF79CD3C9E1 
+ 8: 00007FF79CD3B940 
+ 9: 00007FF79CD3A387 
+10: 00007FF79CD387D7 
+11: 00007FF79CD189C5 
+12: 00007FF79CD159DA 
+13: 00007FF79D4389AF 
+14: 00007FF79CD174BB 
+15: 00007FF79DCA570F 
+16: 00007FF79C7CCD8E 
+17: 00007FF79D51A096 
+18: 00007FF79E7792B3 
+19: 00007FFEBCD07374 
+20: 00007FFEBE3FCC91 

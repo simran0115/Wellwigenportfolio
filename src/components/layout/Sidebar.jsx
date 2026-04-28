@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Squares2X2Icon,
@@ -14,6 +14,23 @@ import {
 
 export default function Sidebar() {
   const location = useLocation();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    // Optionally fetch every time it mounts or poll
+    const fetchPending = async () => {
+      try {
+        // use 127.0.0.1 to avoid ipv6 resolution issues
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"}/api/vendor/all`);
+        const data = await res.json();
+        const pending = (data.vendors || []).filter(v => v.status === "pending").length;
+        setPendingCount(pending);
+      } catch (err) {
+        console.error("Failed to fetch pending vendors:", err);
+      }
+    };
+    fetchPending();
+  }, [location.pathname]); // refetch on navigation
 
   const navItems = [
     { name: "Dashboard", icon: Squares2X2Icon, route: "/admin" },
@@ -41,6 +58,11 @@ export default function Sidebar() {
                 <div className={`flex mt-[10px] items-center gap-3 px-[14px] py-[14px] rounded-[18px] cursor-pointer transition-colors ${isActive ? "bg-white shadow-sm" : "hover:bg-white/60"}`}>
                   <item.icon className="w-[18px] h-[18px] text-[#5E7285]" />
                   <span className="text-[15px] font-[500] text-[#4B5563]">{item.name}</span>
+                  {item.name === "Vendors" && pendingCount > 0 && (
+                    <span className="ml-auto bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                      {pendingCount}
+                    </span>
+                  )}
                 </div>
               </Link>
             )

@@ -62,7 +62,7 @@ const ConsultationForm = () => {
 
             setTimeout(() => navigate('/login'), 1500);
             return data;
-        } catch (error) {
+        } catch {
             // Error state is handled by the store.
         }
     };

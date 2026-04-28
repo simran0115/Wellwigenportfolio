@@ -11,7 +11,7 @@ function Register() {
     phone: "",
   });
 
-  const API = "http://localhost:8000/api"; // later move to .env
+  const API = import.meta.env.VITE_API_BASE_URL ? `${import.meta.env.VITE_API_BASE_URL}/api` : "http://localhost:8000/api";
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });

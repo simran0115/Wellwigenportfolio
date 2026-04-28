@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
   const [form, setForm] = useState({
@@ -9,7 +10,8 @@ function Login() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const API = "http://localhost:8000/api"; // move to .env later
+  const API = import.meta.env.VITE_API_BASE_URL ? `${import.meta.env.VITE_API_BASE_URL}/api` : "http://localhost:8000/api";
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -25,8 +27,9 @@ function Login() {
     try {
       const res = await axios.post(`${API}/vendor/login`, form);
 
-      // ✅ Save token
-      localStorage.setItem("token", res.data.token);
+      // ✅ Save token and info
+      localStorage.setItem("vendorToken", res.data.token);
+      localStorage.setItem("vendorInfo", JSON.stringify(res.data.vendor));
 
       // ✅ Optional: save vendor status
       localStorage.setItem("vendorStatus", res.data.vendor.status);
@@ -34,14 +37,14 @@ function Login() {
       setSuccess("Login successful");
       setError("");
 
-      // 👉 redirect (you can change route)
-      window.location.href = "/vendor/dashboard";
+      // 👉 redirect
+      navigate("/vendor/dashboard");
 
     } catch (err) {
       console.log(err);
 
       const errorMsg =
-        err.response?.data?.message || "Login failed";
+        err.response?.data?.message || err.message || "Login failed";
 
       setError(errorMsg);
       setSuccess("");
@@ -59,6 +62,7 @@ function Login() {
         <input
           className="border p-2 rounded"
           name="email"
+          value={form.email}
           placeholder="Email"
           onChange={handleChange}
         />
@@ -67,6 +71,7 @@ function Login() {
           className="border p-2 rounded"
           name="password"
           type="password"
+          value={form.password}
           placeholder="Password"
           onChange={handleChange}
         />
