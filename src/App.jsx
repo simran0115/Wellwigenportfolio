@@ -30,12 +30,17 @@ import Appointments from "./features/dashboard/components/pages/Appointments";
 import Doctors from "./features/dashboard/components/pages/Doctors";
 import Settings from "./features/dashboard/components/pages/Settings";
 import AdminVendors from "./features/dashboard/components/pages/AdminVendors";
+import ProviderVerification from "./features/admin/pages/ProviderVerification";
+import AdminDashboard from "./features/admin/pages/AdminDashboard";
 
 import Cart from "./features/shop/pages/Cart";
 
 // ✅ Feature Imports
 import Pricing from "./features/subscription/pages/PricingPage";
-import Register from "./features/provider/pages/VendorRegister";
+import Register from "./features/provider/pages/onboarding/OnboardingWizard";
+import OnboardingWizard from "./features/provider/pages/onboarding/OnboardingWizard";
+import ProviderStatus from "./features/provider/pages/onboarding/ProviderStatus";
+import UnifiedDashboard from "./features/provider/pages/dashboard/UnifiedDashboard";
 
 // Legacy Vendor Imports (to be migrated)
 import VendorLogin from "./features/provider/legacy/Login";
@@ -50,9 +55,10 @@ function App() {
   return (
     <div className="min-h-screen bg-white text-black">
 
-      {/* ✅ Hide Navbar for Admin + Vendor Dashboard Pages */}
+      {/* ✅ Hide Navbar for Admin, Vendor, and Provider Pages */}
       {!location.pathname.startsWith("/admin") &&
-       !location.pathname.startsWith("/vendor") && <Navbar />}
+       !location.pathname.startsWith("/vendor") &&
+       !location.pathname.startsWith("/provider") && <Navbar />}
 
         <Routes location={location} key={location.pathname}>
 
@@ -60,25 +66,22 @@ function App() {
           <Route path="/cart" element={<Cart />} />
 
           <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<UserDashboard />} />
+            <Route index element={<AdminDashboard />} />
             <Route path="medical-records" element={<MedicalRecords />} />
             <Route path="prescriptions" element={<Prescriptions />} />
             <Route path="insurance" element={<Insurance />} />
             <Route path="appointments" element={<Appointments />} />
             <Route path="doctors" element={<Doctors />} />
-            <Route path="settings" element={<Settings />} />
+             <Route path="settings" element={<Settings />} />
             <Route path="vendors" element={<AdminVendors />} />
+            <Route path="verification" element={<ProviderVerification />} />
           </Route>
 
           {/* ================= VENDOR ROUTES ================= */}
           
-          <Route path="/vendor/register" element={
-            <PageWrapper>
-              <ResponsiveSection>
-                <Register />
-              </ResponsiveSection>
-            </PageWrapper>
-          } />
+          <Route path="/provider/onboarding" element={<OnboardingWizard />} />
+          <Route path="/provider/status" element={<ProviderStatus />} />
+          <Route path="/vendor/register" element={<OnboardingWizard />} />
 
           <Route path="/vendor/login" element={
             <PageWrapper>
@@ -88,12 +91,9 @@ function App() {
             </PageWrapper>
           } />
 
-          {/* ✅ Dashboard (Overview only) */}
-          <Route path="/vendor/dashboard" element={
-            <PageWrapper>
-              <VendorDashboard />
-            </PageWrapper>
-          } />
+          {/* ✅ Unified Provider Dashboard */}
+          <Route path="/provider/dashboard" element={<UnifiedDashboard />} />
+          <Route path="/vendor/dashboard" element={<UnifiedDashboard />} />
 
           {/* ✅ Add Product */}
           <Route path="/vendor/add-product" element={

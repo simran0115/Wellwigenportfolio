@@ -1,0 +1,13 @@
+/vendor/login
+
+/provider/dashboard
+
+http://localhost:5177/admin
+
+
+
+Doctor	doctor@test.com	password123
+Retail Vendor	vendor@test.com	password123
+Diagnostic Lab	lab@test.com	password123
+Pharmacy	pharmacy@test.com	password123
+Nutrition & Diet	nutrition@test.com	password123

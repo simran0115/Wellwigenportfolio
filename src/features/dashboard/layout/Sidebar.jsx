@@ -43,23 +43,23 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="w-[260px] min-h-screen bg-[#E8EEF0] px-[20px] py-[28px] border-r border-[#DFE6E8] flex flex-col justify-between whitespace-nowrap">
+    <aside className="w-[240px] min-h-screen bg-white px-5 py-8 border-r border-gray-100 flex flex-col justify-between whitespace-nowrap">
       <div>
-        <div className="mb-[36px]">
-          <h1 className="text-[26px] font-[800] text-[#0B5B77]">Wellwigen</h1>
-          <p className="text-[10px] mt-[4px] tracking-[2px] text-[#6B7280]">CLINICAL SANCTUARY</p>
+        <div className="mb-10 px-2">
+          <h1 className="text-xl font-bold tracking-tight text-gray-900">Wellwigen</h1>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Clinical Portal</p>
         </div>
 
-        <div className="space-y-[10px]">
+        <div className="space-y-1">
           {navItems.map((item, i) => {
             const isActive = location.pathname === item.route;
             return (
               <Link to={item.route} key={i}>
-                <div className={`flex mt-[10px] items-center gap-3 px-[14px] py-[14px] rounded-[18px] cursor-pointer transition-colors ${isActive ? "bg-white shadow-sm" : "hover:bg-white/60"}`}>
-                  <item.icon className="w-[18px] h-[18px] text-[#5E7285]" />
-                  <span className="text-[15px] font-[500] text-[#4B5563]">{item.name}</span>
+                <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all ${isActive ? "bg-gray-50 text-blue-600" : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"}`}>
+                  <item.icon className={`w-[18px] h-[18px] ${isActive ? "text-blue-600" : "text-gray-400"}`} />
+                  <span className="text-sm font-medium">{item.name}</span>
                   {item.name === "Vendors" && pendingCount > 0 && (
-                    <span className="ml-auto bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                    <span className="ml-auto bg-blue-100 text-blue-600 text-[10px] font-bold px-1.5 py-0.5 rounded">
                       {pendingCount}
                     </span>
                   )}
@@ -70,19 +70,15 @@ export default function Sidebar() {
         </div>
       </div>
 
-      <div className="space-y-3">
-        <button className="w-full flex items-center gap-3 px-[14px] py-[14px] rounded-[18px] hover:bg-white/70">
-          <QuestionMarkCircleIcon className="w-5 h-5" />
-          <span>Help Center</span>
+      <div className="space-y-1">
+        <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all">
+          <QuestionMarkCircleIcon className="w-4 h-4" />
+          <span className="text-sm font-medium">Support</span>
         </button>
 
-        <button className="w-full flex items-center gap-3 px-[14px] py-[14px] rounded-[18px] hover:bg-white/70">
-          <ArrowLeftOnRectangleIcon className="w-5 h-5" />
-          <span>Logout</span>
-        </button>
-
-        <button className="bg-[#005D86] text-white rounded-full py-[14px] text-[14px] font-[600] flex items-center justify-center gap-2 shadow-sm w-full">
-          <LifebuoyIcon className="w-4 h-4" /> Emergency Support
+        <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all">
+          <ArrowLeftOnRectangleIcon className="w-4 h-4" />
+          <span className="text-sm font-medium">Log out</span>
         </button>
       </div>
     </aside>
