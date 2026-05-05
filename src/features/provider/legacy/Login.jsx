@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import { Mail, Lock, ShieldCheck, ArrowRight, Activity, Heart, Stethoscope } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+import { providerService } from "../services/providerService";
+
 function Login() {
   const [form, setForm] = useState({
     email: "",
@@ -12,7 +14,6 @@ function Login() {
   });
   const [loading, setLoading] = useState(false);
 
-  const API = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -24,13 +25,24 @@ function Login() {
     setLoading(true);
 
     try {
-      const res = await axios.post(`${API}/vendor/login`, form);
-      localStorage.setItem("vendorToken", res.data.token);
-      localStorage.setItem("vendorInfo", JSON.stringify(res.data.vendor));
-      localStorage.setItem("vendorStatus", res.data.vendor.status);
+      const res = await providerService.login(form);
+      localStorage.setItem("providerToken", res.token);
+      localStorage.setItem("providerInfo", JSON.stringify(res.provider));
+      localStorage.setItem("providerStatus", res.provider.verificationStatus);
+
+      // We can also set vendor tokens for legacy compatibility temporarily
+      localStorage.setItem("vendorToken", res.token);
+      localStorage.setItem("vendorInfo", JSON.stringify(res.provider));
+      localStorage.setItem("vendorStatus", res.provider.verificationStatus);
 
       toast.success("Welcome back to Wellwigen Portal");
-      navigate("/provider/dashboard");
+      
+      const type = res.provider.type.toLowerCase();
+      if (["doctor", "vendor", "lab", "nutrition"].includes(type)) {
+        navigate(`/${type}/dashboard`);
+      } else {
+        navigate("/provider/dashboard");
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || "Login failed. Check your credentials.");
     } finally {

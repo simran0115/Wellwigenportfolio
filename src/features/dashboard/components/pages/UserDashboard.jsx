@@ -1,165 +1,849 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  MagnifyingGlassIcon,
-  BellIcon,
-  ChatBubbleOvalLeftEllipsisIcon,
-  Cog6ToothIcon,
-  HeartIcon,
-  MapPinIcon,
-  ClockIcon,
-  BeakerIcon,
-  BoltIcon,
-  UserGroupIcon,
-  SparklesIcon,
-} from "@heroicons/react/24/outline";
+  LayoutDashboard,
+  CreditCard,
+  User as UserIcon,
+  Bell,
+  Settings,
+  LogOut,
+  ChevronRight,
+  ShieldCheck,
+  Zap,
+  Star,
+  Activity,
+  Heart,
+  Calendar,
+  Utensils,
+  Stethoscope,
+  ShoppingBag,
+  Plus,
+  Truck,
+  Apple,
+  CheckCircle2,
+  ChevronDown,
+  ShoppingBasket,
+  Clock,
+  MapPin,
+  Navigation,
+  X,
+  Camera,
+  Save
+} from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import toast from "react-hot-toast";
+import axios from "axios";
 
 export default function UserDashboard() {
-  const stats = [
-    ["HEART RATE", "72", "bpm", "+2.4%", HeartIcon],
-    ["BLOOD OXYGEN", "98", "%", "-0.8%", BoltIcon],
-    ["BLOOD PRESSURE", "120/80", "mmHg", "NORMAL", BeakerIcon],
-  ];
+  const location = useLocation();
+  const navigate = useNavigate();
+  const fileInputRef = useRef(null);
+  
+  const [activeTab, setActiveTab] = useState(location.state?.activeTab || "Overview");
+  const [showTracking, setShowTracking] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
-  const facilities = [
-    ["General Medicine", "4 Doctors available today", "~15m", "OPEN", UserGroupIcon],
-    ["Cardiology Unit", "Specialized heart care", "~45m", "BUSY", HeartIcon],
-    ["Imaging & Radiology", "Advanced diagnostic scans", "~10m", "OPEN", SparklesIcon],
-  ];
+  // Settings States
+  const [orderUpdates, setOrderUpdates] = useState(true);
+  const [subscriptionAlerts, setSubscriptionAlerts] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [paymentMethods, setPaymentMethods] = useState([
+    { id: 1, type: "VISA", last4: "4242", expiry: "12/28", isDefault: true }
+  ]);
+  
+  // Simulated User Data with local persistence
+  const [userData, setUserData] = useState(() => {
+    const saved = localStorage.getItem("userData");
+    return saved ? JSON.parse(saved) : {
+      name: "Rajesh Kumar",
+      email: "rajesh@example.com",
+      phone: "+91 98765 43210",
+      avatar: "https://i.pravatar.cc/150?img=32",
+      joinDate: "January 2026"
+    };
+  });
+
+  const [subscription, setSubscription] = useState(() => {
+    const saved = localStorage.getItem("userSubscription");
+    return saved ? JSON.parse(saved) : {
+      plan: "Gold",
+      status: "Active",
+      nextBilling: "June 05, 2026",
+      price: "₹999/mo"
+    };
+  });
+
+  // Latest Order from LocalStorage
+  const [latestOrder, setLatestOrder] = useState(() => {
+    const saved = localStorage.getItem("latestOrder");
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const [orderHistory, setOrderHistory] = useState([
+    { id: "#WL-8812", date: "May 03, 2026", status: "Delivered", items: "Mangoes, Pineapple", total: "₹320" },
+    { id: "#WL-8756", date: "Apr 28, 2026", status: "Delivered", items: "Oranges, Grapes", total: "₹280" }
+  ]);
+
+  const API = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+
+  useEffect(() => {
+    const fetchRealData = async () => {
+      try {
+        const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
+        const userId = userInfo._id || 'demo-user-id';
+        const token = localStorage.getItem("token") || localStorage.getItem("userToken");
+
+        const [ordersRes, subRes] = await Promise.all([
+          axios.get(`${API}/orders/user/${userId}`).catch(() => ({ data: [] })),
+          axios.get(`${API}/subscription/me/${userId}`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: null }))
+        ]);
+
+        if (ordersRes.data && ordersRes.data.length > 0) {
+          const formattedOrders = ordersRes.data.map(o => ({
+            id: `#WL-${o._id.slice(-4).toUpperCase()}`,
+            date: new Date(o.scheduledFor || o.createdAt).toLocaleDateString(),
+            status: o.status === 'pending' ? 'Processing' : o.status === 'delivered' ? 'Delivered' : 'Processing',
+            items: o.productId?.name || o.type || 'Fresh Produce',
+            total: `₹${o.productId?.price || 0}`
+          }));
+          setOrderHistory(formattedOrders);
+        }
+
+        if (subRes.data) {
+          setSubscription({
+            plan: subRes.data.plan || "Gold",
+            status: subRes.data.status === 'active' ? 'Active' : 'Expired',
+            nextBilling: new Date(subRes.data.endDate).toLocaleDateString(),
+            price: `₹${subRes.data.price || 999}/mo`
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch live data:", err);
+      }
+    };
+    fetchRealData();
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/login");
+  };
+
+  const handleDeleteAccount = () => {
+    toast.success("Account deleted successfully.");
+    handleLogout();
+  };
+
+  const handleTogglePreference = (setting) => {
+    if (setting === 'orders') {
+      setOrderUpdates(!orderUpdates);
+      toast.success(orderUpdates ? "Order updates disabled" : "Order updates enabled");
+    } else {
+      setSubscriptionAlerts(!subscriptionAlerts);
+      toast.success(subscriptionAlerts ? "Subscription alerts disabled" : "Subscription alerts enabled");
+    }
+  };
+
+  const handleAddPayment = (e) => {
+    e.preventDefault();
+    const newMethod = {
+      id: Date.now(),
+      type: "MASTERCARD",
+      last4: Math.floor(1000 + Math.random() * 9000).toString(),
+      expiry: "11/29",
+      isDefault: false
+    };
+    setPaymentMethods([...paymentMethods, newMethod]);
+    setShowPaymentModal(false);
+    toast.success("Payment method added successfully!");
+  };
+
+  const handleBrowseProducts = () => {
+    navigate('/vendor/dashboard', { state: { activeTab: 'Customization' } });
+  };
+
+  const handleSaveProfile = () => {
+    localStorage.setItem("userData", JSON.stringify(userData));
+    setIsEditing(false);
+    toast.success("Profile updated successfully!");
+  };
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setUserData({ ...userData, avatar: reader.result });
+        localStorage.setItem("userData", JSON.stringify({ ...userData, avatar: reader.result }));
+        toast.success("Avatar updated!");
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const planFeatures = {
+    Silver: [
+      { icon: <ShoppingBag size={20} />, label: "2 Fruit Deliveries/Week", desc: "Fresh seasonal picks" },
+      { icon: <Stethoscope size={20} />, label: "1 GP Consultation/Month", desc: "Expert medical advice" },
+      { icon: <Activity size={20} />, label: "1 Basic Lab Panel/Month", desc: "Essential health check" }
+    ],
+    Gold: [
+      { icon: <ShoppingBag size={20} />, label: "3 Fruit Deliveries/Week", desc: "Extended variety & exotic picks" },
+      { icon: <Stethoscope size={20} />, label: "3 Consultations/Month", desc: "Priority specialist access" },
+      { icon: <Zap size={20} />, label: "8 Trainer Sessions/Month", desc: "1-on-1 fitness coaching" }
+    ],
+    Platinum: [
+      { icon: <ShoppingBag size={20} />, label: "Daily Fruit Delivery", desc: "Fresh organic items daily" },
+      { icon: <Stethoscope size={20} />, label: "Unlimited Consultations", desc: "On-demand specialist access" },
+      { icon: <Plus size={20} />, label: "Up to 4 Family Members", desc: "Cover your loved ones" }
+    ]
+  };
+
+  const currentFeatures = planFeatures[subscription.plan] || planFeatures.Silver;
 
   return (
-    <div className="relative w-full min-h-screen overflow-hidden bg-[#F4F8F9] font-[Inter] antialiased px-[34px] py-[28px]">
-      {/* Premium Background Glow */}
-      <div className="absolute top-[-120px] right-[-80px] w-[420px] h-[420px] rounded-full bg-[#D8F2FF] blur-[120px] opacity-60"></div>
-      <div className="absolute bottom-[-100px] left-[-50px] w-[320px] h-[320px] rounded-full bg-[#E9F7FF] blur-[120px] opacity-70"></div>
-
-      <div className="relative z-10">
-        {/* NAVBAR */}
-        <div className="flex items-center justify-between mb-[34px]">
-          <div className="w-[470px] h-[62px] bg-white/90 backdrop-blur-xl border border-white rounded-full flex items-center px-[24px] gap-3 shadow-[0_15px_40px_rgba(14,30,37,0.06)]">
-            <MagnifyingGlassIcon className="w-5 h-5 text-[#8C97A8]" />
-            <input
-              placeholder="Search facilities, doctors, or records..."
-              className="bg-transparent outline-none text-[14px] font-[500] text-[#374151] w-full placeholder:text-[#9CA3AF]"
-            />
-          </div>
-
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-4 bg-white px-5 py-3 rounded-full shadow-[0_10px_25px_rgba(0,0,0,0.04)]">
-              <BellIcon className="w-5 h-5 text-[#4B5563]" />
-              <ChatBubbleOvalLeftEllipsisIcon className="w-5 h-5 text-[#4B5563]" />
-              <Cog6ToothIcon className="w-5 h-5 text-[#4B5563]" />
-            </div>
-
-            <div className="flex items-center gap-3 bg-white px-3 py-2 rounded-full shadow-[0_10px_20px_rgba(0,0,0,0.04)]">
-              <img src="https://i.pravatar.cc/150?img=32" className="w-[50px] h-[50px] rounded-full object-cover border-2 border-[#E6F7FF]" />
-              <div>
-                <h3 className="text-[14px] font-[800] text-[#111827]">Dr. Julianne Smith</h3>
-                <p className="text-[12px] text-[#7B8794] font-[500]">Senior Medical Officer</p>
-              </div>
-            </div>
-          </div>
+    <div className="min-h-screen bg-[#f9fafb] flex font-sans text-slate-900 overflow-x-hidden">
+      {/* Sidebar */}
+      <aside className="w-64 bg-white border-r border-gray-100 flex flex-col fixed h-full z-20">
+        <div className="p-6 flex items-center gap-2">
+          <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-teal-100">W</div>
+          <span className="font-bold text-gray-900 tracking-tight">Wellwigen <span className="text-teal-600 font-black">User</span></span>
         </div>
 
-        <div className="grid grid-cols-12 gap-[24px]">
-          {/* LEFT SECTION */}
-          <div className="col-span-8">
-            <h1 className="text-[64px] font-[800] leading-[60px] tracking-[-2px] text-[#101010]">
-              Patient<br />Central
+        <nav className="flex-1 px-4 space-y-1 mt-4">
+          <NavItem icon={<LayoutDashboard size={18} />} label="Overview" active={activeTab === 'Overview'} onClick={() => setActiveTab('Overview')} />
+          <NavItem icon={<ShoppingBasket size={18} />} label="Place Order" onClick={handleBrowseProducts} />
+          <NavItem icon={<Truck size={18} />} label="My Deliveries" active={activeTab === 'Orders'} onClick={() => setActiveTab('Orders')} />
+          <NavItem icon={<CreditCard size={18} />} label="My Subscription" active={activeTab === 'Subscription'} onClick={() => setActiveTab('Subscription')} />
+          <NavItem icon={<Settings size={18} />} label="Settings" active={activeTab === 'Settings'} onClick={() => setActiveTab('Settings')} />
+        </nav>
+
+        <div className="p-4 border-t border-gray-100 mt-auto bg-white">
+          <button 
+            onClick={() => setActiveTab('Account')}
+            className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all ${
+              activeTab === 'Account' ? 'bg-teal-50 border border-teal-100' : 'hover:bg-gray-50 border border-transparent'
+            }`}
+          >
+            <div className="relative">
+              <img src={userData.avatar} alt="Profile" className="w-10 h-10 rounded-xl object-cover shadow-md" />
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-teal-600 rounded-full border-2 border-white flex items-center justify-center text-[8px] text-white">
+                <ShieldCheck size={10} />
+              </div>
+            </div>
+            <div className="flex flex-col items-start overflow-hidden text-left">
+              <span className={`text-sm font-black truncate w-full ${activeTab === 'Account' ? 'text-teal-900' : 'text-gray-900'}`}>{userData.name.split(' ')[0]}</span>
+              <span className="text-[10px] font-black uppercase text-teal-600 tracking-widest">My Account</span>
+            </div>
+            <ChevronRight size={14} className={`ml-auto ${activeTab === 'Account' ? 'text-teal-600' : 'text-gray-300'}`} />
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 ml-64 p-8 min-h-screen relative">
+        <header className="flex justify-between items-start mb-10">
+          <div>
+            <h1 className="text-4xl font-black text-slate-900 tracking-tight">
+              {activeTab === 'Account' ? 'Account Settings' : `Welcome, ${userData.name.split(' ')[0]}`}
             </h1>
-            <p className="mt-[14px] text-[15px] font-[500] text-[#64707D] mb-[30px]">
-              Welcome back, your sanctuary is ready. You have 3 pending notifications.
+            <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px] mt-2">
+              {activeTab === 'Account' ? 'Manage your profile and security' : 'Your Daily Health Summary'}
             </p>
-
-            {/* STATS */}
-            <div className="grid grid-cols-3 gap-[18px] mb-[30px]">
-              {stats.map((card, i) => {
-                const Icon = card[4];
-                return (
-                  <div key={i} className="group bg-white/90 backdrop-blur-xl border border-white/80 rounded-[32px] px-[24px] py-[22px] min-h-[180px] shadow-[0_12px_30px_rgba(16,24,40,0.05)] hover:-translate-y-1 transition duration-500">
-                    <div className="flex justify-between items-center mb-[26px]">
-                      <div className="w-[50px] h-[50px] rounded-[18px] bg-gradient-to-br from-[#EAF8FF] to-[#D7EEFF] flex items-center justify-center shadow-inner group-hover:scale-110 transition duration-300">
-                        <Icon className="w-[22px] h-[22px] text-[#005D86]" />
-                      </div>
-                      <span className={`text-[13px] font-[700] ${i === 1 ? "text-[#E25A5A]" : "text-[#19A874]"}`}>{card[3]}</span>
-                    </div>
-                    <p className="text-[12px] text-[#9CA3AF]">{card[0]}</p>
-                    <h2 className="text-[42px] font-[800] text-[#111111] mt-[8px] leading-none">{card[1]}</h2>
-                    <span className="text-[15px] text-[#6B7280] font-[500]">{card[2]}</span>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* FACILITIES */}
-            <div className="flex justify-between items-center mb-[18px]">
-              <h2 className="text-[22px] font-[700] text-[#111111]">Facility Directory</h2>
-              <button className="text-[#005D86] font-[700] text-[15px]">View All Facilities</button>
-            </div>
-
-            <div className="grid grid-cols-3 gap-[18px]">
-              {facilities.map((item, i) => {
-                const Icon = item[4];
-                return (
-                  <div key={i} className="group bg-white/90 backdrop-blur-xl border border-white/80 rounded-[32px] p-[22px] min-h-[240px] shadow-[0_12px_30px_rgba(16,24,40,0.05)] hover:-translate-y-1 transition duration-500">
-                    <div className="flex justify-between items-center mb-[20px]">
-                      <div className="w-[56px] h-[56px] rounded-[20px] bg-gradient-to-br from-[#E8F7FF] to-[#D4EAFF] flex items-center justify-center shadow-inner group-hover:scale-110 transition duration-300">
-                        <Icon className="w-[24px] h-[24px] text-[#005D86]" />
-                      </div>
-                      <span className={`px-[14px] py-[6px] rounded-full text-[11px] font-[800] ${item[3] === "OPEN" ? "bg-[#E7F8EF] text-[#0BAA66]" : "bg-[#FDECEC] text-[#E35B5B]"}`}>{item[3]}</span>
-                    </div>
-                    <h3 className="text-[22px] font-[700] text-[#111111] leading-[32px]">{item[0]}</h3>
-                    <p className="text-[15px] text-[#6B7280] mt-[10px]">{item[1]}</p>
-                    <div className="flex items-center gap-2 mt-[34px] text-[#9CA3AF] text-[14px]">
-                      <ClockIcon className="w-4 h-4" />
-                      <span>Wait time: {item[2]}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
           </div>
+          <div className="flex items-center gap-4">
+            <button className="p-3 bg-white border border-gray-100 rounded-2xl text-slate-400 hover:text-teal-600 transition shadow-sm relative">
+              <Bell size={20} />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+            </button>
+            <button onClick={handleLogout} className="p-3 bg-white border border-gray-100 rounded-2xl text-slate-400 hover:text-red-600 transition shadow-sm"><LogOut size={20} /></button>
+          </div>
+        </header>
 
-          {/* RIGHT SECTION */}
-          <div className="col-span-4 space-y-[20px]">
-            <div className="bg-gradient-to-br from-[#005D86] via-[#0A7DA6] to-[#14A9C7] rounded-[34px] p-[30px] text-white shadow-[0_25px_50px_rgba(0,93,134,0.30)] hover:scale-[1.02] transition duration-500">
-              <p className="text-[11px] tracking-[4px] uppercase font-[600]">Upcoming Appointment</p>
-              <h2 className="text-[34px] font-[800] mt-[20px] leading-[46px]">Dr. Sarah Jenkins</h2>
-              <p className="text-[16px] mt-[8px] text-[#D8ECF5]">Annual Health Assessment</p>
-              <div className="flex justify-between mt-[28px] text-[18px] font-[700]">
-                <span>24 Oct</span>
-                <span>10:30 AM</span>
+        <AnimatePresence mode="wait">
+          {activeTab === 'Overview' && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <StatCard label="Heart Rate" value="72" unit="bpm" trend="Normal" icon={<Heart className="text-rose-500" size={20} />} />
+                <StatCard label="Blood Oxygen" value="98" unit="%" trend="Optimal" icon={<Zap className="text-amber-500" size={20} />} />
+                <StatCard label="Daily Steps" value="8,432" unit="steps" trend="+12%" icon={<Activity className="text-teal-500" size={20} />} />
               </div>
-              <button className="bg-white text-[#005D86] mt-[26px] w-full py-[15px] rounded-full font-[800] text-[14px] shadow-lg hover:scale-[1.03] transition">
-                Manage Booking
-              </button>
-            </div>
 
-            <div className="bg-white rounded-[32px] p-[22px] shadow-[0_12px_30px_rgba(16,24,40,0.05)]">
-              <h2 className="text-[20px] font-[700] mb-[14px] text-[#111111]">Hospital Location</h2>
-              <div className="bg-[#EEF3F4] rounded-[22px] h-[170px] flex items-center justify-center">
-                <MapPinIcon className="w-10 h-10 text-[#005D86]" />
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div className="lg:col-span-4 bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm">
+                  <div className="flex justify-between items-center mb-8">
+                    <h2 className="text-xl font-bold text-gray-900">Your {subscription.plan} Perks</h2>
+                    <span className="text-xs font-bold text-teal-600 bg-teal-50 px-3 py-1 rounded-full">Active</span>
+                  </div>
+                  <div className="space-y-6">
+                    {currentFeatures.map((feature, i) => (
+                      <div key={i} className="flex items-start gap-4 p-4 rounded-2xl hover:bg-gray-50 transition-colors group">
+                        <div className="p-3 bg-teal-50 text-teal-600 rounded-xl group-hover:bg-teal-600 group-hover:text-white transition-all">{feature.icon}</div>
+                        <div>
+                          <h4 className="font-bold text-gray-900 text-sm">{feature.label}</h4>
+                          <p className="text-[10px] text-gray-500 mt-0.5">{feature.desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="lg:col-span-8 space-y-8">
+                   <div className="bg-white border border-teal-100 rounded-[2.5rem] p-8 shadow-sm relative overflow-hidden">
+                     <div className="absolute top-0 right-0 w-32 h-32 bg-teal-50 rounded-bl-full -mr-16 -mt-16 -z-0"></div>
+                     <div className="relative z-10">
+                       <div className="flex justify-between items-center mb-6">
+                         <h2 className="text-xl font-black text-gray-900">Current Basket</h2>
+                         <span className="text-[10px] font-black text-teal-600 bg-teal-50 px-3 py-1 rounded-full uppercase tracking-widest">
+                           {latestOrder ? latestOrder.status : 'Planning Mode'}
+                         </span>
+                       </div>
+                       
+                       {latestOrder ? (
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                           {latestOrder.items.map((item, i) => (
+                             <div key={i} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
+                               <div className="flex items-center gap-3">
+                                 <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-teal-600 shadow-sm font-bold text-xs">{item.quantity}x</div>
+                                 <span className="text-sm font-bold text-gray-700">{item.name}</span>
+                               </div>
+                               <span className="text-xs font-black text-gray-400">₹{item.total}</span>
+                             </div>
+                           ))}
+                         </div>
+                       ) : (
+                         <div className="flex flex-col items-center justify-center py-10 border-2 border-dashed border-slate-100 rounded-[2rem] mb-8 bg-slate-50/50">
+                            <ShoppingBasket className="text-slate-300 mb-3" size={32} />
+                            <p className="text-sm font-bold text-slate-400">Your basket is waiting to be filled.</p>
+                         </div>
+                       )}
+
+                       <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+                          <div>
+                            <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Order Status</p>
+                            <p className="text-sm font-bold text-gray-900">{latestOrder ? latestOrder.orderId : 'Not Yet Placed'}</p>
+                          </div>
+                          <button onClick={handleBrowseProducts} className="px-6 py-2 bg-teal-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-teal-700 transition-all shadow-lg shadow-teal-100">
+                            {latestOrder ? 'Update Basket' : 'Place Now'}
+                          </button>
+                       </div>
+                     </div>
+                   </div>
+
+                   <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden">
+                     <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+                     <h3 className="text-xs font-black text-teal-400 uppercase tracking-[0.2em] mb-8">Delivery Details</h3>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                       <div className="flex gap-4">
+                         <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center border border-white/10"><Truck className="text-teal-400" size={24} /></div>
+                         <div><h4 className="text-lg font-bold">Next Delivery</h4><p className="text-slate-400 text-sm">Tomorrow, 06:00 AM</p></div>
+                       </div>
+                       <div className="flex gap-4">
+                         <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center border border-white/10"><Clock className="text-teal-400" size={24} /></div>
+                         <div><h4 className="text-lg font-bold">Estimated Arrival</h4><p className="text-slate-400 text-sm">Within 14 hours</p></div>
+                       </div>
+                     </div>
+                     <button onClick={() => setShowTracking(true)} className="w-full mt-8 py-4 bg-white/10 border border-white/10 hover:bg-white/20 text-white rounded-2xl font-bold text-sm transition-all">Track Order Live</button>
+                   </div>
+                </div>
               </div>
-            </div>
+            </motion.div>
+          )}
 
-            <div className="bg-white rounded-[32px] p-[22px] shadow-[0_12px_30px_rgba(16,24,40,0.05)]">
-              <h2 className="text-[28px] font-[900] text-[#111111] mb-[16px]">Quick Actions</h2>
-              <div className="space-y-[10px]">
-                {["Book Appointment", "Request Refill", "Message Doctor"].map((btn, i) => (
-                  <button key={i} className="w-full bg-[#F2F5F6] rounded-full py-[14px] text-[13px] font-[600] text-[#374151] hover:bg-[#E8EEF0] hover:scale-[1.02] transition duration-300">
-                    {btn}
+          {activeTab === 'Orders' && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+              <div className="max-w-4xl mx-auto bg-white border border-gray-100 rounded-[2.5rem] p-10 shadow-sm">
+                <header className="mb-10 flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-black text-slate-900">Delivery History</h2>
+                    <p className="text-slate-400 font-medium text-sm mt-1">Track your recent fresh produce deliveries.</p>
+                  </div>
+                  <button onClick={handleBrowseProducts} className="px-6 py-3 bg-teal-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-teal-700 transition-all">New Delivery</button>
+                </header>
+                <div className="space-y-4">
+                   {latestOrder && (
+                     <OrderRow 
+                       id={latestOrder.orderId} 
+                       date={latestOrder.date} 
+                       status="Processing" 
+                       items={latestOrder.items.map(i => i.name).join(", ")} 
+                       total={`₹${latestOrder.items.reduce((a, b) => a + b.total, 0)}`} 
+                       onClick={() => setSelectedOrder({
+                         id: latestOrder.orderId,
+                         date: latestOrder.date,
+                         status: "Processing",
+                         items: latestOrder.items.map(i => i.name).join(", "),
+                         total: `₹${latestOrder.items.reduce((a, b) => a + b.total, 0)}`,
+                         fullItems: latestOrder.items
+                       })}
+                     />
+                   )}
+                   {orderHistory.map((order, idx) => (
+                     <OrderRow 
+                       key={idx} 
+                       id={order.id} 
+                       date={order.date} 
+                       status={order.status} 
+                       items={order.items} 
+                       total={order.total} 
+                       onClick={() => setSelectedOrder(order)}
+                     />
+                   ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'Subscription' && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+              <div className="max-w-4xl mx-auto space-y-6">
+                {/* Active Plan Header */}
+                <div className="bg-white border border-gray-200 rounded-xl p-8">
+                  <div className="flex justify-between items-start mb-6 flex-col md:flex-row gap-6">
+                    <div>
+                      <span className={`text-xs font-semibold px-3 py-1 rounded-md border ${
+                        subscription.status.toLowerCase() === 'active' 
+                          ? 'text-teal-700 bg-teal-50 border-teal-200' 
+                          : 'text-rose-700 bg-rose-50 border-rose-200'
+                      }`}>
+                        {subscription.status}
+                      </span>
+                      <h2 className="text-2xl font-bold mt-4 text-gray-900">{subscription.plan} Plan</h2>
+                      <p className="text-gray-500 text-sm mt-1">Your premium health & wellness package.</p>
+                    </div>
+                    <div className="md:text-right">
+                      <p className="text-2xl font-bold text-gray-900">{subscription.price}</p>
+                      <p className="text-xs text-gray-500 mt-1">Next Billing: {subscription.nextBilling}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-100">
+                     <button 
+                       onClick={() => navigate('/pricing')} 
+                       className="px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium text-sm transition-colors"
+                     >
+                       Manage Plan
+                     </button>
+                     <button className="px-6 py-2 bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 rounded-lg font-medium text-sm transition-colors">View Billing History</button>
+                  </div>
+                </div>
+
+                {/* Plan Features Grid */}
+                <div className="bg-white border border-gray-200 rounded-xl p-8">
+                  <h3 className="text-lg font-bold text-gray-900 mb-6">Included in your plan</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {currentFeatures.map((feature, i) => (
+                      <div key={i} className="flex gap-4">
+                        <div className="w-10 h-10 bg-teal-50 text-teal-600 rounded-lg flex items-center justify-center shrink-0">
+                          {feature.icon}
+                        </div>
+                        <div>
+                           <h4 className="font-semibold text-gray-900 text-sm mb-1">{feature.label}</h4>
+                           <p className="text-sm text-gray-500">{feature.desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Upcoming Deliveries Summary */}
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 flex items-center justify-between">
+                   <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-gray-600 border border-gray-200">
+                         <Calendar size={20} />
+                      </div>
+                      <div>
+                         <h4 className="font-semibold text-gray-900">Delivery Schedule</h4>
+                         <p className="text-sm text-gray-600">Mon, Wed, Fri (Morning Slots)</p>
+                      </div>
+                   </div>
+                   <button onClick={() => setActiveTab('Orders')} className="p-2 text-gray-400 hover:text-teal-600 transition-colors">
+                      <ChevronRight size={20} />
+                   </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'Settings' && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+              <div className="max-w-4xl mx-auto space-y-6">
+                <div className="bg-white border border-gray-200 rounded-xl p-8">
+                  <h3 className="text-xl font-bold text-gray-900 mb-6">Account Settings</h3>
+                  
+                  <div className="space-y-6">
+                    {/* Notification Preferences */}
+                    <div className="pb-6 border-b border-gray-100">
+                      <h4 className="font-semibold text-gray-900 mb-4">Notifications</h4>
+                      <div className="space-y-4">
+                        <label className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">Order Updates</p>
+                            <p className="text-xs text-gray-500">Receive SMS & Email notifications about your deliveries</p>
+                          </div>
+                          <input 
+                            type="checkbox" 
+                            className="w-5 h-5 accent-teal-600" 
+                            checked={orderUpdates}
+                            onChange={() => handleTogglePreference('orders')} 
+                          />
+                        </label>
+                        <label className="flex items-center justify-between cursor-pointer">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">Subscription Alerts</p>
+                            <p className="text-xs text-gray-500">Get notified when your plan is about to expire</p>
+                          </div>
+                          <input 
+                            type="checkbox" 
+                            className="w-5 h-5 accent-teal-600" 
+                            checked={subscriptionAlerts}
+                            onChange={() => handleTogglePreference('subscriptions')} 
+                          />
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Payment Methods */}
+                    <div className="pb-6 border-b border-gray-100">
+                      <div className="flex justify-between items-center mb-4">
+                        <h4 className="font-semibold text-gray-900">Payment Methods</h4>
+                        <button onClick={() => setShowPaymentModal(true)} className="text-sm text-teal-600 font-medium hover:text-teal-700">Add New</button>
+                      </div>
+                      <div className="space-y-3">
+                        {paymentMethods.map(pm => (
+                          <div key={pm.id} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg">
+                            <div className="w-12 h-8 bg-slate-100 rounded flex items-center justify-center">
+                              <span className="font-bold text-slate-800 text-xs">{pm.type}</span>
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-900">•••• •••• •••• {pm.last4}</p>
+                              <p className="text-xs text-gray-500">Expires {pm.expiry}</p>
+                            </div>
+                            {pm.isDefault && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Default</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Danger Zone */}
+                    <div>
+                      <h4 className="font-semibold text-red-600 mb-4">Danger Zone</h4>
+                      <button 
+                        onClick={() => setShowDeleteModal(true)}
+                        className="px-6 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-sm font-medium transition-colors"
+                      >
+                        Delete Account
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'Account' && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+              <div className="max-w-4xl mx-auto">
+                <div className="bg-white border border-gray-100 rounded-[2.5rem] p-10 shadow-sm">
+                  <div className="flex flex-col md:flex-row gap-10 items-start">
+                    <div className="relative group">
+                      <img src={userData.avatar} alt="Profile" className="w-32 h-32 rounded-[2rem] object-cover border-4 border-white shadow-xl transition-all group-hover:brightness-90" />
+                      <button 
+                        onClick={() => fileInputRef.current?.click()}
+                        className="absolute -bottom-2 -right-2 p-3 bg-teal-600 text-white rounded-xl shadow-lg hover:scale-110 transition-transform flex items-center justify-center"
+                      >
+                        <Plus size={16} />
+                      </button>
+                      <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        onChange={handleAvatarChange} 
+                        className="hidden" 
+                        accept="image/*"
+                      />
+                    </div>
+                    <div className="flex-1 space-y-8 w-full">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
+                          <input 
+                            type="text" 
+                            value={userData.name} 
+                            onChange={(e) => setUserData({...userData, name: e.target.value})}
+                            disabled={!isEditing}
+                            className={`w-full px-6 py-4 rounded-2xl font-bold outline-none transition-all ${
+                              isEditing ? 'bg-white border-teal-600 border-2 shadow-xl ring-4 ring-teal-50' : 'bg-slate-50 border border-slate-100 text-slate-900'
+                            }`}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
+                          <input 
+                            type="email" 
+                            value={userData.email} 
+                            onChange={(e) => setUserData({...userData, email: e.target.value})}
+                            disabled={!isEditing}
+                            className={`w-full px-6 py-4 rounded-2xl font-bold outline-none transition-all ${
+                              isEditing ? 'bg-white border-teal-600 border-2 shadow-xl ring-4 ring-teal-50' : 'bg-slate-50 border border-slate-100 text-slate-900'
+                            }`}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Phone Number</label>
+                          <input 
+                            type="text" 
+                            value={userData.phone} 
+                            onChange={(e) => setUserData({...userData, phone: e.target.value})}
+                            disabled={!isEditing}
+                            className={`w-full px-6 py-4 rounded-2xl font-bold outline-none transition-all ${
+                              isEditing ? 'bg-white border-teal-600 border-2 shadow-xl ring-4 ring-teal-50' : 'bg-slate-50 border border-slate-100 text-slate-900'
+                            }`}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Member Since</label>
+                          <input type="text" value={userData.joinDate} readOnly className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 font-bold text-slate-400 outline-none" />
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-4">
+                        {isEditing ? (
+                          <button 
+                            onClick={handleSaveProfile}
+                            className="flex-1 md:flex-none px-10 py-4 bg-teal-600 text-white rounded-2xl font-bold text-sm hover:bg-teal-700 transition-all shadow-xl shadow-teal-100 flex items-center justify-center gap-2"
+                          >
+                            <Save size={18} /> Save Changes
+                          </button>
+                        ) : (
+                          <button 
+                            onClick={() => setIsEditing(true)}
+                            className="flex-1 md:flex-none px-10 py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-black transition-all shadow-xl shadow-slate-200"
+                          >
+                            Edit Profile Details
+                          </button>
+                        )}
+                        {isEditing && (
+                          <button 
+                            onClick={() => setIsEditing(false)}
+                            className="px-10 py-4 bg-white border border-gray-200 text-slate-400 rounded-2xl font-bold text-sm hover:bg-gray-50 transition-all"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
+
+      {/* Live Tracking Modal */}
+      <AnimatePresence>
+        {showTracking && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+              className="bg-white w-full max-w-4xl rounded-[3rem] overflow-hidden shadow-2xl flex flex-col md:flex-row h-[600px]"
+            >
+              <div className="flex-1 bg-slate-100 relative overflow-hidden">
+                <div className="absolute inset-0 bg-[url('https://api.mapbox.com/styles/v1/mapbox/light-v10/static/75.80,26.90,12,0/800x600?access_token=pk.eyJ1IjoiZGV2ZWxvcGVyIiwiYSI6ImNrY3h...')] bg-cover opacity-50"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                   <svg className="w-full h-full absolute">
+                      <motion.path d="M100,500 Q200,300 400,100" fill="none" stroke="#0d9488" strokeWidth="4" strokeDasharray="10 10" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 3, repeat: Infinity }} />
+                   </svg>
+                   <motion.div initial={{ y: 0 }} animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 2 }} className="absolute bottom-[50px] left-[100px] flex flex-col items-center"><div className="w-12 h-12 bg-teal-600 rounded-full flex items-center justify-center text-white shadow-xl border-4 border-white"><ShoppingBasket size={20} /></div></motion.div>
+                   <motion.div className="absolute top-[100px] right-[100px] flex flex-col items-center"><div className="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center text-white shadow-xl border-4 border-white animate-bounce"><Truck size={20} /></div></motion.div>
+                </div>
+              </div>
+              <div className="w-full md:w-80 bg-white p-10 flex flex-col border-l border-gray-100">
+                <div className="flex justify-between items-center mb-10"><h3 className="text-xl font-black">Track Order</h3><button onClick={() => setShowTracking(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors"><X size={20} /></button></div>
+                <div className="space-y-8 flex-1">
+                   <TrackingStep icon={<ShoppingBag size={18} />} title="Order Confirmed" time="09:00 AM" active />
+                   <TrackingStep icon={<ShoppingBasket size={18} />} title="Customizing Basket" time="10:15 AM" active />
+                   <TrackingStep icon={<Truck size={18} />} title="Out for Delivery" time="11:30 AM" active current />
+                   <TrackingStep icon={<MapPin size={18} />} title="Arriving Soon" time="ETA 12:15 PM" />
+                </div>
+                <div className="pt-8 border-t border-gray-100">
+                   <div className="flex items-center gap-4 mb-6"><img src="https://i.pravatar.cc/150?img=12" className="w-12 h-12 rounded-2xl object-cover shadow-lg" /><div><p className="text-sm font-black">Rahul Singh</p><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Delivery Hero</p></div></div>
+                   <button className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm">Call Rahul</button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showPaymentModal && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+              className="bg-white w-full max-w-md rounded-[2rem] overflow-hidden shadow-2xl p-8 relative"
+            >
+              <button onClick={() => setShowPaymentModal(false)} className="absolute top-6 right-6 text-gray-400 hover:text-gray-900"><X size={20} /></button>
+              <h3 className="text-2xl font-black text-slate-900 mb-6">Add Payment Method</h3>
+              <form onSubmit={handleAddPayment} className="space-y-4">
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Card Number</label>
+                  <input type="text" placeholder="0000 0000 0000 0000" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-teal-500" required />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Expiry Date</label>
+                    <input type="text" placeholder="MM/YY" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-teal-500" required />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">CVV</label>
+                    <input type="text" placeholder="123" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-teal-500" required />
+                  </div>
+                </div>
+                <button type="submit" className="w-full py-4 mt-4 bg-teal-600 text-white rounded-xl font-bold hover:bg-teal-700 transition-colors">Save Card</button>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {showDeleteModal && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+              className="bg-white w-full max-w-md rounded-[2rem] overflow-hidden shadow-2xl p-8 text-center"
+            >
+              <div className="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <ShieldCheck size={32} />
+              </div>
+              <h3 className="text-2xl font-black text-slate-900 mb-2">Delete Account?</h3>
+              <p className="text-slate-500 mb-8">This action cannot be undone. All your data, subscriptions, and delivery history will be permanently erased.</p>
+              <div className="flex gap-4">
+                <button onClick={() => setShowDeleteModal(false)} className="flex-1 py-4 bg-slate-100 text-slate-900 font-bold rounded-xl hover:bg-slate-200 transition-colors">Cancel</button>
+                <button onClick={handleDeleteAccount} className="flex-1 py-4 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors">Yes, Delete</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {selectedOrder && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+              className="bg-white w-full max-w-lg rounded-[2rem] overflow-hidden shadow-2xl relative"
+            >
+              <div className="bg-slate-50 p-8 border-b border-gray-100 flex justify-between items-start">
+                <div>
+                  <h3 className="text-2xl font-black text-slate-900 mb-1">Order Details</h3>
+                  <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">{selectedOrder.id} &bull; {selectedOrder.date}</p>
+                </div>
+                <button onClick={() => setSelectedOrder(null)} className="p-2 bg-white text-gray-400 hover:text-gray-900 rounded-xl shadow-sm transition-colors"><X size={20} /></button>
+              </div>
+              
+              <div className="p-8">
+                <div className="flex justify-between items-center mb-6">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Status</span>
+                  <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                    selectedOrder.status === 'Processing' ? 'bg-amber-50 text-amber-600' : 'bg-teal-50 text-teal-600'
+                  }`}>
+                    {selectedOrder.status}
+                  </span>
+                </div>
+
+                <div className="space-y-4 mb-8">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Items</span>
+                  {selectedOrder.fullItems ? (
+                     selectedOrder.fullItems.map((item, idx) => (
+                       <div key={idx} className="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
+                         <div className="flex items-center gap-4">
+                           <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center font-black text-teal-600 text-xs shadow-sm">{item.quantity}x</div>
+                           <span className="font-bold text-sm text-slate-900">{item.name}</span>
+                         </div>
+                         <span className="font-black text-slate-400 text-xs">₹{item.total}</span>
+                       </div>
+                     ))
+                  ) : (
+                    <div className="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
+                       <span className="font-bold text-sm text-slate-900">{selectedOrder.items}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-between items-center pt-6 border-t border-gray-100 mb-8">
+                  <span className="font-bold text-slate-900">Total Paid</span>
+                  <span className="text-2xl font-black text-teal-600">{selectedOrder.total}</span>
+                </div>
+
+                <div className="flex gap-4">
+                  {selectedOrder.status === 'Processing' && (
+                    <button 
+                      onClick={() => { setSelectedOrder(null); setShowTracking(true); }}
+                      className="flex-1 py-4 bg-slate-900 text-white font-bold rounded-xl hover:bg-black transition-colors"
+                    >
+                      Track Order
+                    </button>
+                  )}
+                  <button onClick={handleBrowseProducts} className="flex-1 py-4 bg-teal-600 text-white font-bold rounded-xl hover:bg-teal-700 transition-colors">
+                    Reorder Items
                   </button>
-                ))}
+                </div>
               </div>
-            </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
-            <div className="bg-white rounded-[32px] p-[22px] shadow-[0_12px_30px_rgba(16,24,40,0.05)]">
-              <h2 className="text-[28px] font-[900] text-[#111111] mb-[14px]">Recent Activity</h2>
-              <p className="font-[800] text-[15px] text-[#111111]">Prescription Ready</p>
-              <p className="text-[14px] text-[#6B7280] mt-[6px] leading-[22px]">Your Amoxicillin refill is available for pickup.</p>
-            </div>
-          </div>
-        </div>
+function TrackingStep({ icon, title, time, active, current }) {
+   return (
+      <div className="flex gap-4 relative">
+         {!title.includes("Arriving") && <div className={`absolute left-[13px] top-[30px] w-0.5 h-[50px] ${active ? 'bg-teal-600' : 'bg-gray-100'}`} />}
+         <div className={`w-7 h-7 rounded-lg flex items-center justify-center relative z-10 transition-all ${
+            current ? 'bg-teal-600 text-white scale-125 shadow-lg shadow-teal-100' : active ? 'bg-teal-50 text-teal-600' : 'bg-gray-50 text-gray-300'
+         }`}>{icon}</div>
+         <div><p className={`text-sm font-bold ${active ? 'text-slate-900' : 'text-slate-300'}`}>{title}</p><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{time}</p></div>
       </div>
+   );
+}
+
+function NavItem({ icon, label, active, onClick }) {
+  return (
+    <button onClick={onClick} className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-sm font-bold transition-all ${active ? 'bg-teal-600 text-white shadow-xl shadow-teal-100' : 'text-gray-400 hover:bg-gray-50 hover:text-black'}`}>
+      {icon}<span>{label}</span>{active && <motion.div layoutId="active" className="ml-auto w-1.5 h-1.5 bg-white rounded-full" />}
+    </button>
+  );
+}
+
+function StatCard({ label, value, unit, trend, icon }) {
+  return (
+    <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all group">
+      <div className="flex justify-between items-start mb-6"><div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-teal-600 group-hover:text-white transition-all">{icon}</div><span className="text-[10px] font-black bg-teal-50 text-teal-600 px-3 py-1 rounded-full">{trend}</span></div>
+      <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest">{label}</p>
+      <div className="flex items-baseline gap-1 mt-2"><h4 className="text-4xl font-black text-gray-900 tracking-tight">{value}</h4><span className="text-sm font-bold text-gray-400">{unit}</span></div>
+    </div>
+  );
+}
+
+function OrderRow({ id, date, status, items, total, onClick }) {
+  return (
+    <div onClick={onClick} className="flex items-center justify-between p-6 bg-slate-50 rounded-[1.5rem] hover:bg-slate-100 transition-colors border border-slate-100 cursor-pointer group">
+      <div className="flex items-center gap-6"><div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-teal-600 font-black text-xs shadow-sm group-hover:scale-110 transition-transform">{id.slice(1, 3)}</div><div><h4 className="font-black text-slate-900 text-sm">{id} &bull; {date}</h4><p className="text-xs text-slate-400 font-medium line-clamp-1 mt-1">{items}</p></div></div>
+      <div className="flex items-center gap-10"><div className="text-right"><p className="text-sm font-black text-slate-900">{total}</p><span className={`text-[10px] font-black uppercase tracking-widest ${status === 'Processing' ? 'text-amber-500' : 'text-teal-600'}`}>{status}</span></div><ChevronRight size={18} className="text-slate-300 group-hover:text-teal-600 transition-colors" /></div>
     </div>
   );
 }

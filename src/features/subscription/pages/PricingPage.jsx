@@ -20,37 +20,26 @@ const PricingPage = () => {
   }, []);
 
   const handleSubscribe = async (planId) => {
-    const dummyUserId = "60d0fe4f5311236168a109ca";
-    try {
-      toast.loading("Initiating subscription...", { id: "sub" });
-      const response = await createSubscription(planId, billingCycle, dummyUserId);
-      const options = {
-        key: response.key,
-        subscription_id: response.razorpaySubscriptionId,
-        name: "Wellwigen",
-        description: "Health-as-a-Service Subscription",
-        image: "https://example.com/your_logo",
-        handler: async function (paymentResponse) {
-          try {
-            toast.loading("Verifying payment...", { id: "sub" });
-            await verifyPayment(paymentResponse, response.subscriptionId);
-            toast.success("Subscription Active!", { id: "sub" });
-            navigate('/subscription-success');
-          } catch (err) {
-            toast.error("Payment verification failed", { id: "sub" });
-          }
-        },
-        theme: { color: "#0d9488" },
-      };
-      const rzp = new window.Razorpay(options);
-      rzp.on('payment.failed', function (response) {
-        toast.error("Payment failed: " + response.error.description, { id: "sub" });
-      });
-      rzp.open();
-      toast.dismiss("sub");
-    } catch (error) {
-      toast.error(error.message || "Failed to create subscription", { id: "sub" });
-    }
+    const planMap = {
+      'fit_start': { name: 'Silver', price: '₹499/mo' },
+      'healthy_life': { name: 'Gold', price: '₹999/mo' },
+      'total_wellness': { name: 'Platinum', price: '₹1,999/mo' }
+    };
+
+    const selectedPlan = planMap[planId] || { name: 'Silver', price: '₹499/mo' };
+
+    // Save the plan intent to localStorage
+    localStorage.setItem("userSubscription", JSON.stringify({
+      plan: selectedPlan.name,
+      status: "Active",
+      nextBilling: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+      price: selectedPlan.price
+    }));
+
+    toast.success(`${selectedPlan.name} Plan selected! Please register to continue.`);
+    
+    // Redirect to registration instead of directly to dashboard
+    navigate('/register');
   };
 
   return (

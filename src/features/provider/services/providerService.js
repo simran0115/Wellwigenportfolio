@@ -2,6 +2,11 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
+export const loginProviderApi = async (data) => {
+  const response = await axios.post(`${API_URL}/provider/login`, data);
+  return response.data;
+};
+
 export const saveProgressApi = async (data) => {
   const response = await axios.post(`${API_URL}/provider/save-progress`, data);
   return response.data;
@@ -31,6 +36,7 @@ export const addProviderItemApi = async (itemData) => {
 
 // Also keeping the object export for flexibility
 export const providerService = {
+  login: loginProviderApi,
   register: registerProviderApi,
   uploadDocs: uploadProviderDocumentsApi,
   getStatus: getProviderStatusApi,

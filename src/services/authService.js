@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import apiClient from './apiClient';
 import { ENDPOINTS } from './apiConstants';
@@ -28,6 +28,15 @@ export const loginUser = async ({ email, password }) => {
 };
 
 export const registerUser = async (payload) => {
-  const response = await apiClient.post(ENDPOINTS.register, payload);
-  return response.data;
+  try {
+    const usersRef = collection(db, 'users');
+    const docRef = await addDoc(usersRef, {
+      ...payload,
+      createdAt: new Date().toISOString(),
+      role: 'user'
+    });
+    return { id: docRef.id, message: "Registration successful" };
+  } catch (error) {
+    throw new Error("Registration failed: " + error.message);
+  }
 };

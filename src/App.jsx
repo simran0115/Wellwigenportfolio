@@ -23,6 +23,8 @@ import Login from './features/auth/components/Login';
 
 // Admin Pages
 import UserDashboard from "./features/dashboard/components/pages/UserDashboard";
+import AdminCategories from "./features/dashboard/components/pages/AdminCategories";
+// ProductCatalog is now integrated into UserDashboard as 'Vendor Products'
 import MedicalRecords from "./features/dashboard/components/pages/MedicalRecords";
 import Prescriptions from "./features/dashboard/components/pages/Prescriptions";
 import Insurance from "./features/dashboard/components/pages/Insurance";
@@ -44,7 +46,6 @@ import UnifiedDashboard from "./features/provider/pages/dashboard/UnifiedDashboa
 
 // Legacy Vendor Imports (to be migrated)
 import VendorLogin from "./features/provider/legacy/Login";
-import VendorDashboard from "./features/provider/legacy/VendorDashboard";
 import AddProduct from "./features/provider/legacy/AddProduct";
 // import MyStore from "./vendor/MyStore";
 
@@ -58,7 +59,8 @@ function App() {
       {/* ✅ Hide Navbar for Admin, Vendor, and Provider Pages */}
       {!location.pathname.startsWith("/admin") &&
        !location.pathname.startsWith("/vendor") &&
-       !location.pathname.startsWith("/provider") && <Navbar />}
+       !location.pathname.startsWith("/provider") && 
+       !location.pathname.startsWith("/dashboard") && <Navbar />}
 
         <Routes location={location} key={location.pathname}>
 
@@ -74,6 +76,7 @@ function App() {
             <Route path="doctors" element={<Doctors />} />
              <Route path="settings" element={<Settings />} />
             <Route path="vendors" element={<AdminVendors />} />
+            <Route path="categories" element={<AdminCategories />} />
             <Route path="verification" element={<ProviderVerification />} />
           </Route>
 
@@ -91,9 +94,14 @@ function App() {
             </PageWrapper>
           } />
 
-          {/* ✅ Unified Provider Dashboard */}
+          {/* ✅ Role-Specific Provider Dashboards */}
           <Route path="/provider/dashboard" element={<UnifiedDashboard />} />
+          <Route path="/doctor/dashboard" element={<UnifiedDashboard />} />
           <Route path="/vendor/dashboard" element={<UnifiedDashboard />} />
+          <Route path="/lab/dashboard" element={<UnifiedDashboard />} />
+          <Route path="/nutrition/dashboard" element={<UnifiedDashboard />} />
+          <Route path="/dashboard" element={<UserDashboard />} />
+          {/* Vendor Products is now integrated into /dashboard */}
 
           {/* ✅ Add Product */}
           <Route path="/vendor/add-product" element={
