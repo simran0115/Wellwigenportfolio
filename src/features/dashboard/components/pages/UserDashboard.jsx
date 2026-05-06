@@ -28,11 +28,64 @@ import {
   Navigation,
   X,
   Camera,
-  Save
+  Save,
+  Menu
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import axios from "axios";
+import { io } from "socket.io-client";
+
+const getUpcomingDeliveries = (plan) => {
+  const today = new Date();
+  const deliveries = [];
+  const deliveredIds = JSON.parse(localStorage.getItem("deliveredDeliveries_v3") || "[]");
+  const outForDeliveryIds = JSON.parse(localStorage.getItem("outForDeliveryDeliveries_v3") || "[]");
+
+  const getStatus = (id) => {
+    if (deliveredIds.includes(id)) return "Delivered";
+    if (outForDeliveryIds.includes(id)) return "Out for Delivery";
+    return "Scheduled";
+  };
+  
+  // Calculate upcoming deliveries based on the day
+  if (plan === 'Silver') {
+    // 2 deliveries a week, e.g., Tuesday and Friday
+    const d1 = new Date(today);
+    d1.setDate(today.getDate() + ((2 + 7 - today.getDay()) % 7 || 7)); 
+    const d2 = new Date(today);
+    d2.setDate(today.getDate() + ((5 + 7 - today.getDay()) % 7 || 7));
+    
+    const id1 = `#WL-S${d1.getTime().toString().slice(-4)}`;
+    const id2 = `#WL-S${d2.getTime().toString().slice(-4)}`;
+
+    deliveries.push({ id: id1, date: d1.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }), status: getStatus(id1), items: "Fresh Seasonal Box", total: "Included" });
+    deliveries.push({ id: id2, date: d2.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }), status: getStatus(id2), items: "Fresh Seasonal Box", total: "Included" });
+  } else if (plan === 'Gold') {
+    // 3 deliveries a week, e.g., Monday, Wednesday, Friday
+    const days = [1, 3, 5];
+    days.forEach(day => {
+      const d = new Date(today);
+      d.setDate(today.getDate() + ((day + 7 - today.getDay()) % 7 || 7));
+      const id = `#WL-G${d.getTime().toString().slice(-4)}`;
+      deliveries.push({ id: id, date: d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }), status: getStatus(id), items: "Extended Variety Box", total: "Included" });
+    });
+  } else if (plan === 'Platinum') {
+    // Daily
+    const d = new Date(today);
+    d.setDate(today.getDate() + 1);
+    const id = `#WL-P${d.getTime().toString().slice(-4)}`;
+    deliveries.push({ id: id, date: d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }), status: getStatus(id), items: "Premium Organic Box", total: "Included" });
+  } else {
+    // Default fallback
+    const d = new Date(today);
+    d.setDate(today.getDate() + 2);
+    const id = `#WL-D${d.getTime().toString().slice(-4)}`;
+    deliveries.push({ id: id, date: d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }), status: getStatus(id), items: "Standard Box", total: "Included" });
+  }
+  
+  return deliveries.sort((a, b) => new Date(a.date) - new Date(b.date));
+};
 
 export default function UserDashboard() {
   const location = useLocation();
@@ -42,6 +95,7 @@ export default function UserDashboard() {
   const [activeTab, setActiveTab] = useState(location.state?.activeTab || "Overview");
   const [showTracking, setShowTracking] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Settings States
   const [orderUpdates, setOrderUpdates] = useState(true);
@@ -85,6 +139,7 @@ export default function UserDashboard() {
     { id: "#WL-8812", date: "May 03, 2026", status: "Delivered", items: "Mangoes, Pineapple", total: "₹320" },
     { id: "#WL-8756", date: "Apr 28, 2026", status: "Delivered", items: "Oranges, Grapes", total: "₹280" }
   ]);
+  const [upcomingOrders, setUpcomingOrders] = useState(() => getUpcomingDeliveries("Gold"));
 
   const API = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
@@ -92,39 +147,108 @@ export default function UserDashboard() {
     const fetchRealData = async () => {
       try {
         const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
-        const userId = userInfo._id || 'demo-user-id';
-        const token = localStorage.getItem("token") || localStorage.getItem("userToken");
+        if (userInfo._id) {
+          const subRes = await axios.get(`${API}/subscription/user/${userInfo._id}`);
+          if (subRes.data) {
+            setSubscription({
+              plan: subRes.data.plan || "Gold",
+              status: subRes.data.status || "active",
+              expiry: subRes.data.endDate || "N/A"
+            });
+          }
 
-        const [ordersRes, subRes] = await Promise.all([
-          axios.get(`${API}/orders/user/${userId}`).catch(() => ({ data: [] })),
-          axios.get(`${API}/subscription/me/${userId}`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: null }))
-        ]);
-
-        if (ordersRes.data && ordersRes.data.length > 0) {
-          const formattedOrders = ordersRes.data.map(o => ({
-            id: `#WL-${o._id.slice(-4).toUpperCase()}`,
-            date: new Date(o.scheduledFor || o.createdAt).toLocaleDateString(),
-            status: o.status === 'pending' ? 'Processing' : o.status === 'delivered' ? 'Delivered' : 'Processing',
-            items: o.productId?.name || o.type || 'Fresh Produce',
-            total: `₹${o.productId?.price || 0}`
+          const orderRes = await axios.get(`${API}/orders/user/${userInfo._id}`);
+          const formattedOrders = orderRes.data.map(o => ({
+            id: `#WL-${o._id.toString().slice(-4).toUpperCase()}`,
+            date: new Date(o.scheduledFor).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            status: o.status.charAt(0).toUpperCase() + o.status.slice(1),
+            items: o.productName || "Fresh Produce Box",
+            total: `₹${o.totalAmount || 'Included'}`
           }));
           setOrderHistory(formattedOrders);
         }
-
-        if (subRes.data) {
-          setSubscription({
-            plan: subRes.data.plan || "Gold",
-            status: subRes.data.status === 'active' ? 'Active' : 'Expired',
-            nextBilling: new Date(subRes.data.endDate).toLocaleDateString(),
-            price: `₹${subRes.data.price || 999}/mo`
-          });
-        }
       } catch (err) {
-        console.error("Failed to fetch live data:", err);
+        console.error("Error fetching dashboard data:", err);
       }
     };
     fetchRealData();
-  }, []);
+
+    // Setup Socket.io
+    const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
+    const userId = userInfo._id || 'demo-user-id';
+    
+    const socketBaseUrl = API.replace('/api', '');
+    const socket = io(socketBaseUrl, {
+      transports: ["polling", "websocket"],
+      reconnection: true
+    });
+    
+    socket.emit("registerUser", userId);
+
+    socket.on("connect", () => {
+      console.log("✅ Socket Connected:", socket.id);
+      toast.success("Live Sync Connected", { id: 'socket-conn' });
+    });
+
+    socket.on("orderStatusUpdated", (data) => {
+      console.log("🔔 Status Update Received:", data);
+      console.log("🔔 Status Update Received:", data);
+
+      // Update upcoming orders
+      setUpcomingOrders(prev => {
+        let updated = false;
+        const newList = prev.map(o => {
+          const isMatch = o.id === data.orderId || 
+                         (data.orderId && o.id.includes(data.orderId.toString().slice(-4).toUpperCase()));
+          if (isMatch) {
+            updated = true;
+            return { ...o, status: data.status === 'out for delivery' ? 'Out for Delivery' : data.status === 'delivered' ? 'Delivered' : 'Scheduled' };
+          }
+          return o;
+        });
+
+        const isMockId = data.orderId?.toString().startsWith('mock_') || 
+                        data.orderId === '1' || 
+                        data.orderId === '2' ||
+                        data.orderId?.toString().startsWith('#WL-');
+
+        if (!updated && isMockId) {
+          if (data.status === 'out for delivery') {
+            const firstScheduledIdx = newList.findIndex(o => o.status === 'Scheduled');
+            if (firstScheduledIdx !== -1) {
+              newList[firstScheduledIdx] = { ...newList[firstScheduledIdx], status: 'Out for Delivery' };
+              const outIds = JSON.parse(localStorage.getItem("outForDeliveryDeliveries_v3") || "[]");
+              outIds.push(newList[firstScheduledIdx].id);
+              localStorage.setItem("outForDeliveryDeliveries_v3", JSON.stringify(outIds));
+            }
+          } else if (data.status === 'delivered') {
+            // Find the first one that is Out for Delivery, or fallback to Scheduled
+            let targetIdx = newList.findIndex(o => o.status === 'Out for Delivery');
+            if (targetIdx === -1) targetIdx = newList.findIndex(o => o.status === 'Scheduled');
+            
+            if (targetIdx !== -1) {
+              const targetId = newList[targetIdx].id;
+              newList[targetIdx] = { ...newList[targetIdx], status: 'Delivered' };
+              
+              // Move from Out for Delivery array to Delivered array
+              let outIds = JSON.parse(localStorage.getItem("outForDeliveryDeliveries_v3") || "[]");
+              outIds = outIds.filter(id => id !== targetId);
+              localStorage.setItem("outForDeliveryDeliveries_v3", JSON.stringify(outIds));
+
+              const deliveredIds = JSON.parse(localStorage.getItem("deliveredDeliveries_v3") || "[]");
+              deliveredIds.push(targetId);
+              localStorage.setItem("deliveredDeliveries_v3", JSON.stringify(deliveredIds));
+            }
+          }
+        }
+        return newList;
+      });
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [API]);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -203,62 +327,107 @@ export default function UserDashboard() {
 
   const currentFeatures = planFeatures[subscription.plan] || planFeatures.Silver;
 
+
+  useEffect(() => {
+    setUpcomingOrders(getUpcomingDeliveries(subscription.plan));
+  }, [subscription.plan]);
+
+  const upcomingDeliveries = upcomingOrders;
   return (
-    <div className="min-h-screen bg-[#f9fafb] flex font-sans text-slate-900 overflow-x-hidden">
+    <div className="flex h-screen bg-[#f9fafb] font-sans text-slate-900 overflow-hidden">
+      {/* Overlay for mobile sidebar */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsSidebarOpen(false)}
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-100 flex flex-col fixed h-full z-20">
-        <div className="p-6 flex items-center gap-2">
-          <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-teal-100">W</div>
-          <span className="font-bold text-gray-900 tracking-tight">Wellwigen <span className="text-teal-600 font-black">User</span></span>
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 w-64 bg-[#f8f9fa] border-r border-gray-200 flex flex-col transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        <div className="p-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white font-bold text-sm">W</div>
+            <span className="font-bold text-gray-900 tracking-tight">Wellwigen <span className="text-blue-600 font-semibold">User</span></span>
+          </div>
+          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-2 text-slate-500 hover:bg-white rounded">
+            <X size={20} />
+          </button>
         </div>
 
-        <nav className="flex-1 px-4 space-y-1 mt-4">
-          <NavItem icon={<LayoutDashboard size={18} />} label="Overview" active={activeTab === 'Overview'} onClick={() => setActiveTab('Overview')} />
-          <NavItem icon={<ShoppingBasket size={18} />} label="Place Order" onClick={handleBrowseProducts} />
-          <NavItem icon={<Truck size={18} />} label="My Deliveries" active={activeTab === 'Orders'} onClick={() => setActiveTab('Orders')} />
-          <NavItem icon={<CreditCard size={18} />} label="My Subscription" active={activeTab === 'Subscription'} onClick={() => setActiveTab('Subscription')} />
-          <NavItem icon={<Settings size={18} />} label="Settings" active={activeTab === 'Settings'} onClick={() => setActiveTab('Settings')} />
+        <nav className="flex-1 px-4 space-y-1 mt-4 overflow-y-auto">
+          <NavItem icon={<LayoutDashboard size={18} />} label="Overview" active={activeTab === 'Overview'} onClick={() => { setActiveTab('Overview'); setIsSidebarOpen(false); }} />
+          <NavItem icon={<Truck size={18} />} label="My Order" active={activeTab === 'Orders'} onClick={() => { setActiveTab('Orders'); setIsSidebarOpen(false); }} />
+          <NavItem icon={<CreditCard size={18} />} label="My Subscription" active={activeTab === 'Subscription'} onClick={() => { setActiveTab('Subscription'); setIsSidebarOpen(false); }} />
+          <NavItem icon={<Settings size={18} />} label="Settings" active={activeTab === 'Settings'} onClick={() => { setActiveTab('Settings'); setIsSidebarOpen(false); }} />
         </nav>
 
-        <div className="p-4 border-t border-gray-100 mt-auto bg-white">
+        <div className="p-4 border-t border-gray-200 bg-[#f8f9fa]">
           <button 
-            onClick={() => setActiveTab('Account')}
-            className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all ${
-              activeTab === 'Account' ? 'bg-teal-50 border border-teal-100' : 'hover:bg-gray-50 border border-transparent'
+            onClick={() => { setActiveTab('Account'); setIsSidebarOpen(false); }}
+            className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
+              activeTab === 'Account' ? 'bg-[#eef2ff] border border-blue-100' : 'hover:bg-white border border-transparent'
             }`}
           >
             <div className="relative">
-              <img src={userData.avatar} alt="Profile" className="w-10 h-10 rounded-xl object-cover shadow-md" />
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-teal-600 rounded-full border-2 border-white flex items-center justify-center text-[8px] text-white">
+              <img src={userData.avatar} alt="Profile" className="w-10 h-10 rounded object-cover" />
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-blue-600 rounded-full border-2 border-[#f8f9fa] flex items-center justify-center text-[10px] text-white">
                 <ShieldCheck size={10} />
               </div>
             </div>
             <div className="flex flex-col items-start overflow-hidden text-left">
-              <span className={`text-sm font-black truncate w-full ${activeTab === 'Account' ? 'text-teal-900' : 'text-gray-900'}`}>{userData.name.split(' ')[0]}</span>
-              <span className="text-[10px] font-black uppercase text-teal-600 tracking-widest">My Account</span>
+              <span className={`text-sm font-semibold truncate w-full ${activeTab === 'Account' ? 'text-blue-900' : 'text-gray-900'}`}>{userData.name.split(' ')[0]}</span>
+              <span className="text-xs font-semibold uppercase text-blue-600 tracking-widest">My Account</span>
             </div>
-            <ChevronRight size={14} className={`ml-auto ${activeTab === 'Account' ? 'text-teal-600' : 'text-gray-300'}`} />
+            <ChevronRight size={14} className={`ml-auto ${activeTab === 'Account' ? 'text-blue-600' : 'text-gray-400'}`} />
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 ml-64 p-8 min-h-screen relative">
-        <header className="flex justify-between items-start mb-10">
-          <div>
-            <h1 className="text-4xl font-black text-slate-900 tracking-tight">
-              {activeTab === 'Account' ? 'Account Settings' : `Welcome, ${userData.name.split(' ')[0]}`}
-            </h1>
-            <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px] mt-2">
-              {activeTab === 'Account' ? 'Manage your profile and security' : 'Your Daily Health Summary'}
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <button className="p-3 bg-white border border-gray-100 rounded-2xl text-slate-400 hover:text-teal-600 transition shadow-sm relative">
-              <Bell size={20} />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-white">
+        {/* Mobile Header */}
+        <header className="lg:hidden flex items-center justify-between p-4 border-b border-gray-100 bg-white">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setIsSidebarOpen(true)} className="p-2 -ml-2 text-slate-500">
+              <Menu size={24} />
             </button>
-            <button onClick={handleLogout} className="p-3 bg-white border border-gray-100 rounded-2xl text-slate-400 hover:text-red-600 transition shadow-sm"><LogOut size={20} /></button>
+            <span className="font-bold text-gray-900 text-sm">Wellwigen</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <img 
+              src={userData.avatar} 
+              alt="Profile" 
+              className="w-8 h-8 rounded border border-gray-200 object-cover"
+            />
+          </div>
+        </header>
+
+        {/* Scrollable Content */}
+        <main className="flex-1 overflow-y-auto p-4 lg:p-8">
+          <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-gray-100 pb-6 gap-4">
+            <div>
+              <h1 className="text-xl lg:text-2xl font-semibold text-slate-900">
+                {activeTab === 'Account' ? 'Account Settings' : `Welcome, ${userData.name.split(' ')[0]}`}
+              </h1>
+              <p className="text-slate-500 text-sm mt-1">
+                {activeTab === 'Account' ? 'Manage your profile and security' : 'Your Daily Health Summary'}
+              </p>
+            </div>
+            <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+            <button className="p-2 bg-white border border-gray-200 rounded text-slate-500 hover:text-blue-600 transition relative">
+              <Bell size={18} />
+              <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+            </button>
+            <button onClick={handleLogout} className="p-2 bg-white border border-gray-200 rounded text-slate-500 hover:text-red-600 transition"><LogOut size={18} /></button>
           </div>
         </header>
 
@@ -272,18 +441,18 @@ export default function UserDashboard() {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <div className="lg:col-span-4 bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm">
-                  <div className="flex justify-between items-center mb-8">
-                    <h2 className="text-xl font-bold text-gray-900">Your {subscription.plan} Perks</h2>
-                    <span className="text-xs font-bold text-teal-600 bg-teal-50 px-3 py-1 rounded-full">Active</span>
+                <div className="lg:col-span-4 bg-white border border-gray-200 rounded-lg p-6">
+                  <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
+                    <h2 className="text-lg font-semibold text-gray-900">Your {subscription.plan} Perks</h2>
+                    <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded">Active</span>
                   </div>
-                  <div className="space-y-6">
+                  <div className="space-y-4">
                     {currentFeatures.map((feature, i) => (
-                      <div key={i} className="flex items-start gap-4 p-4 rounded-2xl hover:bg-gray-50 transition-colors group">
-                        <div className="p-3 bg-teal-50 text-teal-600 rounded-xl group-hover:bg-teal-600 group-hover:text-white transition-all">{feature.icon}</div>
+                      <div key={i} className="flex items-start gap-4 p-3 rounded hover:bg-gray-50 transition-colors group">
+                        <div className="text-blue-600">{feature.icon}</div>
                         <div>
-                          <h4 className="font-bold text-gray-900 text-sm">{feature.label}</h4>
-                          <p className="text-[10px] text-gray-500 mt-0.5">{feature.desc}</p>
+                          <h4 className="font-semibold text-gray-900 text-sm">{feature.label}</h4>
+                          <p className="text-sm text-gray-500 mt-0.5">{feature.desc}</p>
                         </div>
                       </div>
                     ))}
@@ -291,12 +460,11 @@ export default function UserDashboard() {
                 </div>
 
                 <div className="lg:col-span-8 space-y-8">
-                   <div className="bg-white border border-teal-100 rounded-[2.5rem] p-8 shadow-sm relative overflow-hidden">
-                     <div className="absolute top-0 right-0 w-32 h-32 bg-teal-50 rounded-bl-full -mr-16 -mt-16 -z-0"></div>
+                   <div className="bg-white border border-gray-200 rounded-lg p-6">
                      <div className="relative z-10">
-                       <div className="flex justify-between items-center mb-6">
-                         <h2 className="text-xl font-black text-gray-900">Current Basket</h2>
-                         <span className="text-[10px] font-black text-teal-600 bg-teal-50 px-3 py-1 rounded-full uppercase tracking-widest">
+                       <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
+                         <h2 className="text-lg font-semibold text-gray-900">Current Basket</h2>
+                         <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded uppercase tracking-wider">
                            {latestOrder ? latestOrder.status : 'Planning Mode'}
                          </span>
                        </div>
@@ -306,10 +474,10 @@ export default function UserDashboard() {
                            {latestOrder.items.map((item, i) => (
                              <div key={i} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
                                <div className="flex items-center gap-3">
-                                 <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-teal-600 shadow-sm font-bold text-xs">{item.quantity}x</div>
+                                 <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-teal-600 shadow-sm font-bold text-sm">{item.quantity}x</div>
                                  <span className="text-sm font-bold text-gray-700">{item.name}</span>
                                </div>
-                               <span className="text-xs font-black text-gray-400">₹{item.total}</span>
+                               <span className="text-sm font-black text-gray-400">₹{item.total}</span>
                              </div>
                            ))}
                          </div>
@@ -322,30 +490,30 @@ export default function UserDashboard() {
 
                        <div className="flex justify-between items-center pt-4 border-t border-gray-100">
                           <div>
-                            <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Order Status</p>
+                            <p className="text-xs font-black text-gray-300 uppercase tracking-widest">Order Status</p>
                             <p className="text-sm font-bold text-gray-900">{latestOrder ? latestOrder.orderId : 'Not Yet Placed'}</p>
                           </div>
-                          <button onClick={handleBrowseProducts} className="px-6 py-2 bg-teal-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-teal-700 transition-all shadow-lg shadow-teal-100">
+                          <button onClick={handleBrowseProducts} className="px-4 py-2 bg-blue-600 text-white rounded text-xs font-bold uppercase tracking-widest hover:bg-blue-700 transition-all">
                             {latestOrder ? 'Update Basket' : 'Place Now'}
                           </button>
                        </div>
                      </div>
                    </div>
 
-                   <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden">
-                     <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-                     <h3 className="text-xs font-black text-teal-400 uppercase tracking-[0.2em] mb-8">Delivery Details</h3>
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                   <div className="bg-slate-900 rounded-lg p-6 text-white shadow-sm relative overflow-hidden">
+                     <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+                     <h3 className="text-sm font-bold text-blue-400 uppercase tracking-[0.2em] mb-6 border-b border-white/10 pb-4">Delivery Details</h3>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                        <div className="flex gap-4">
-                         <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center border border-white/10"><Truck className="text-teal-400" size={24} /></div>
-                         <div><h4 className="text-lg font-bold">Next Delivery</h4><p className="text-slate-400 text-sm">Tomorrow, 06:00 AM</p></div>
+                         <div className="w-12 h-12 bg-white/10 rounded flex items-center justify-center border border-white/10"><Truck className="text-blue-400" size={20} /></div>
+                         <div><h4 className="text-base font-semibold">Next Delivery</h4><p className="text-slate-400 text-sm mt-1">Tomorrow, 06:00 AM</p></div>
                        </div>
                        <div className="flex gap-4">
-                         <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center border border-white/10"><Clock className="text-teal-400" size={24} /></div>
-                         <div><h4 className="text-lg font-bold">Estimated Arrival</h4><p className="text-slate-400 text-sm">Within 14 hours</p></div>
+                         <div className="w-12 h-12 bg-white/10 rounded flex items-center justify-center border border-white/10"><Clock className="text-blue-400" size={20} /></div>
+                         <div><h4 className="text-base font-semibold">Estimated Arrival</h4><p className="text-slate-400 text-sm mt-1">Within 14 hours</p></div>
                        </div>
                      </div>
-                     <button onClick={() => setShowTracking(true)} className="w-full mt-8 py-4 bg-white/10 border border-white/10 hover:bg-white/20 text-white rounded-2xl font-bold text-sm transition-all">Track Order Live</button>
+                     <button onClick={() => setShowTracking(true)} className="w-full mt-6 py-3 bg-white/10 border border-white/10 hover:bg-white/20 text-white rounded font-semibold text-sm transition-all">Track Order Live</button>
                    </div>
                 </div>
               </div>
@@ -354,43 +522,33 @@ export default function UserDashboard() {
 
           {activeTab === 'Orders' && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-              <div className="max-w-4xl mx-auto bg-white border border-gray-100 rounded-[2.5rem] p-10 shadow-sm">
-                <header className="mb-10 flex justify-between items-center">
+              <div className="max-w-4xl mx-auto bg-white border border-gray-200 rounded-lg p-8">
+                <header className="mb-8 flex justify-between items-center border-b border-gray-100 pb-6">
                   <div>
-                    <h2 className="text-2xl font-black text-slate-900">Delivery History</h2>
-                    <p className="text-slate-400 font-medium text-sm mt-1">Track your recent fresh produce deliveries.</p>
+                    <h2 className="text-xl font-semibold text-slate-900">Upcoming Deliveries</h2>
+                    <p className="text-slate-500 text-sm mt-1">Track your scheduled fresh produce deliveries based on your {subscription.plan} plan.</p>
                   </div>
-                  <button onClick={handleBrowseProducts} className="px-6 py-3 bg-teal-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-teal-700 transition-all">New Delivery</button>
+                  <button onClick={handleBrowseProducts} className="px-4 py-2 bg-blue-600 text-white rounded font-semibold text-sm transition-all hover:bg-blue-700">Customize Next Box</button>
                 </header>
                 <div className="space-y-4">
-                   {latestOrder && (
-                     <OrderRow 
-                       id={latestOrder.orderId} 
-                       date={latestOrder.date} 
-                       status="Processing" 
-                       items={latestOrder.items.map(i => i.name).join(", ")} 
-                       total={`₹${latestOrder.items.reduce((a, b) => a + b.total, 0)}`} 
-                       onClick={() => setSelectedOrder({
-                         id: latestOrder.orderId,
-                         date: latestOrder.date,
-                         status: "Processing",
-                         items: latestOrder.items.map(i => i.name).join(", "),
-                         total: `₹${latestOrder.items.reduce((a, b) => a + b.total, 0)}`,
-                         fullItems: latestOrder.items
-                       })}
-                     />
-                   )}
-                   {orderHistory.map((order, idx) => (
-                     <OrderRow 
-                       key={idx} 
-                       id={order.id} 
-                       date={order.date} 
-                       status={order.status} 
-                       items={order.items} 
-                       total={order.total} 
-                       onClick={() => setSelectedOrder(order)}
-                     />
-                   ))}
+                   {/* Real Orders from Backend */}
+                    {/* Scheduled Deliveries (Logic Based) */}
+                    <div>
+                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Scheduled Deliveries</h3>
+                     <div className="space-y-4">
+                        {upcomingOrders.map((order, idx) => (
+                          <OrderRow 
+                            key={`upcoming-${idx}`} 
+                            id={order.id} 
+                            date={order.date} 
+                            status={order.status} 
+                            items={order.items} 
+                            total={order.total} 
+                            onClick={() => setSelectedOrder(order)}
+                          />
+                        ))}
+                     </div>
+                   </div>
                 </div>
               </div>
             </motion.div>
@@ -400,43 +558,43 @@ export default function UserDashboard() {
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
               <div className="max-w-4xl mx-auto space-y-6">
                 {/* Active Plan Header */}
-                <div className="bg-white border border-gray-200 rounded-xl p-8">
-                  <div className="flex justify-between items-start mb-6 flex-col md:flex-row gap-6">
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <div className="flex justify-between items-start mb-6 flex-col md:flex-row gap-6 border-b border-gray-100 pb-6">
                     <div>
-                      <span className={`text-xs font-semibold px-3 py-1 rounded-md border ${
+                      <span className={`text-xs font-bold px-2 py-1 rounded uppercase ${
                         subscription.status.toLowerCase() === 'active' 
-                          ? 'text-teal-700 bg-teal-50 border-teal-200' 
-                          : 'text-rose-700 bg-rose-50 border-rose-200'
+                          ? 'text-blue-700 bg-blue-50' 
+                          : 'text-rose-700 bg-rose-50'
                       }`}>
                         {subscription.status}
                       </span>
-                      <h2 className="text-2xl font-bold mt-4 text-gray-900">{subscription.plan} Plan</h2>
+                      <h2 className="text-xl font-semibold mt-3 text-gray-900">{subscription.plan} Plan</h2>
                       <p className="text-gray-500 text-sm mt-1">Your premium health & wellness package.</p>
                     </div>
                     <div className="md:text-right">
-                      <p className="text-2xl font-bold text-gray-900">{subscription.price}</p>
-                      <p className="text-xs text-gray-500 mt-1">Next Billing: {subscription.nextBilling}</p>
+                      <p className="text-xl font-semibold text-gray-900">{subscription.price}</p>
+                      <p className="text-sm text-gray-500 mt-1">Next Billing: {subscription.nextBilling}</p>
                     </div>
                   </div>
                   
-                  <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-100">
+                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
                      <button 
                        onClick={() => navigate('/pricing')} 
-                       className="px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium text-sm transition-colors"
+                       className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium text-sm transition-colors"
                      >
                        Manage Plan
                      </button>
-                     <button className="px-6 py-2 bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 rounded-lg font-medium text-sm transition-colors">View Billing History</button>
+                     <button className="px-4 py-2 bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 rounded font-medium text-sm transition-colors">View Billing History</button>
                   </div>
                 </div>
 
                 {/* Plan Features Grid */}
-                <div className="bg-white border border-gray-200 rounded-xl p-8">
-                  <h3 className="text-lg font-bold text-gray-900 mb-6">Included in your plan</h3>
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-6 border-b border-gray-100 pb-4">Included in your plan</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {currentFeatures.map((feature, i) => (
                       <div key={i} className="flex gap-4">
-                        <div className="w-10 h-10 bg-teal-50 text-teal-600 rounded-lg flex items-center justify-center shrink-0">
+                        <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded flex items-center justify-center shrink-0">
                           {feature.icon}
                         </div>
                         <div>
@@ -456,7 +614,12 @@ export default function UserDashboard() {
                       </div>
                       <div>
                          <h4 className="font-semibold text-gray-900">Delivery Schedule</h4>
-                         <p className="text-sm text-gray-600">Mon, Wed, Fri (Morning Slots)</p>
+                         <p className="text-sm text-gray-600">
+                           {subscription.plan === 'Silver' ? 'Tue, Fri (Morning Slots)' :
+                            subscription.plan === 'Gold' ? 'Mon, Wed, Fri (Morning Slots)' :
+                            subscription.plan === 'Platinum' ? 'Daily (Morning Slots)' :
+                            'Flexible Schedule'}
+                         </p>
                       </div>
                    </div>
                    <button onClick={() => setActiveTab('Orders')} className="p-2 text-gray-400 hover:text-teal-600 transition-colors">
@@ -481,7 +644,7 @@ export default function UserDashboard() {
                         <label className="flex items-center justify-between">
                           <div>
                             <p className="text-sm font-medium text-gray-900">Order Updates</p>
-                            <p className="text-xs text-gray-500">Receive SMS & Email notifications about your deliveries</p>
+                            <p className="text-sm text-gray-500">Receive SMS & Email notifications about your deliveries</p>
                           </div>
                           <input 
                             type="checkbox" 
@@ -493,7 +656,7 @@ export default function UserDashboard() {
                         <label className="flex items-center justify-between cursor-pointer">
                           <div>
                             <p className="text-sm font-medium text-gray-900">Subscription Alerts</p>
-                            <p className="text-xs text-gray-500">Get notified when your plan is about to expire</p>
+                            <p className="text-sm text-gray-500">Get notified when your plan is about to expire</p>
                           </div>
                           <input 
                             type="checkbox" 
@@ -515,13 +678,13 @@ export default function UserDashboard() {
                         {paymentMethods.map(pm => (
                           <div key={pm.id} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg">
                             <div className="w-12 h-8 bg-slate-100 rounded flex items-center justify-center">
-                              <span className="font-bold text-slate-800 text-xs">{pm.type}</span>
+                              <span className="font-bold text-slate-800 text-sm">{pm.type}</span>
                             </div>
                             <div className="flex-1">
                               <p className="text-sm font-medium text-gray-900">•••• •••• •••• {pm.last4}</p>
-                              <p className="text-xs text-gray-500">Expires {pm.expiry}</p>
+                              <p className="text-sm text-gray-500">Expires {pm.expiry}</p>
                             </div>
-                            {pm.isDefault && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Default</span>}
+                            {pm.isDefault && <span className="text-sm bg-gray-100 text-gray-600 px-2 py-1 rounded">Default</span>}
                           </div>
                         ))}
                       </div>
@@ -567,7 +730,7 @@ export default function UserDashboard() {
                     <div className="flex-1 space-y-8 w-full">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
+                          <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
                           <input 
                             type="text" 
                             value={userData.name} 
@@ -579,7 +742,7 @@ export default function UserDashboard() {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
+                          <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
                           <input 
                             type="email" 
                             value={userData.email} 
@@ -591,7 +754,7 @@ export default function UserDashboard() {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Phone Number</label>
+                          <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Phone Number</label>
                           <input 
                             type="text" 
                             value={userData.phone} 
@@ -603,7 +766,7 @@ export default function UserDashboard() {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Member Since</label>
+                          <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Member Since</label>
                           <input type="text" value={userData.joinDate} readOnly className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 font-bold text-slate-400 outline-none" />
                         </div>
                       </div>
@@ -640,7 +803,6 @@ export default function UserDashboard() {
             </motion.div>
           )}
         </AnimatePresence>
-      </main>
 
       {/* Live Tracking Modal */}
       <AnimatePresence>
@@ -672,7 +834,7 @@ export default function UserDashboard() {
                    <TrackingStep icon={<MapPin size={18} />} title="Arriving Soon" time="ETA 12:15 PM" />
                 </div>
                 <div className="pt-8 border-t border-gray-100">
-                   <div className="flex items-center gap-4 mb-6"><img src="https://i.pravatar.cc/150?img=12" className="w-12 h-12 rounded-2xl object-cover shadow-lg" /><div><p className="text-sm font-black">Rahul Singh</p><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Delivery Hero</p></div></div>
+                   <div className="flex items-center gap-4 mb-6"><img src="https://i.pravatar.cc/150?img=12" className="w-12 h-12 rounded-2xl object-cover shadow-lg" /><div><p className="text-sm font-black">Rahul Singh</p><p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Delivery Hero</p></div></div>
                    <button className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm">Call Rahul</button>
                 </div>
               </div>
@@ -695,16 +857,16 @@ export default function UserDashboard() {
               <h3 className="text-2xl font-black text-slate-900 mb-6">Add Payment Method</h3>
               <form onSubmit={handleAddPayment} className="space-y-4">
                 <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Card Number</label>
+                  <label className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2 block">Card Number</label>
                   <input type="text" placeholder="0000 0000 0000 0000" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-teal-500" required />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Expiry Date</label>
+                    <label className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2 block">Expiry Date</label>
                     <input type="text" placeholder="MM/YY" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-teal-500" required />
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">CVV</label>
+                    <label className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2 block">CVV</label>
                     <input type="text" placeholder="123" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-teal-500" required />
                   </div>
                 </div>
@@ -748,15 +910,15 @@ export default function UserDashboard() {
               <div className="bg-slate-50 p-8 border-b border-gray-100 flex justify-between items-start">
                 <div>
                   <h3 className="text-2xl font-black text-slate-900 mb-1">Order Details</h3>
-                  <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">{selectedOrder.id} &bull; {selectedOrder.date}</p>
+                  <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">{selectedOrder.id} &bull; {selectedOrder.date}</p>
                 </div>
                 <button onClick={() => setSelectedOrder(null)} className="p-2 bg-white text-gray-400 hover:text-gray-900 rounded-xl shadow-sm transition-colors"><X size={20} /></button>
               </div>
               
               <div className="p-8">
                 <div className="flex justify-between items-center mb-6">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Status</span>
-                  <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                  <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Status</span>
+                  <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest ${
                     selectedOrder.status === 'Processing' ? 'bg-amber-50 text-amber-600' : 'bg-teal-50 text-teal-600'
                   }`}>
                     {selectedOrder.status}
@@ -764,15 +926,15 @@ export default function UserDashboard() {
                 </div>
 
                 <div className="space-y-4 mb-8">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Items</span>
+                  <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Items</span>
                   {selectedOrder.fullItems ? (
                      selectedOrder.fullItems.map((item, idx) => (
                        <div key={idx} className="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
                          <div className="flex items-center gap-4">
-                           <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center font-black text-teal-600 text-xs shadow-sm">{item.quantity}x</div>
+                           <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center font-black text-teal-600 text-sm shadow-sm">{item.quantity}x</div>
                            <span className="font-bold text-sm text-slate-900">{item.name}</span>
                          </div>
-                         <span className="font-black text-slate-400 text-xs">₹{item.total}</span>
+                         <span className="font-black text-slate-400 text-sm">₹{item.total}</span>
                        </div>
                      ))
                   ) : (
@@ -804,9 +966,11 @@ export default function UserDashboard() {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+        </AnimatePresence>
+      </main>
     </div>
-  );
+  </div>
+);
 }
 
 function TrackingStep({ icon, title, time, active, current }) {
@@ -816,34 +980,64 @@ function TrackingStep({ icon, title, time, active, current }) {
          <div className={`w-7 h-7 rounded-lg flex items-center justify-center relative z-10 transition-all ${
             current ? 'bg-teal-600 text-white scale-125 shadow-lg shadow-teal-100' : active ? 'bg-teal-50 text-teal-600' : 'bg-gray-50 text-gray-300'
          }`}>{icon}</div>
-         <div><p className={`text-sm font-bold ${active ? 'text-slate-900' : 'text-slate-300'}`}>{title}</p><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{time}</p></div>
+         <div><p className={`text-sm font-bold ${active ? 'text-slate-900' : 'text-slate-300'}`}>{title}</p><p className="text-xs font-black text-slate-400 uppercase tracking-widest">{time}</p></div>
       </div>
    );
 }
 
 function NavItem({ icon, label, active, onClick }) {
   return (
-    <button onClick={onClick} className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-sm font-bold transition-all ${active ? 'bg-teal-600 text-white shadow-xl shadow-teal-100' : 'text-gray-400 hover:bg-gray-50 hover:text-black'}`}>
-      {icon}<span>{label}</span>{active && <motion.div layoutId="active" className="ml-auto w-1.5 h-1.5 bg-white rounded-full" />}
+    <button onClick={onClick} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all ${active ? 'bg-[#eef2ff] text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}>
+      {icon}<span>{label}</span>
     </button>
   );
 }
 
 function StatCard({ label, value, unit, trend, icon }) {
   return (
-    <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all group">
-      <div className="flex justify-between items-start mb-6"><div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-teal-600 group-hover:text-white transition-all">{icon}</div><span className="text-[10px] font-black bg-teal-50 text-teal-600 px-3 py-1 rounded-full">{trend}</span></div>
-      <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest">{label}</p>
-      <div className="flex items-baseline gap-1 mt-2"><h4 className="text-4xl font-black text-gray-900 tracking-tight">{value}</h4><span className="text-sm font-bold text-gray-400">{unit}</span></div>
+    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+      <div className="flex justify-between items-start mb-4"><div className="text-blue-600">{icon}</div><span className="text-xs font-bold bg-gray-100 text-gray-600 px-2 py-1 rounded">{trend}</span></div>
+      <p className="text-gray-500 text-sm font-semibold">{label}</p>
+      <div className="flex items-baseline gap-1 mt-1"><h4 className="text-2xl font-bold text-gray-900">{value}</h4><span className="text-sm font-medium text-gray-400">{unit}</span></div>
     </div>
   );
 }
 
 function OrderRow({ id, date, status, items, total, onClick }) {
+  const isDelivered = status.toLowerCase() === 'delivered';
+  const isOutForDelivery = status.toLowerCase() === 'out for delivery';
+  
   return (
-    <div onClick={onClick} className="flex items-center justify-between p-6 bg-slate-50 rounded-[1.5rem] hover:bg-slate-100 transition-colors border border-slate-100 cursor-pointer group">
-      <div className="flex items-center gap-6"><div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-teal-600 font-black text-xs shadow-sm group-hover:scale-110 transition-transform">{id.slice(1, 3)}</div><div><h4 className="font-black text-slate-900 text-sm">{id} &bull; {date}</h4><p className="text-xs text-slate-400 font-medium line-clamp-1 mt-1">{items}</p></div></div>
-      <div className="flex items-center gap-10"><div className="text-right"><p className="text-sm font-black text-slate-900">{total}</p><span className={`text-[10px] font-black uppercase tracking-widest ${status === 'Processing' ? 'text-amber-500' : 'text-teal-600'}`}>{status}</span></div><ChevronRight size={18} className="text-slate-300 group-hover:text-teal-600 transition-colors" /></div>
+    <div onClick={onClick} className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-300 cursor-pointer transition-colors">
+      <div className="flex items-center gap-4">
+        <div className={`w-10 h-10 rounded flex items-center justify-center text-sm font-bold ${
+          isDelivered ? 'bg-blue-50 text-blue-600' : 
+          isOutForDelivery ? 'bg-blue-50 text-blue-500' :
+          'bg-gray-50 text-gray-600'
+        }`}>
+          {isDelivered ? <ShieldCheck size={18} /> : 
+           isOutForDelivery ? <Truck size={18} /> : 
+           id.slice(1, 3)}
+        </div>
+        <div>
+          <h4 className="font-semibold text-slate-900 text-sm">{id}</h4>
+          <p className="text-sm text-slate-500 mt-0.5">{date} • {items}</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-6">
+        <div className="text-right">
+          <p className="text-sm font-semibold text-slate-900">{total}</p>
+          <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+            isDelivered ? 'text-blue-700 bg-blue-50' : 
+            isOutForDelivery ? 'text-blue-600 bg-blue-50' :
+            status === 'Processing' ? 'text-amber-600 bg-amber-50' : 
+            'text-slate-500 bg-slate-100'
+          }`}>
+            {status}
+          </span>
+        </div>
+        <ChevronRight size={16} className="text-slate-400" />
+      </div>
     </div>
   );
 }

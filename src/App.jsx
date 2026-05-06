@@ -3,6 +3,7 @@ import "./App.css";
 import "./index.css";
 import { Helmet } from 'react-helmet-async';
 import { Routes, Route, useLocation } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 
 import Navbar from "./components/common/Navbar";
 import AdminLayout from "./features/dashboard/layout/AdminLayout";
@@ -55,6 +56,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-white text-black">
+      <Toaster position="top-right" reverseOrder={false} />
 
       {/* ✅ Hide Navbar for Admin, Vendor, and Provider Pages */}
       {!location.pathname.startsWith("/admin") &&
@@ -66,15 +68,16 @@ function App() {
 
           {/* ================= ADMIN ROUTES ================= */}
           <Route path="/cart" element={<Cart />} />
-
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          
+          <Route path="/admin/manage" element={<AdminLayout />}>
             <Route path="medical-records" element={<MedicalRecords />} />
             <Route path="prescriptions" element={<Prescriptions />} />
             <Route path="insurance" element={<Insurance />} />
             <Route path="appointments" element={<Appointments />} />
             <Route path="doctors" element={<Doctors />} />
-             <Route path="settings" element={<Settings />} />
+            <Route path="settings" element={<Settings />} />
             <Route path="vendors" element={<AdminVendors />} />
             <Route path="categories" element={<AdminCategories />} />
             <Route path="verification" element={<ProviderVerification />} />
@@ -101,21 +104,6 @@ function App() {
           <Route path="/lab/dashboard" element={<UnifiedDashboard />} />
           <Route path="/nutrition/dashboard" element={<UnifiedDashboard />} />
           <Route path="/dashboard" element={<UserDashboard />} />
-          {/* Vendor Products is now integrated into /dashboard */}
-
-          {/* ✅ Add Product */}
-          <Route path="/vendor/add-product" element={
-            <PageWrapper>
-              <AddProduct />
-            </PageWrapper>
-          } />
-
-          {/* ✅ My Store (View Products) */}
-          {/* <Route path="/vendor/my-store" element={ */}
-            {/* <PageWrapper> */}
-              {/* <MyStore /> */}
-            {/* </PageWrapper> */}
-          {/* } /> */}
 
           {/* ================= TERMS ================= */}
           <Route
@@ -139,25 +127,18 @@ function App() {
 
                 <main>
                   <Hero />
-
                   <Ecosystem />
-
                   <Pricing />
-
                   <ResponsiveSection>
                     <Dashboard />
                   </ResponsiveSection>
-
                   <ResponsiveSection>
                     <Diet />
                   </ResponsiveSection>
-
                   <ResponsiveSection>
                     <Testimonials />
                   </ResponsiveSection>
-
                   <Metrics />
-
                   <ContactUs />
                 </main>
 
@@ -169,7 +150,6 @@ function App() {
           {/* ================= OTHER ROUTES ================= */}
           <Route path="/ecosystem" element={<PageWrapper><Ecosystem /><Footer /></PageWrapper>} />
           <Route path="/pricing" element={<PageWrapper><Pricing /><Footer /></PageWrapper>} />
-          <Route path="/dashboard" element={<PageWrapper><Dashboard /><Footer /></PageWrapper>} />
           <Route path="/testimonial" element={<PageWrapper><Testimonials /><Footer /></PageWrapper>} />
           <Route path="/contactus" element={<PageWrapper><ContactUs /><Footer /></PageWrapper>} />
 

@@ -2,14 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PricingCards from '../components/PricingCards';
 import { useSubscriptionStore } from '../store/useSubscriptionStore';
+import DummyPaymentGateway from '../components/DummyPaymentGateway';
 import toast from 'react-hot-toast';
 
 const PricingPage = () => {
   const [billingCycle, setBillingCycle] = useState('monthly');
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPlanDetails, setSelectedPlanDetails] = useState(null);
   const { createSubscription, verifyPayment, isLoading } = useSubscriptionStore();
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Keeping razorpay script in case it's needed later, but we use dummy gateway now.
     const script = document.createElement('script');
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.async = true;
@@ -19,7 +23,7 @@ const PricingPage = () => {
     };
   }, []);
 
-  const handleSubscribe = async (planId) => {
+  const handleSubscribeClick = (planId) => {
     const planMap = {
       'fit_start': { name: 'Silver', price: '₹499/mo' },
       'healthy_life': { name: 'Gold', price: '₹999/mo' },
@@ -27,19 +31,25 @@ const PricingPage = () => {
     };
 
     const selectedPlan = planMap[planId] || { name: 'Silver', price: '₹499/mo' };
+    setSelectedPlanDetails(selectedPlan);
+    setShowPaymentModal(true);
+  };
 
+  const handlePaymentSuccess = () => {
+    setShowPaymentModal(false);
+    
     // Save the plan intent to localStorage
     localStorage.setItem("userSubscription", JSON.stringify({
-      plan: selectedPlan.name,
+      plan: selectedPlanDetails.name,
       status: "Active",
       nextBilling: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-      price: selectedPlan.price
+      price: selectedPlanDetails.price
     }));
 
-    toast.success(`${selectedPlan.name} Plan selected! Please register to continue.`);
+    toast.success(`Payment successful! ${selectedPlanDetails.name} Plan active. Please login to continue.`);
     
-    // Redirect to registration instead of directly to dashboard
-    navigate('/register');
+    // Redirect to login after buying
+    navigate('/login');
   };
 
   return (
@@ -100,9 +110,18 @@ const PricingPage = () => {
 
         <PricingCards
           billingCycle={billingCycle}
-          onSelectPlan={handleSubscribe}
+          onSelectPlan={handleSubscribeClick}
           isLoading={isLoading}
         />
+
+        {showPaymentModal && selectedPlanDetails && (
+          <DummyPaymentGateway
+            plan={selectedPlanDetails.name}
+            amount={selectedPlanDetails.price}
+            onClose={() => setShowPaymentModal(false)}
+            onSuccess={handlePaymentSuccess}
+          />
+        )}
       </div>
     </section>
   );
