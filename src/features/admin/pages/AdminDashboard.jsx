@@ -20,33 +20,66 @@ import {
   Menu,
   X as CloseIcon,
   LayoutDashboard,
-  ShoppingBag
+  ShoppingBag,
+  Calendar,
+  FileText,
+  Building2,
+  Bell,
+  MessageSquare,
+  Heart,
+  Droplets,
+  FlaskConical,
+  Sparkles,
+  MapPin,
+  CheckCircle2,
+  XCircle
 } from 'lucide-react';
-import { 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer
-} from 'recharts';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import toast from 'react-hot-toast';
+import useAppStore from '../../../store/useAppStore';
+import * as mapService from '../../../services/mapService';
 
-// Realistic live data generator
-const generateLiveData = () => {
-  const data = [];
-  const now = new Date();
-  for (let i = 20; i >= 0; i--) {
-    const time = new Date(now.getTime() - i * 60000);
-    data.push({
-      time: time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      load: Math.floor(Math.random() * 30) + 40,
-      requests: Math.floor(Math.random() * 200) + 500,
-    });
-  }
-  return data;
-};
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+
+// Dummy Data
+const APPOINTMENTS = [
+  { id: 'APT-001', patient: 'Rajesh Kumar', doctor: 'Dr. Sarah Jenkins', date: '2026-05-10', time: '10:00 AM', status: 'Confirmed' },
+  { id: 'APT-002', patient: 'Ananya Sharma', doctor: 'Dr. Julianne Smith', date: '2026-05-10', time: '11:30 AM', status: 'Pending' },
+  { id: 'APT-003', patient: 'Vikram Singh', doctor: 'Dr. Michael Chen', date: '2026-05-11', time: '02:00 PM', status: 'Confirmed' },
+  { id: 'APT-004', patient: 'Priya Verma', doctor: 'Dr. Sarah Jenkins', date: '2026-05-11', time: '04:30 PM', status: 'Cancelled' },
+];
+
+const RECORDS = [
+  { id: 'REC-9921', patient: 'Rajesh Kumar', type: 'Blood Test', date: '2026-05-01', laboratory: 'Apollo Diagnostics' },
+  { id: 'REC-9922', patient: 'Ananya Sharma', type: 'X-Ray Chest', date: '2026-04-28', laboratory: 'General Imaging' },
+  { id: 'REC-9923', patient: 'Suresh Raina', type: 'MRI Scan', date: '2026-04-25', laboratory: 'City Scan Center' },
+];
+
+const VENDORS = [
+  { id: 'VEN-001', name: 'Wellness Pharmacy', type: 'Pharmacy', status: 'Active', contact: 'Mr. Gupta' },
+  { id: 'VEN-002', name: 'Precision Labs', type: 'Laboratory', status: 'Pending', contact: 'Ms. Reddy' },
+  { id: 'VEN-003', name: 'MedEquip Inc', type: 'Equipment', status: 'Active', contact: 'Mr. Wilson' },
+];
+
+const MOCK_PENDING = [
+  { _id: 'mock-1', businessName: 'City Pharma', licenseNumber: 'LIC-2026-001', type: 'Pharmacy', ownerName: 'Amit Shah', email: 'amit@citypharma.com', phone: '+91 98765 43210', verificationStatus: 'pending' },
+  { _id: 'mock-2', businessName: 'Stellar Diagnostics', licenseNumber: 'LIC-2026-002', type: 'Laboratory', ownerName: 'Dr. Neha Kapoor', email: 'neha@stellar.com', phone: '+91 87654 32109', verificationStatus: 'pending' },
+];
+
+const MOCK_ACTIVE = [
+  { _id: 'mock-3', businessName: 'Global Meds', licenseNumber: 'LIC-2025-998', type: 'Pharmacy', ownerName: 'John Doe', email: 'john@globalmeds.com', phone: '+91 76543 21098', verificationStatus: 'approved' },
+  { _id: 'mock-4', businessName: 'Precision Pathology', licenseNumber: 'LIC-2025-999', type: 'Laboratory', ownerName: 'Sarah Smith', email: 'sarah@precision.com', phone: '+91 65432 10987', verificationStatus: 'approved' },
+];
+
+const INSURANCE = [
+  { id: 'INS-101', provider: 'Star Health', coverage: 'Full Medical', status: 'Verified' },
+  { id: 'INS-102', provider: 'HDFC Ergo', coverage: 'Critical Illness', status: 'Pending' },
+  { id: 'INS-103', provider: 'LIC Health', coverage: 'Surgical Care', status: 'Verified' },
+];
+
+
+
 
 const AdminNavItem = ({ icon, label, active, onClick }) => (
   <button 
@@ -62,7 +95,7 @@ const AdminNavItem = ({ icon, label, active, onClick }) => (
   </button>
 );
 
-const MetricCard = ({ title, value, sub, icon, trend, status }) => (
+const MetricCard = ({ title, value, unit, icon, trend, trendValue, status }) => (
   <div className="p-6 bg-white border border-slate-200 rounded-lg shadow-sm hover:shadow-md transition-all group overflow-hidden relative">
     <div className={`absolute -right-2 -top-2 w-16 h-16 bg-slate-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity`}></div>
     
@@ -71,10 +104,10 @@ const MetricCard = ({ title, value, sub, icon, trend, status }) => (
         {icon}
       </div>
       <span className={`text-xs font-semibold px-2 py-0.5 rounded-md uppercase tracking-widest ${
-        status === 'up' ? 'text-emerald-500 bg-emerald-50' : 
-        status === 'down' ? 'text-rose-500 bg-rose-50' : 'text-slate-500 bg-slate-50'
+        trend === 'up' ? 'text-emerald-500 bg-emerald-50' : 
+        trend === 'down' ? 'text-rose-500 bg-rose-50' : 'text-slate-500 bg-slate-50'
       }`}>
-        {trend}
+        {trendValue}
       </span>
     </div>
     
@@ -82,106 +115,858 @@ const MetricCard = ({ title, value, sub, icon, trend, status }) => (
       <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">{title}</p>
       <div className="flex items-baseline gap-2">
         <h4 className="text-2xl font-semibold text-slate-900 tracking-tighter">{value}</h4>
-        <span className="text-sm font-semibold text-slate-400">{sub}</span>
+        <span className="text-sm font-semibold text-slate-400 uppercase">{unit}</span>
       </div>
     </div>
   </div>
 );
 
-const LogRow = ({ name, type, time, status, id, isPending }) => (
-  <div className="p-5 flex items-center justify-between hover:bg-slate-50 transition-all cursor-pointer group">
-    <div className="flex items-center gap-4">
-      <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
-        <UserPlus size={18} />
+const FacilityCard = ({ title, status, icon, statusColor }) => (
+  <div className="p-6 bg-white border border-slate-200 rounded-lg shadow-sm hover:shadow-md transition-all group relative">
+    <div className="flex justify-between items-center mb-4">
+      <div className="p-2 bg-slate-50 text-slate-400 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-all">
+        {icon}
       </div>
-      <div>
-        <p className="text-base font-bold text-slate-900 tracking-tight leading-none mb-1">{name}</p>
-        <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">{type} • {id}</p>
-      </div>
-    </div>
-    
-    <div className="flex items-center gap-8">
-      <span className="text-sm font-semibold text-slate-400 uppercase tracking-widest">{time}</span>
-      <span className={`text-xs font-semibold px-2 py-0.5 rounded-md uppercase tracking-widest border ${
-        isPending ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'
-      }`}>
+      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md uppercase tracking-widest border ${statusColor}`}>
         {status}
       </span>
-      <ChevronRight size={14} className="text-slate-300 group-hover:text-blue-600 transition-all" />
+    </div>
+    <h4 className="text-sm font-bold text-slate-900">{title}</h4>
+  </div>
+);
+
+const DataTable = ({ title, columns, data }) => (
+  <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+    <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+      <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest">{title}</h3>
+      <button className="text-[10px] font-bold text-blue-600 uppercase tracking-widest hover:underline">Export CSV</button>
+    </div>
+    <div className="overflow-x-auto">
+      <table className="w-full text-left border-collapse">
+        <thead>
+          <tr className="bg-slate-50">
+            {columns.map((col, idx) => (
+              <th key={idx} className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">{col}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-100">
+          {data.map((row, idx) => (
+            <tr key={idx} className="hover:bg-slate-50 transition-colors">
+              {Object.values(row).map((val, i) => (
+                <td key={i} className="px-6 py-4 text-sm text-slate-600 font-medium">
+                  {val === 'Confirmed' || val === 'Active' || val === 'Verified' ? (
+                    <span className="px-2 py-1 bg-emerald-50 text-emerald-600 rounded text-[10px] font-bold uppercase">{val}</span>
+                  ) : val === 'Pending' ? (
+                    <span className="px-2 py-1 bg-amber-50 text-amber-600 rounded text-[10px] font-bold uppercase">{val}</span>
+                  ) : val === 'Cancelled' ? (
+                    <span className="px-2 py-1 bg-rose-50 text-rose-600 rounded text-[10px] font-bold uppercase">{val}</span>
+                  ) : val}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   </div>
 );
 
-const QuickTask = ({ title, count, icon, link, highlight }) => (
-  <Link 
-    to={link}
-    className={`flex items-center gap-4 p-4 rounded-lg border border-white/5 transition-all group ${
-      highlight ? 'bg-blue-600/10 border-blue-600/20' : 'bg-white/5 hover:bg-white/10'
-    }`}
-  >
-    <div className={`p-2 rounded-lg ${highlight ? 'text-blue-500 bg-blue-600/10' : 'text-slate-500 bg-white/5 group-hover:text-white'}`}>
-      {icon}
-    </div>
-    <div className="flex-1">
-      <h4 className="text-xs font-semibold tracking-widest uppercase">{title}</h4>
-      {count && <p className="text-xs text-slate-500 font-bold">{count} tasks remaining</p>}
-    </div>
-    <ExternalLink size={14} className="text-slate-600 group-hover:text-white" />
-  </Link>
-);
-
-const RegionProgress = ({ name, value }) => (
-  <div className="space-y-1.5">
-    <div className="flex justify-between items-center text-sm font-semibold uppercase tracking-widest">
-      <span className="text-slate-500">{name}</span>
-      <span className="text-slate-900">{value}%</span>
-    </div>
-    <div className="w-full bg-slate-100 h-1 rounded-full overflow-hidden">
-      <motion.div 
-        initial={{ width: 0 }}
-        animate={{ width: `${value}%` }}
-        className="h-full bg-blue-600"
-      />
-    </div>
-  </div>
-);
 
 const AdminDashboard = () => {
-  const [chartData, setChartData] = useState(generateLiveData());
+  const navigate = useNavigate();
+  const user = useAppStore((state) => state.auth.user);
+  const logout = useAppStore((state) => state.logout);
+  
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('Overview');
+  const [activeTab, setActiveTab] = useState('Dashboard');
+  const [vendorTab, setVendorTab] = useState('Pending');
+  const [pendingVendors, setPendingVendors] = useState(MOCK_PENDING);
+  const [activeVendors, setActiveVendors] = useState(MOCK_ACTIVE);
+  const [isLoadingVendors, setIsLoadingVendors] = useState(false);
+  const [selectedVendor, setSelectedVendor] = useState(null);
+  const [locationData, setLocationData] = useState(null);
+
+  // Fetch vendor data on mount and when switching to relevant tabs
+  useEffect(() => {
+    fetchPendingVendors();
+    fetchActiveVendors();
+  }, []);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setChartData(prev => {
-        const newData = [...prev.slice(1)];
-        const now = new Date();
-        newData.push({
-          time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          load: Math.floor(Math.random() * 30) + 40,
-          requests: Math.floor(Math.random() * 200) + 500,
-        });
-        return newData;
-      });
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
+    console.log("🎯 ACTIVE_TAB_CHANGED:", activeTab);
+    if (activeTab === 'Vendors') {
+      fetchPendingVendors();
+      fetchActiveVendors();
+    }
+    if (activeTab === 'Dashboard') {
+      fetchLocation();
+    }
+  }, [activeTab]);
+
+  const fetchLocation = async () => {
+    try {
+      const data = await mapService.getHospitalLocation();
+      setLocationData(data);
+    } catch (err) {
+      console.error("Failed to fetch location:", err);
+    }
+  };
+
+  useEffect(() => {
+    console.log("📂 VENDOR_TAB_CHANGED:", vendorTab);
+  }, [vendorTab]);
+
+  const fetchPendingVendors = async () => {
+    try {
+      setIsLoadingVendors(true);
+      const response = await axios.get(`${API_URL}/provider/admin/pending`);
+      if (response.data.success) {
+        // Always use real DB data — if empty, show empty (not mocks)
+        setPendingVendors(response.data.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch pending vendors, using mock data:", err);
+      // Only keep mocks on true network failure
+      setPendingVendors(MOCK_PENDING);
+    } finally {
+      setIsLoadingVendors(false);
+    }
+  };
+
+  const fetchActiveVendors = async () => {
+    try {
+      setIsLoadingVendors(true);
+      const response = await axios.get(`${API_URL}/provider/admin/active`);
+      if (response.data.success) {
+        // Always use real DB data — if empty, show empty (not mocks)
+        setActiveVendors(response.data.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch active vendors, using mock data:", err);
+      // Only keep mocks on true network failure
+      setActiveVendors(MOCK_ACTIVE);
+    } finally {
+      setIsLoadingVendors(false);
+    }
+  };
+
+  const handleVendorAction = async (id, status) => {
+    const action = status === 'approved' ? 'Approving' : 'Rejecting';
+    toast.loading(`${action} application...`, { id: 'admin-action' });
+    try {
+      await axios.put(`${API_URL}/provider/admin/verify/${id}`, { status });
+      toast.success(`Application ${status === 'approved' ? 'Approved' : 'Rejected'}`, { id: 'admin-action' });
+      setSelectedVendor(null);
+      fetchPendingVendors();
+      fetchActiveVendors();
+    } catch (err) {
+      toast.error("Action failed", { id: 'admin-action' });
+    }
+  };
+
+  const handleDeleteVendor = async (id, name) => {
+    if (!window.confirm(`⚠️ CRITICAL ACTION: Are you sure you want to PERMANENTLY DELETE "${name}"? This action cannot be undone.`)) {
+      return;
+    }
+    
+    toast.loading(`Removing ${name}...`, { id: 'admin-delete' });
+    try {
+      await axios.delete(`${API_URL}/provider/admin/remove/${id}`);
+      toast.success(`${name} removed successfully`, { id: 'admin-delete' });
+      setSelectedVendor(null);
+      fetchPendingVendors();
+      fetchActiveVendors();
+    } catch (err) {
+      toast.error("Deletion failed", { id: 'admin-delete' });
+    }
+  };
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'Appointments':
+        return (
+          <div className="max-w-7xl mx-auto space-y-8">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-2">Appointments</h1>
+              <p className="text-slate-500 text-sm">Manage and schedule patient visits across all departments.</p>
+            </div>
+            <DataTable 
+              title="Recent Bookings" 
+              columns={['ID', 'Patient', 'Doctor', 'Date', 'Time', 'Status']} 
+              data={APPOINTMENTS} 
+            />
+          </div>
+        );
+      case 'Records':
+        return (
+          <div className="max-w-7xl mx-auto space-y-8">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-2">Medical Records</h1>
+              <p className="text-slate-500 text-sm">Secure access to clinical data and diagnostic reports.</p>
+            </div>
+            <DataTable 
+              title="Patient Records" 
+              columns={['ID', 'Patient', 'Type', 'Date', 'Laboratory']} 
+              data={RECORDS} 
+            />
+          </div>
+        );
+      case 'Facilities':
+        return (
+          <div className="max-w-7xl mx-auto space-y-8">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-2">Hospital Facilities</h1>
+              <p className="text-slate-500 text-sm">Real-time status and capacity of clinical units.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <FacilityCard title="General Medicine" status="OPEN" icon={<Users size={18} />} statusColor="bg-emerald-50 text-emerald-600 border-emerald-100" />
+              <FacilityCard title="Cardiology Unit" status="BUSY" icon={<Heart size={18} />} statusColor="bg-rose-50 text-rose-600 border-rose-100" />
+              <FacilityCard title="Imaging & Radiology" status="OPEN" icon={<Sparkles size={18} />} statusColor="bg-emerald-50 text-emerald-600 border-emerald-100" />
+              <FacilityCard title="Intensive Care" status="AT CAPACITY" icon={<Activity size={18} />} statusColor="bg-rose-50 text-rose-600 border-rose-100" />
+              <FacilityCard title="Pharmacy" status="OPEN" icon={<ShoppingBag size={18} />} statusColor="bg-emerald-50 text-emerald-600 border-emerald-100" />
+              <FacilityCard title="Laboratory" status="BUSY" icon={<FlaskConical size={18} />} statusColor="bg-rose-50 text-rose-600 border-rose-100" />
+            </div>
+          </div>
+        );
+      case 'Insurance':
+        return (
+          <div className="max-w-7xl mx-auto space-y-8">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-2">Insurance & Claims</h1>
+              <p className="text-slate-500 text-sm">Verify coverage and manage provider relationships.</p>
+            </div>
+            <DataTable 
+              title="Provider Network" 
+              columns={['ID', 'Provider', 'Coverage', 'Status']} 
+              data={INSURANCE} 
+            />
+          </div>
+        );
+      case 'Vendors':
+        return (
+          <div className="max-w-7xl mx-auto space-y-10">
+            {/* Header */}
+            <div className="flex justify-between items-start">
+              <div>
+                <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-2">Vendor Management</h1>
+                <p className="text-slate-500 text-sm max-w-xl">
+                  Review and approve vendor store applications, or manually onboard new partners.
+                </p>
+              </div>
+              <div className="flex gap-4">
+                <button 
+                  onClick={() => {
+                    fetchPendingVendors();
+                    fetchActiveVendors();
+                    toast.success("Refreshing vendor data...");
+                  }}
+                  className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-sm shadow-sm hover:shadow-md transition-all"
+                >
+                  <Activity size={18} />
+                  Refresh
+                </button>
+                <button className="flex items-center gap-2 px-6 py-3 bg-[#009688] hover:bg-[#00796B] text-white rounded-xl font-bold text-sm shadow-lg shadow-emerald-900/10 transition-all">
+                  <UserPlus size={18} />
+                  Manually Add Store
+                </button>
+              </div>
+            </div>
+
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-6">
+                <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
+                  <ShoppingBag size={24} />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Active Stores</p>
+                  <h4 className="text-3xl font-bold text-slate-900">{activeVendors.length}</h4>
+                </div>
+              </div>
+
+              <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-6">
+                <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center">
+                  <Clock size={24} />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Pending Approvals</p>
+                  <h4 className="text-3xl font-bold text-slate-900">{pendingVendors.length}</h4>
+                </div>
+              </div>
+
+              <div className="bg-[#1e293b] p-8 rounded-2xl shadow-xl relative overflow-hidden flex flex-col justify-center">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full -mr-12 -mt-12 blur-2xl"></div>
+                <h4 className="text-lg font-bold text-white mb-1">Expand Your Reach</h4>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Invite local businesses to scale the platform.
+                </p>
+              </div>
+            </div>
+
+            {/* Tabs & Table */}
+            <div className="space-y-6">
+              <div className="flex gap-8 border-b border-slate-200">
+                <button 
+                  onClick={() => setVendorTab('Pending')}
+                  className={`pb-4 text-sm font-bold transition-all relative ${vendorTab === 'Pending' ? 'text-[#009688]' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                  Pending Requests
+                  {vendorTab === 'Pending' && <div className="absolute bottom-0 left-0 w-full h-1 bg-[#009688] rounded-t-full"></div>}
+                </button>
+                <button 
+                  onClick={() => setVendorTab('Active')}
+                  className={`pb-4 text-sm font-bold transition-all relative ${vendorTab === 'Active' ? 'text-[#009688]' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                  Active Stores
+                  {vendorTab === 'Active' && <div className="absolute bottom-0 left-0 w-full h-1 bg-[#009688] rounded-t-full"></div>}
+                </button>
+              </div>
+
+              <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm min-h-[400px] flex flex-col">
+                <table className="w-full text-left">
+                  <thead className="bg-slate-50/50">
+                    <tr>
+                      <th className="px-8 py-6 text-[11px] font-bold text-slate-400 uppercase tracking-widest">Store Identity</th>
+                      <th className="px-8 py-6 text-[11px] font-bold text-slate-400 uppercase tracking-widest">Vendor Details</th>
+                      <th className="px-8 py-6 text-[11px] font-bold text-slate-400 uppercase tracking-widest">Contact</th>
+                      <th className="px-8 py-6 text-[11px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
+                      <th className="px-8 py-6 text-[11px] font-bold text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {isLoadingVendors ? (
+                      <tr>
+                        <td colSpan="5" className="py-20 text-center text-slate-400 text-sm font-medium">Loading applications...</td>
+                      </tr>
+                    ) : vendorTab === 'Pending' && pendingVendors.length > 0 ? (
+                      pendingVendors.map((vendor) => (
+                        <tr key={vendor._id} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="px-8 py-5">
+                            <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-xs uppercase">
+                                {vendor.businessName.substring(0, 2)}
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-sm font-bold text-slate-900">{vendor.businessName}</span>
+                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{vendor.licenseNumber}</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-8 py-5">
+                            <div className="flex flex-col">
+                              <span className="text-sm font-semibold text-slate-700">{vendor.type}</span>
+                              <span className="text-xs text-slate-500">{vendor.ownerName}</span>
+                            </div>
+                          </td>
+                          <td className="px-8 py-5">
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium text-slate-600">{vendor.email}</span>
+                              <span className="text-[10px] text-slate-400">{vendor.phone}</span>
+                            </div>
+                          </td>
+                          <td className="px-8 py-5">
+                            <span className="px-2 py-1 bg-amber-50 text-amber-600 rounded text-[10px] font-bold uppercase tracking-widest">Awaiting Review</span>
+                          </td>
+                          <td className="px-8 py-5">
+                            <div className="flex justify-end">
+                              <button 
+                                onClick={() => setSelectedVendor(vendor)}
+                                className="px-5 py-2 bg-[#009688] hover:bg-[#00796B] text-white rounded-lg text-xs font-bold shadow-md shadow-emerald-900/10 transition-all flex items-center gap-2"
+                              >
+                                Review
+                                <ChevronRight size={14} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                      ) : vendorTab === 'Active' && activeVendors.length > 0 ? (
+                        activeVendors.map((vendor) => (
+                          <tr key={vendor._id} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="px-8 py-5">
+                              <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 font-bold text-xs uppercase flex items-center justify-center shrink-0">
+                                  {vendor.businessName.substring(0, 2)}
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-bold text-slate-900">{vendor.businessName}</span>
+                                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{vendor.licenseNumber}</span>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-8 py-5">
+                              <div className="flex flex-col">
+                                <span className="text-sm font-semibold text-slate-700">{vendor.type}</span>
+                                <span className="text-xs text-slate-500">{vendor.ownerName}</span>
+                              </div>
+                            </td>
+                            <td className="px-8 py-5">
+                              <div className="flex flex-col">
+                                <span className="text-sm font-medium text-slate-600">{vendor.email}</span>
+                                <span className="text-[10px] text-slate-400">{vendor.phone}</span>
+                              </div>
+                            </td>
+                            <td className="px-8 py-5">
+                              <span className="px-2 py-1 bg-emerald-50 text-emerald-600 rounded text-[10px] font-bold uppercase tracking-widest">Active</span>
+                            </td>
+                            <td className="px-8 py-5">
+                              <div className="flex justify-end">
+                                <button 
+                                  onClick={() => setSelectedVendor(vendor)}
+                                  className="px-4 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-xs font-bold hover:bg-white hover:text-slate-900 transition-all"
+                                >
+                                  View Details
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="5" className="py-32 text-center">
+                            <div className="flex flex-col items-center gap-4">
+                              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-300">
+                                <ShoppingBag size={32} />
+                              </div>
+                              <p className="text-slate-400 font-medium text-sm">
+                                {vendorTab === 'Pending' ? 'No pending requests at this time.' : 'No active stores available.'}
+                              </p>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Vendor Review Modal */}
+            <AnimatePresence>
+              {selectedVendor && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                    className="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl"
+                  >
+                    <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                      <div>
+                        <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase tracking-widest mb-2 inline-block">
+                          {selectedVendor.verificationStatus === 'approved' ? 'Store Profile' : 'Application Review'}
+                        </span>
+                        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+                          {selectedVendor.verificationStatus === 'approved' ? selectedVendor.businessName : `Review ${selectedVendor.businessName}`}
+                        </h2>
+                      </div>
+                      <button 
+                        onClick={() => setSelectedVendor(null)}
+                        className="p-2 text-slate-400 hover:text-slate-900 hover:bg-white rounded-xl transition-all"
+                      >
+                        <CloseIcon size={24} />
+                      </button>
+                    </div>
+
+                    <div className="p-10 space-y-8">
+                      <div className="grid grid-cols-2 gap-10">
+                        <div className="space-y-6">
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Business Details</p>
+                            <h4 className="text-sm font-bold text-slate-900">{selectedVendor.businessName}</h4>
+                            <p className="text-xs text-slate-500 font-medium">{selectedVendor.type}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">License Number</p>
+                            <h4 className="text-sm font-bold text-slate-900">{selectedVendor.licenseNumber}</h4>
+                          </div>
+                        </div>
+                        <div className="space-y-6">
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Owner / Primary Contact</p>
+                            <h4 className="text-sm font-bold text-slate-900">{selectedVendor.ownerName}</h4>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Contact Info</p>
+                            <p className="text-sm font-medium text-slate-700">{selectedVendor.email}</p>
+                            <p className="text-sm font-medium text-slate-700">{selectedVendor.phone}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-blue-600 shadow-sm border border-slate-100">
+                              <FileText size={20} />
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-slate-900">Registration Documents</p>
+                              <p className="text-[10px] text-slate-400 font-medium tracking-wide">Business License, ID Proof, Certificates</p>
+                            </div>
+                          </div>
+                          <button className="px-4 py-2 bg-white border border-slate-200 text-blue-600 rounded-lg text-xs font-bold shadow-sm hover:shadow-md transition-all">
+                            View All
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {selectedVendor.verificationStatus !== 'approved' && (
+                      <div className="p-8 bg-slate-50/50 border-t border-slate-100 grid grid-cols-2 gap-4">
+                        <button 
+                          onClick={() => {
+                            if(window.confirm(`Are you sure you want to REJECT ${selectedVendor.businessName}?`)) {
+                              handleVendorAction(selectedVendor._id, 'rejected');
+                            }
+                          }}
+                          className="py-4 rounded-2xl text-sm font-bold text-rose-600 border border-rose-100 bg-rose-50/50 hover:bg-rose-50 transition-all flex items-center justify-center gap-2"
+                        >
+                          <XCircle size={18} />
+                          Reject Application
+                        </button>
+                        <button 
+                          onClick={() => {
+                            if(window.confirm(`Are you sure you want to APPROVE ${selectedVendor.businessName}?`)) {
+                              handleVendorAction(selectedVendor._id, 'approved');
+                            }
+                          }}
+                          className="py-4 bg-slate-900 text-white rounded-2xl text-sm font-bold hover:bg-black transition-all shadow-lg flex items-center justify-center gap-2"
+                        >
+                          <CheckCircle2 size={18} />
+                          Approve Application
+                        </button>
+                      </div>
+                    )}
+                    
+                    {selectedVendor.verificationStatus === 'approved' && (
+                      <div className="p-8 border-t border-slate-100 bg-slate-50/50 flex gap-4">
+                        <button 
+                          onClick={() => handleDeleteVendor(selectedVendor._id, selectedVendor.businessName)}
+                          className="flex-1 py-4 bg-white border border-rose-100 text-rose-600 rounded-2xl text-sm font-bold hover:bg-rose-50 transition-all flex items-center justify-center gap-2"
+                        >
+                          <XCircle size={18} />
+                          Remove Store
+                        </button>
+                        <button 
+                          onClick={() => setSelectedVendor(null)}
+                          className="flex-1 py-4 bg-slate-900 text-white rounded-2xl text-sm font-bold hover:bg-black transition-all shadow-lg"
+                        >
+                          Close Profile
+                        </button>
+                      </div>
+                    )}
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
+          </div>
+        );
+
+      case 'Settings':
+        return (
+          <div className="max-w-7xl mx-auto space-y-8">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-2">System Settings</h1>
+              <p className="text-slate-500 text-sm">Configure global parameters and user permissions.</p>
+            </div>
+            <div className="bg-white border border-slate-200 rounded-xl p-8 space-y-6">
+              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                <div>
+                  <p className="text-sm font-bold text-slate-900">Automatic Sync</p>
+                  <p className="text-xs text-slate-500">Sync patient data across all nodes every 5 minutes.</p>
+                </div>
+                <div className="w-12 h-6 bg-blue-600 rounded-full relative">
+                  <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                <div>
+                  <p className="text-sm font-bold text-slate-900">Email Notifications</p>
+                  <p className="text-xs text-slate-500">Send automated reminders for upcoming appointments.</p>
+                </div>
+                <div className="w-12 h-6 bg-slate-200 rounded-full relative">
+                  <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      default: // Dashboard
+        return (
+          <div className="max-w-7xl mx-auto space-y-10">
+            <div className="flex items-center gap-3 mb-2">
+              <span className="px-2 py-0.5 bg-blue-600/10 text-blue-600 text-[10px] font-bold uppercase tracking-widest rounded-md">Patient Management</span>
+              <span className="text-slate-300">/</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Master View</span>
+            </div>
+            
+            <div className="mb-10">
+              <h1 className="text-5xl font-bold text-slate-900 tracking-tight mb-2">Patient Central</h1>
+              <p className="text-slate-500 text-base">Welcome back, your sanctuary is ready. You have <span className="text-blue-600 font-bold">3 pending notifications.</span></p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <MetricCard 
+                title="Active Partners" 
+                value={activeVendors.length} 
+                unit="Stores" 
+                icon={<ShoppingBag size={18} />} 
+                trend="up" 
+                trendValue="+12%" 
+              />
+              <MetricCard 
+                title="Approval Queue" 
+                value={pendingVendors.length} 
+                unit="Pending" 
+                icon={<Clock size={18} />} 
+                trend="down" 
+                trendValue="-2" 
+              />
+              <MetricCard 
+                title="System Uptime" 
+                value="99.9" 
+                unit="%" 
+                icon={<ShieldCheck size={18} />} 
+                trend="stable" 
+                trendValue="STABLE" 
+              />
+            </div>
+
+            <section className="mt-16">
+              <div className="flex justify-between items-center mb-8">
+                <h3 className="text-xl font-bold text-slate-900 uppercase tracking-widest">Facility Directory</h3>
+                <button className="text-sm font-bold text-blue-600 uppercase tracking-widest hover:underline">View All Facilities</button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <FacilityCard 
+                  title="General Medicine" 
+                  status="OPEN" 
+                  icon={<Users size={18} />} 
+                  statusColor="bg-emerald-50 text-emerald-600 border-emerald-100" 
+                />
+                <FacilityCard 
+                  title="Cardiology Unit" 
+                  status="BUSY" 
+                  icon={<Heart size={18} />} 
+                  statusColor="bg-rose-50 text-rose-600 border-rose-100" 
+                />
+                <FacilityCard 
+                  title="Imaging & Radiology" 
+                  status="OPEN" 
+                  icon={<Sparkles size={18} />} 
+                  statusColor="bg-emerald-50 text-emerald-600 border-emerald-100" 
+                />
+              </div>
+            </section>
+          </div>
+        );
+    }
+  };
+
+  const renderRightPanel = () => {
+    switch (activeTab) {
+      case 'Appointments':
+        return (
+          <div className="space-y-10">
+            <div className="bg-blue-600 rounded-2xl p-6 text-white shadow-xl">
+              <h4 className="text-sm font-bold uppercase tracking-widest mb-4">Daily Summary</h4>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                  <span className="text-xs opacity-80">Total Slots</span>
+                  <span className="text-lg font-bold">24</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                  <span className="text-xs opacity-80">Confirmed</span>
+                  <span className="text-lg font-bold">18</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs opacity-80">Available</span>
+                  <span className="text-lg font-bold">6</span>
+                </div>
+              </div>
+            </div>
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
+              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-4">Quick Actions</h4>
+              <button className="w-full py-3 bg-white border border-slate-200 text-slate-900 rounded-xl text-xs font-bold shadow-sm hover:shadow-md transition-all mb-3">
+                Bulk Reschedule
+              </button>
+              <button className="w-full py-3 bg-white border border-slate-200 text-slate-900 rounded-xl text-xs font-bold shadow-sm hover:shadow-md transition-all">
+                Download Schedule
+              </button>
+            </div>
+          </div>
+        );
+      case 'Records':
+        return (
+          <div className="space-y-10">
+            <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm">
+              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-6">Storage Health</h4>
+              <div className="relative h-4 bg-slate-100 rounded-full overflow-hidden mb-2">
+                <div className="absolute left-0 top-0 h-full bg-blue-600 w-[72%]"></div>
+              </div>
+              <div className="flex justify-between text-[10px] font-bold text-slate-900">
+                <span>720GB USED</span>
+                <span>1TB TOTAL</span>
+              </div>
+            </div>
+            <div className="p-6 bg-emerald-50 border border-emerald-100 rounded-2xl">
+              <div className="flex items-center gap-3 mb-4 text-emerald-600">
+                <ShieldCheck size={20} />
+                <h4 className="text-xs font-bold uppercase tracking-widest">Encryption On</h4>
+              </div>
+              <p className="text-[10px] text-emerald-700 font-medium leading-relaxed">
+                All clinical records are protected with AES-256 bit encryption. Last scan completed 2h ago.
+              </p>
+            </div>
+          </div>
+        );
+      case 'Facilities':
+        return (
+          <div className="space-y-10">
+            <div className="p-6 bg-slate-900 rounded-2xl text-white shadow-xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-rose-600/20 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+              <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-6">Emergency Status</h4>
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
+                <span className="text-xl font-bold tracking-tight">System Normal</span>
+              </div>
+              <button className="w-full py-4 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all shadow-lg">
+                Activate Alert Protocol
+              </button>
+            </div>
+          </div>
+        );
+      case 'Vendors':
+        return null;
+      case 'Settings':
+        return (
+          <div className="space-y-10">
+            <div className="p-6 bg-slate-50 border border-slate-200 rounded-2xl">
+              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6">System Health</h4>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-medium text-slate-600">Database</span>
+                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">UP</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-medium text-slate-600">Auth Service</span>
+                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">UP</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-medium text-slate-600">Storage API</span>
+                  <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">LAGGING</span>
+                </div>
+              </div>
+            </div>
+            <button className="w-full py-4 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-black transition-all shadow-lg">
+              Download System Logs
+            </button>
+          </div>
+        );
+      default: // Dashboard
+        return (
+          <div className="space-y-10">
+            <div>
+              <div className="bg-slate-900 rounded-2xl p-6 text-white relative overflow-hidden shadow-xl">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/20 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+                
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-6 text-slate-500">Upcoming Appointment</p>
+                
+                <h4 className="text-3xl font-bold mb-1 tracking-tight">Dr. Sarah Jenkins</h4>
+                <p className="text-sm text-slate-400 mb-8 font-medium">Annual Health Assessment</p>
+                
+                <div className="flex justify-between items-center mb-8 bg-white/5 p-5 rounded-xl border border-white/5">
+                  <div>
+                    <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">Date</p>
+                    <p className="text-lg font-bold">24 Oct</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">Time</p>
+                    <p className="text-lg font-bold">10:30 AM</p>
+                  </div>
+                </div>
+
+                <button className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
+                  <Calendar size={16} />
+                  Manage Booking
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h4 className="text-sm font-bold text-slate-900 uppercase tracking-widest">Hospital Location</h4>
+                <a 
+                  href={locationData ? mapService.getGoogleMapsLink(locationData.lat, locationData.lng) : '#'} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-[10px] font-bold text-blue-600 uppercase hover:underline"
+                >
+                  Get Directions
+                </a>
+              </div>
+              
+              <div className="aspect-video bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 relative group cursor-pointer overflow-hidden shadow-sm">
+                {locationData ? (
+                  <img 
+                    src={mapService.getStaticMapUrl(locationData.lat, locationData.lng)} 
+                    alt="Map" 
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">Loading Map...</span>
+                  </div>
+                )}
+                
+                <div className="absolute inset-0 bg-blue-900/10 group-hover:bg-blue-900/0 transition-colors"></div>
+                
+                <div className="absolute top-4 left-4 px-3 py-1 bg-white/90 backdrop-blur-md rounded-full shadow-sm flex items-center gap-2 z-10">
+                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                  <span className="text-[9px] font-bold text-slate-900 uppercase tracking-tight">Live Satellite</span>
+                </div>
+
+                <div className="absolute top-4 right-4 flex flex-col gap-1 z-10">
+                  <div className="w-8 h-8 bg-white/90 backdrop-blur-md rounded-lg shadow-sm flex items-center justify-center text-slate-600 font-bold hover:bg-white transition-colors">+</div>
+                  <div className="w-8 h-8 bg-white/90 backdrop-blur-md rounded-lg shadow-sm flex items-center justify-center text-slate-600 font-bold hover:bg-white transition-colors">-</div>
+                </div>
+
+                <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md rounded-xl p-2 shadow-sm border border-white/20 flex items-center gap-3 z-10 transform translate-y-2 group-hover:translate-y-0 transition-all opacity-0 group-hover:opacity-100">
+                  <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shrink-0">
+                    <Search size={14} />
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest truncate">
+                    {locationData?.address || 'Searching location...'}
+                  </span>
+                </div>
+
+                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-xl border border-slate-100 relative z-10 transition-transform group-hover:scale-110">
+                  <div className="absolute inset-0 bg-blue-600/20 rounded-full animate-ping"></div>
+                  <MapPin size={20} className="text-blue-600 relative z-10" />
+                </div>
+              </div>
+
+              <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                <p className="text-xs font-bold text-blue-800 mb-1 flex items-center gap-2">
+                  <Activity size={14} />
+                  Hospital Address
+                </p>
+                <p className="text-[10px] text-blue-600 font-medium leading-relaxed">
+                  {locationData?.address || 'Detecting system location...'}
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+    }
+  };
+
 
   return (
     <div className="flex h-screen bg-[#f9fafb] font-sans text-slate-900 overflow-hidden">
-      {/* Overlay for mobile sidebar */}
-      <AnimatePresence>
-        {isSidebarOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setIsSidebarOpen(false)}
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden"
-          />
-        )}
-      </AnimatePresence>
-
       {/* Sidebar */}
       <aside className={`
         fixed inset-y-0 left-0 z-50 w-64 bg-[#f8f9fa] border-r border-gray-200 flex flex-col transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0
@@ -198,236 +983,85 @@ const AdminDashboard = () => {
         </div>
 
         <nav className="flex-1 px-4 space-y-1 mt-4 overflow-y-auto">
-          <AdminNavItem icon={<LayoutDashboard size={18} />} label="System Overview" active={activeTab === 'Overview'} onClick={() => { setActiveTab('Overview'); setIsSidebarOpen(false); }} />
-          <AdminNavItem icon={<Users size={18} />} label="User Management" active={activeTab === 'Users'} onClick={() => { setActiveTab('Users'); setIsSidebarOpen(false); }} />
-          <AdminNavItem icon={<ShoppingBag size={18} />} label="Order Monitor" active={activeTab === 'Orders'} onClick={() => { setActiveTab('Orders'); setIsSidebarOpen(false); }} />
-          <AdminNavItem icon={<ShieldCheck size={18} />} label="Security" active={activeTab === 'Security'} onClick={() => { setActiveTab('Security'); setIsSidebarOpen(false); }} />
-          <AdminNavItem icon={<Settings size={18} />} label="System Settings" active={activeTab === 'Settings'} onClick={() => { setActiveTab('Settings'); setIsSidebarOpen(false); }} />
+          <AdminNavItem icon={<LayoutDashboard size={18} />} label="Dashboard" active={activeTab === 'Dashboard'} onClick={() => setActiveTab('Dashboard')} />
+          <AdminNavItem icon={<Calendar size={18} />} label="Appointments" active={activeTab === 'Appointments'} onClick={() => setActiveTab('Appointments')} />
+          <AdminNavItem icon={<FileText size={18} />} label="Records" active={activeTab === 'Records'} onClick={() => setActiveTab('Records')} />
+          <AdminNavItem icon={<Building2 size={18} />} label="Facilities" active={activeTab === 'Facilities'} onClick={() => setActiveTab('Facilities')} />
+          <AdminNavItem icon={<ShieldCheck size={18} />} label="Insurance" active={activeTab === 'Insurance'} onClick={() => setActiveTab('Insurance')} />
+          <AdminNavItem icon={<Users size={18} />} label="Vendors" active={activeTab === 'Vendors'} onClick={() => setActiveTab('Vendors')} />
+          <AdminNavItem icon={<Settings size={18} />} label="Settings" active={activeTab === 'Settings'} onClick={() => setActiveTab('Settings')} />
         </nav>
 
-        <div className="p-4 border-t border-gray-200 bg-[#f8f9fa]">
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-white border border-gray-100">
-            <div className="w-10 h-10 rounded bg-slate-900 flex items-center justify-center text-white font-bold text-xs">AD</div>
+        <div className="p-4 border-t border-gray-200 bg-[#f8f9fa] space-y-3">
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-white border border-gray-100 shadow-sm group hover:border-blue-200 transition-all">
+            <div className="w-10 h-10 rounded bg-slate-900 flex items-center justify-center text-white font-bold text-xs">
+              {user?.name?.substring(0, 2).toUpperCase() || 'AD'}
+            </div>
             <div className="flex flex-col">
-              <span className="text-sm font-semibold text-gray-900">System Admin</span>
-              <span className="text-xs text-blue-600 font-semibold uppercase">Superuser</span>
+              <span className="text-sm font-semibold text-gray-900 leading-none mb-1">{user?.name || 'System Admin'}</span>
+              <span className="text-[10px] text-blue-600 font-bold uppercase tracking-widest">{user?.role || 'Superuser'}</span>
             </div>
           </div>
+          <button 
+            onClick={() => {
+              logout();
+              toast.success("Logged out successfully");
+              navigate('/login');
+            }}
+            className="w-full py-3 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 transition-all flex items-center justify-center gap-2"
+          >
+            <XCircle size={14} />
+            Sign Out
+          </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#F8FAFC]">
-        {/* TOP STRIP / COMMAND BAR */}
+        {/* Header / Top Bar */}
         <div className="h-16 bg-white border-b border-slate-200 sticky top-0 z-30 flex items-center justify-between px-4 lg:px-8 shrink-0">
-          <div className="flex items-center gap-4 lg:gap-6">
+          <div className="flex items-center gap-4">
             <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 -ml-2 text-slate-500">
               <Menu size={24} />
             </button>
-            <div className="hidden sm:flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></div>
-              <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">Node: Central-Alpha</span>
-            </div>
-            <div className="hidden md:block h-4 w-[1px] bg-slate-200"></div>
-            <div className="hidden md:flex items-center gap-4">
-              <div className="flex items-center gap-1.5">
-                <Database size={14} className="text-slate-400" />
-                <span className="text-sm font-semibold text-slate-500">DB Sync: 100%</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Globe size={14} className="text-slate-400" />
-                <span className="text-sm font-semibold text-slate-500">Latency: 24ms</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
             <div className="relative hidden sm:block">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input 
                 type="text" 
-                placeholder="Search..." 
-                className="bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 transition-all w-32 md:w-64"
+                placeholder="Search facilities, records..." 
+                className="bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 transition-all w-64"
               />
             </div>
-            <button className="p-2 text-slate-400 hover:text-slate-900 transition-colors">
-              <Filter size={16} />
-            </button>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <button className="p-2 text-slate-400 hover:text-slate-900 transition-colors">
+                <Bell size={18} />
+              </button>
+              <button className="p-2 text-slate-400 hover:text-slate-900 transition-colors">
+                <MessageSquare size={18} />
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-4 lg:p-8 max-w-[1600px] mx-auto space-y-8">
-        
-        {/* HEADER SECTION */}
-        <div className="flex items-end justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="px-2 py-0.5 bg-blue-600/10 text-blue-600 text-xs font-semibold uppercase tracking-widest rounded-md">Master Overview</span>
-              <span className="text-slate-300">/</span>
-              <span className="text-sm font-semibold text-slate-400 uppercase tracking-widest">Real-time Telemetry</span>
-            </div>
-            <h1 className="text-3xl font-semibold text-slate-900 tracking-tight flex items-center gap-3">
-              Operational Command Center
-              <Zap size={24} className="text-blue-600 fill-blue-600" />
-            </h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <button className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:border-slate-300 transition-all flex items-center gap-2">
-              <Activity size={14} />
-              Export Metrics
-            </button>
-            <button className="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-bold hover:bg-slate-800 transition-all flex items-center gap-2 shadow-sm">
-              <ShieldCheck size={14} />
-              Security Audit
-            </button>
-          </div>
-        </div>
-
-        {/* METRICS GRID */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <MetricCard title="System Throughput" value="1.2M" sub="Requests / hour" icon={<Activity size={18} />} trend="+8.2%" status="up" />
-          <MetricCard title="Active Connections" value="4,821" sub="Live sessions" icon={<Users size={18} />} trend="+142" status="up" />
-          <MetricCard title="Resource Load" value="42%" sub="Compute efficiency" icon={<Zap size={18} />} trend="-2.4%" status="down" />
-          <MetricCard title="Network Latency" value="12ms" sub="Response time" icon={<BarChart3 size={18} />} trend="Stable" status="stable" />
-        </div>
-
-        {/* ANALYTICS SECTION */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
-          {/* LIVE GRAPH */}
-          <div className="lg:col-span-8 space-y-8">
-            <div className="bg-white border border-slate-200 rounded-lg shadow-sm border border-gray-200 p-6 relative">
-              <div className="flex items-center justify-between mb-8">
-                <div>
-                  <h3 className="text-base font-bold text-slate-900 uppercase tracking-widest">System Load Telemetry</h3>
-                  <p className="text-xs font-medium text-slate-400 mt-1">Live data feed from global clusters</p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-blue-600"></div>
-                    <span className="text-sm font-semibold text-slate-500 uppercase">Requests</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-slate-200"></div>
-                    <span className="text-sm font-semibold text-slate-500 uppercase">Load</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="h-[350px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData}>
-                    <defs>
-                      <linearGradient id="colorRequests" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#14B8A6" stopOpacity={0.1}/>
-                        <stop offset="95%" stopColor="#14B8A6" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-                    <XAxis 
-                      dataKey="time" 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{fill: '#94A3B8', fontSize: 10, fontWeight: 700}}
-                      dy={10}
-                    />
-                    <YAxis 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{fill: '#94A3B8', fontSize: 10, fontWeight: 700}}
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        borderRadius: '12px', 
-                        border: 'none', 
-                        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-                        padding: '12px'
-                      }} 
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="requests" 
-                      stroke="#14B8A6" 
-                      strokeWidth={2}
-                      fillOpacity={1} 
-                      fill="url(#colorRequests)" 
-                      isAnimationActive={false}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* LOWER LOGS TABLE */}
-            <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                <h3 className="text-base font-bold text-slate-900 uppercase tracking-widest">Network Inbound Log</h3>
-                <button className="text-xs font-semibold text-blue-600 uppercase tracking-widest hover:underline">See full log</button>
-              </div>
-              <div className="divide-y divide-slate-50">
-                <LogRow name="Dr. Julianne Smith" type="Physician" time="2m ago" status="Success" id="REG-4291" />
-                <LogRow name="Apollo Diagnostics" type="Laboratory" time="12m ago" status="Pending" id="REG-4292" isPending />
-                <LogRow name="Wellness Pharmacy" type="Pharmacy" time="28m ago" status="Success" id="REG-4293" />
-                <LogRow name="Rajesh Kumar" type="Patient" time="45m ago" status="Success" id="REG-4294" />
-              </div>
-            </div>
+        <div className="flex-1 overflow-hidden flex flex-col lg:flex-row">
+          {/* Main Scrollable Content */}
+          <div className="flex-1 overflow-y-auto p-4 lg:p-10">
+            {renderContent()}
           </div>
 
-          {/* SIDE PANEL: QUICK TASKS & HEALTH */}
-          <div className="lg:col-span-4 space-y-8">
-            
-            {/* ACTION PANEL */}
-            <div className="bg-slate-900 rounded-lg p-8 text-white relative overflow-hidden shadow-sm">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/20 rounded-full blur-[60px]"></div>
-              
-              <h3 className="text-lg font-semibold mb-6 tracking-tight flex items-center gap-2">
-                System Controls
-                <MoreHorizontal size={18} className="text-slate-500" />
-              </h3>
-              
-              <div className="space-y-3 relative z-10">
-                <QuickTask title="Pending Verifications" count="12" icon={<ShieldCheck size={18} />} link="/admin/verification" highlight />
-                <QuickTask title="Inventory Management" count="340" icon={<Database size={18} />} link="/admin/categories" />
-                <QuickTask title="System Configuration" icon={<Settings size={18} />} link="/admin/settings" />
-              </div>
-
-              <div className="mt-8 pt-8 border-t border-white/5 space-y-4">
-                <div className="flex items-center justify-between px-2">
-                  <span className="text-sm font-semibold text-slate-500 uppercase tracking-widest">Cluster Health</span>
-                  <span className="text-sm font-semibold text-blue-500 uppercase">99.8% Nominal</span>
-                </div>
-                <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: '99.8%' }}
-                    className="h-full bg-blue-600"
-                  />
-                </div>
-                <button className="w-full mt-4 py-4 bg-white text-slate-900 rounded-lg font-semibold text-xs uppercase tracking-[0.2em] hover:bg-blue-600 hover:text-white transition-all shadow-lg">
-                  Initiate System Sync
-                </button>
-              </div>
+          {/* Right Dedicated Panel - Only show if there's content */}
+          {renderRightPanel() && (
+            <div className="w-full lg:w-96 bg-white border-l border-slate-200 overflow-y-auto p-8 shrink-0 transition-all duration-300">
+              {renderRightPanel()}
             </div>
-
-            {/* PERFORMANCE RADAR / MINI CHART */}
-            <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
-              <h3 className="text-base font-bold text-slate-900 uppercase tracking-widest mb-6">Regional Distribution</h3>
-              <div className="space-y-4">
-                <RegionProgress name="Asia Pacific" value={78} />
-                <RegionProgress name="North America" value={45} />
-                <RegionProgress name="Europe" value={62} />
-                <RegionProgress name="Middle East" value={15} />
-              </div>
-            </div>
-
-          </div>
-
+          )}
         </div>
-        </div>
+
       </div>
     </div>
-  </div>
   );
 };
 
