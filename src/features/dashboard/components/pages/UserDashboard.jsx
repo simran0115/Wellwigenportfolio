@@ -36,7 +36,8 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import { io } from "socket.io-client";
 
-const getUpcomingDeliveries = (plan) => {
+const getUpcomingDeliveries = (plan, status) => {
+  if (status && (status.toLowerCase() === 'expired' || status.toLowerCase() === 'cancelled')) return [];
   const today = new Date();
   const deliveries = [];
   const deliveredIds = JSON.parse(localStorage.getItem("deliveredDeliveries_v3") || "[]");
@@ -139,43 +140,77 @@ export default function UserDashboard() {
     { id: "#WL-8812", date: "May 03, 2026", status: "Delivered", items: "Mangoes, Pineapple", total: "₹320" },
     { id: "#WL-8756", date: "Apr 28, 2026", status: "Delivered", items: "Oranges, Grapes", total: "₹280" }
   ]);
-  const [upcomingOrders, setUpcomingOrders] = useState(() => getUpcomingDeliveries("Gold"));
+  const [upcomingOrders, setUpcomingOrders] = useState(() => getUpcomingDeliveries("Gold", "Active"));
 
   const API = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
   useEffect(() => {
     const fetchRealData = async () => {
       try {
-        const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
-        if (userInfo._id) {
-          const subRes = await axios.get(`${API}/subscription/user/${userInfo._id}`);
-          if (subRes.data) {
-            setSubscription({
-              plan: subRes.data.plan || "Gold",
-              status: subRes.data.status || "active",
-              expiry: subRes.data.endDate || "N/A"
-            });
-          }
+        // Check all possible localStorage keys for user ID
+        const userInfo = JSON.parse(
+          localStorage.getItem("userInfo") ||
+          localStorage.getItem("user") ||
+          "{}"
+        );
+        const userId = userInfo._id || userInfo.id;
+        console.log("👤 [USER-DASHBOARD] User ID:", userId);
 
-          const orderRes = await axios.get(`${API}/orders/user/${userInfo._id}`);
+        if (!userId) {
+          console.warn("⚠️ No user ID found in localStorage. Using fallback data.");
+          return;
+        }
+
+        // Fetch subscription
+        const subRes = await axios.get(`${API}/subscription/me/${userId}`).catch(() => null);
+        if (subRes?.data?.data) {
+          const s = subRes.data.data;
+          const planMap = { fit_start: 'Silver', healthy_life: 'Gold', total_wellness: 'Platinum' };
+          setSubscription({
+            plan: planMap[s.plan] || s.plan || 'Silver',
+            status: s.status || 'active',
+            nextBilling: s.endDate ? new Date(s.endDate).toLocaleDateString('en-IN') : 'N/A',
+            price: `₹${s.price || 499}/mo`
+          });
+          // Also update upcoming orders based on real plan
+          setUpcomingOrders(getUpcomingDeliveries(planMap[s.plan] || 'Silver', s.status));
+        }
+
+        // Fetch real orders for this user
+        const orderRes = await axios.get(`${API}/orders/user/${userId}`).catch(() => null);
+        if (orderRes?.data && Array.isArray(orderRes.data) && orderRes.data.length > 0) {
           const formattedOrders = orderRes.data.map(o => ({
             id: `#WL-${o._id.toString().slice(-4).toUpperCase()}`,
-            date: new Date(o.scheduledFor).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-            status: o.status.charAt(0).toUpperCase() + o.status.slice(1),
-            items: o.productName || "Fresh Produce Box",
-            total: `₹${o.totalAmount || 'Included'}`
+            _id: o._id,
+            date: new Date(o.scheduledFor || o.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            status: o.status === 'out_for_delivery' ? 'Out for Delivery' :
+                    o.status === 'delivered' ? 'Delivered' :
+                    o.status === 'pending' ? 'Scheduled' :
+                    o.status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+            items: o.items?.[0]?.name || 'Fresh Produce Box',
+            total: o.totalAmount ? `₹${o.totalAmount}` : 'Included'
           }));
           setOrderHistory(formattedOrders);
+          // Real orders also populate upcoming orders list
+          const upcoming = formattedOrders.filter(o => o.status !== 'Delivered');
+          if (upcoming.length > 0) setUpcomingOrders(upcoming);
         }
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
       }
     };
     fetchRealData();
+    const refreshInterval = setInterval(fetchRealData, 30000);
+    return () => clearInterval(refreshInterval);
 
-    // Setup Socket.io
-    const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
-    const userId = userInfo._id || 'demo-user-id';
+    // Setup Socket.io with real user ID
+    const socketUserInfo = JSON.parse(
+      localStorage.getItem("userInfo") ||
+      localStorage.getItem("user") ||
+      "{}"
+    );
+    const userId = socketUserInfo._id || socketUserInfo.id || 'demo-user-id';
+    console.log("🔌 [SOCKET] Registering userId:", userId);
     
     const socketBaseUrl = API.replace('/api', '');
     const socket = io(socketBaseUrl, {
@@ -187,62 +222,73 @@ export default function UserDashboard() {
 
     socket.on("connect", () => {
       console.log("✅ Socket Connected:", socket.id);
-      toast.success("Live Sync Connected", { id: 'socket-conn' });
+      socket.emit("registerUser", userId); // Re-register on reconnect
     });
 
     socket.on("orderStatusUpdated", (data) => {
-      console.log("🔔 Status Update Received:", data);
-      console.log("🔔 Status Update Received:", data);
+      console.log("🔔 [SOCKET] Order Status Update Received:", data);
 
-      // Update upcoming orders
+      const mapStatus = (s) => {
+        if (s === 'out_for_delivery') return 'Out for Delivery';
+        if (s === 'delivered') return 'Delivered';
+        if (s === 'pending') return 'Scheduled';
+        return s?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || s;
+      };
+
+      const newStatus = mapStatus(data.status);
+
+      // Update order history (by real _id)
+      setOrderHistory(prev => prev.map(o =>
+        (o._id === data.orderId || o._id?.toString() === data.orderId?.toString())
+          ? { ...o, status: newStatus }
+          : o
+      ));
+
+      // Update upcoming orders (by real _id or short ID suffix match)
       setUpcomingOrders(prev => {
-        let updated = false;
-        const newList = prev.map(o => {
-          const isMatch = o.id === data.orderId || 
-                         (data.orderId && o.id.includes(data.orderId.toString().slice(-4).toUpperCase()));
-          if (isMatch) {
-            updated = true;
-            return { ...o, status: data.status === 'out for delivery' ? 'Out for Delivery' : data.status === 'delivered' ? 'Delivered' : 'Scheduled' };
+        const updated = prev.map(o => {
+          const matchById = o._id === data.orderId || o._id?.toString() === data.orderId?.toString();
+          const matchBySuffix = data.orderId && o.id?.includes(data.orderId.toString().slice(-4).toUpperCase());
+          if (matchById || matchBySuffix) {
+            return { ...o, status: newStatus };
           }
           return o;
         });
 
-        const isMockId = data.orderId?.toString().startsWith('mock_') || 
-                        data.orderId === '1' || 
-                        data.orderId === '2' ||
-                        data.orderId?.toString().startsWith('#WL-');
-
-        if (!updated && isMockId) {
-          if (data.status === 'out for delivery') {
-            const firstScheduledIdx = newList.findIndex(o => o.status === 'Scheduled');
-            if (firstScheduledIdx !== -1) {
-              newList[firstScheduledIdx] = { ...newList[firstScheduledIdx], status: 'Out for Delivery' };
-              const outIds = JSON.parse(localStorage.getItem("outForDeliveryDeliveries_v3") || "[]");
-              outIds.push(newList[firstScheduledIdx].id);
-              localStorage.setItem("outForDeliveryDeliveries_v3", JSON.stringify(outIds));
-            }
-          } else if (data.status === 'delivered') {
-            // Find the first one that is Out for Delivery, or fallback to Scheduled
-            let targetIdx = newList.findIndex(o => o.status === 'Out for Delivery');
-            if (targetIdx === -1) targetIdx = newList.findIndex(o => o.status === 'Scheduled');
-            
-            if (targetIdx !== -1) {
-              const targetId = newList[targetIdx].id;
-              newList[targetIdx] = { ...newList[targetIdx], status: 'Delivered' };
-              
-              // Move from Out for Delivery array to Delivered array
-              let outIds = JSON.parse(localStorage.getItem("outForDeliveryDeliveries_v3") || "[]");
-              outIds = outIds.filter(id => id !== targetId);
-              localStorage.setItem("outForDeliveryDeliveries_v3", JSON.stringify(outIds));
-
-              const deliveredIds = JSON.parse(localStorage.getItem("deliveredDeliveries_v3") || "[]");
-              deliveredIds.push(targetId);
-              localStorage.setItem("deliveredDeliveries_v3", JSON.stringify(deliveredIds));
-            }
+        // If no match found, update the first non-delivered order
+        const hasMatch = updated.some((o, i) => o.status !== prev[i]?.status);
+        if (!hasMatch && newStatus !== 'Scheduled') {
+          const firstActive = updated.findIndex(o => o.status !== 'Delivered');
+          if (firstActive !== -1) {
+            updated[firstActive] = { ...updated[firstActive], status: newStatus };
           }
         }
-        return newList;
+        return updated;
       });
+
+      // Toast notification to user
+      if (newStatus === 'Out for Delivery') {
+        toast.success("🚚 Your order is on its way!", { duration: 5000 });
+      } else if (newStatus === 'Delivered') {
+        toast.success("✅ Your order has been delivered!", { duration: 5000 });
+      }
+    });
+
+    socket.on("subscriptionExpiringSoon", (data) => {
+      console.log("🔔 Subscription Expiring Soon:", data);
+      toast(data.message, { icon: '⚠️', duration: 6000 });
+      setSubscription(prev => ({ ...prev, status: "Expiring Soon" }));
+    });
+
+    socket.on("subscriptionExpired", (data) => {
+      console.log("🛑 Subscription Expired:", data);
+      toast.error(data.message, { duration: 6000 });
+      setSubscription(prev => ({ ...prev, status: "Expired" }));
+    });
+
+    socket.on("storesClosed", (data) => {
+      console.log("🛑 Stores Closed Alert:", data);
+      toast.error(data.message, { icon: '🏪', duration: 8000 });
     });
 
     return () => {
@@ -328,9 +374,16 @@ export default function UserDashboard() {
   const currentFeatures = planFeatures[subscription.plan] || planFeatures.Silver;
 
 
+  const getBadgeStyle = (status) => {
+    const s = status.toLowerCase();
+    if (s === 'active') return 'text-blue-700 bg-blue-50';
+    if (s === 'expiring soon') return 'text-amber-700 bg-amber-50';
+    return 'text-rose-700 bg-rose-50';
+  };
+
   useEffect(() => {
-    setUpcomingOrders(getUpcomingDeliveries(subscription.plan));
-  }, [subscription.plan]);
+    setUpcomingOrders(getUpcomingDeliveries(subscription.plan, subscription.status));
+  }, [subscription.plan, subscription.status]);
 
   const upcomingDeliveries = upcomingOrders;
   return (
@@ -444,7 +497,7 @@ export default function UserDashboard() {
                 <div className="lg:col-span-4 bg-white border border-gray-200 rounded-lg p-6">
                   <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
                     <h2 className="text-lg font-semibold text-gray-900">Your {subscription.plan} Perks</h2>
-                    <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded">Active</span>
+                    <span className={`text-xs font-bold px-2 py-1 rounded uppercase tracking-wider ${getBadgeStyle(subscription.status)}`}>{subscription.status}</span>
                   </div>
                   <div className="space-y-4">
                     {currentFeatures.map((feature, i) => (
@@ -493,7 +546,10 @@ export default function UserDashboard() {
                             <p className="text-xs font-black text-gray-300 uppercase tracking-widest">Order Status</p>
                             <p className="text-sm font-bold text-gray-900">{latestOrder ? latestOrder.orderId : 'Not Yet Placed'}</p>
                           </div>
-                          <button onClick={handleBrowseProducts} className="px-4 py-2 bg-blue-600 text-white rounded text-xs font-bold uppercase tracking-widest hover:bg-blue-700 transition-all">
+                          <button 
+                            onClick={handleBrowseProducts} 
+                            disabled={['expired', 'cancelled'].includes(subscription.status.toLowerCase())}
+                            className={`px-4 py-2 text-white rounded text-xs font-bold uppercase tracking-widest transition-all ${['expired', 'cancelled'].includes(subscription.status.toLowerCase()) ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>
                             {latestOrder ? 'Update Basket' : 'Place Now'}
                           </button>
                        </div>
@@ -528,7 +584,12 @@ export default function UserDashboard() {
                     <h2 className="text-xl font-semibold text-slate-900">Upcoming Deliveries</h2>
                     <p className="text-slate-500 text-sm mt-1">Track your scheduled fresh produce deliveries based on your {subscription.plan} plan.</p>
                   </div>
-                  <button onClick={handleBrowseProducts} className="px-4 py-2 bg-blue-600 text-white rounded font-semibold text-sm transition-all hover:bg-blue-700">Customize Next Box</button>
+                  <button 
+                    onClick={handleBrowseProducts} 
+                    disabled={['expired', 'cancelled'].includes(subscription.status.toLowerCase())}
+                    className={`px-4 py-2 text-white rounded font-semibold text-sm transition-all ${['expired', 'cancelled'].includes(subscription.status.toLowerCase()) ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>
+                    Customize Next Box
+                  </button>
                 </header>
                 <div className="space-y-4">
                    {/* Real Orders from Backend */}
@@ -561,11 +622,7 @@ export default function UserDashboard() {
                 <div className="bg-white border border-gray-200 rounded-lg p-6">
                   <div className="flex justify-between items-start mb-6 flex-col md:flex-row gap-6 border-b border-gray-100 pb-6">
                     <div>
-                      <span className={`text-xs font-bold px-2 py-1 rounded uppercase ${
-                        subscription.status.toLowerCase() === 'active' 
-                          ? 'text-blue-700 bg-blue-50' 
-                          : 'text-rose-700 bg-rose-50'
-                      }`}>
+                      <span className={`text-xs font-bold px-2 py-1 rounded uppercase ${getBadgeStyle(subscription.status)}`}>
                         {subscription.status}
                       </span>
                       <h2 className="text-xl font-semibold mt-3 text-gray-900">{subscription.plan} Plan</h2>

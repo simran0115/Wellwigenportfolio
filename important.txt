@@ -11,3 +11,30 @@ Retail Vendor	vendor@test.com	password123
 Diagnostic Lab	lab@test.com	password123
 Pharmacy	pharmacy@test.com	password123
 Nutrition & Diet	nutrition@test.com	password123
+
+
+
+
+Vendor Applies
+      |
+Admin Reviews Vendor
+      |
+Admin Approves Vendor
+      |
+Vendor becomes Active Store
+      |
+User buys Subscription
+      |
+Cron creates scheduled order
+      |
+Order broadcast to nearby active vendors
+      |
+First vendor accepts order
+      |
+Order locked to that vendor
+      |
+Vendor delivers order
+      |
+Order status updates
+      |
+User dashboard updates automatically
