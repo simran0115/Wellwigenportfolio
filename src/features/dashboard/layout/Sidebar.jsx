@@ -40,7 +40,6 @@ export default function Sidebar() {
     { name: "Medical Records", icon: FileText, route: "/admin/medical-records" },
     { name: "Vendor Partners", icon: Users, route: "/admin/vendors" },
     { name: "Health Categories", icon: Tag, route: "/admin/categories" },
-    { name: "Insurance Hub", icon: ShieldCheck, route: "/admin/insurance" },
     { name: "System Config", icon: Settings, route: "/admin/settings" },
   ];
 

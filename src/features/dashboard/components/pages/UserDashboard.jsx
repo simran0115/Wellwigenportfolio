@@ -136,142 +136,99 @@ export default function UserDashboard() {
     return saved ? JSON.parse(saved) : null;
   });
 
-  const [orderHistory, setOrderHistory] = useState([
-    { id: "#WL-8812", date: "May 03, 2026", status: "Delivered", items: "Mangoes, Pineapple", total: "₹320" },
-    { id: "#WL-8756", date: "Apr 28, 2026", status: "Delivered", items: "Oranges, Grapes", total: "₹280" }
-  ]);
-  const [upcomingOrders, setUpcomingOrders] = useState(() => getUpcomingDeliveries("Gold", "Active"));
+  const [socketConnected, setSocketConnected] = useState(false);
+
+  const [orderHistory, setOrderHistory] = useState([]);
+  const [upcomingOrders, setUpcomingOrders] = useState([]);
+  const [lastSynced, setLastSynced] = useState(new Date().toLocaleTimeString());
 
   const API = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+  const fetchUserData = async () => {
+    try {
+      const userInfo = JSON.parse(
+        localStorage.getItem("userInfo") ||
+        localStorage.getItem("user") ||
+        "{}"
+      );
+      const userId = userInfo._id || userInfo.id;
+      console.log("👤 [USER-DASHBOARD] Fetching data for:", userId);
+
+      if (!userId) return;
+
+      // Fetch subscription
+      const subRes = await axios.get(`${API}/subscription/me/${userId}`).catch(() => null);
+      if (subRes?.data?.data) {
+        const s = subRes.data.data;
+        const planMap = { fit_start: 'Silver', healthy_life: 'Gold', total_wellness: 'Platinum' };
+        setSubscription({
+          plan: planMap[s.plan] || s.plan || 'Silver',
+          status: s.status || 'active',
+          nextBilling: s.endDate ? new Date(s.endDate).toLocaleDateString('en-IN') : 'N/A',
+          price: `₹${s.price || 499}/mo`
+        });
+      }
+
+      // Fetch real orders
+      const orderRes = await axios.get(`${API}/orders/user/${userId}`).catch(() => null);
+      if (orderRes?.data && Array.isArray(orderRes.data)) {
+        const formattedOrders = orderRes.data.map(o => ({
+          id: `#WL-${o._id.toString().slice(-4).toUpperCase()}`,
+          _id: o._id,
+          date: new Date(o.scheduledFor || o.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          status: o.status === 'out_for_delivery' ? 'Out for Delivery' :
+                  o.status === 'delivered' ? 'Delivered' :
+                  o.status === 'pending' ? 'Scheduled' :
+                  o.status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+          items: o.items?.[0]?.name || 'Fresh Produce Box',
+          total: o.totalAmount ? `₹${o.totalAmount}` : 'Included'
+        }));
+        setOrderHistory(formattedOrders);
+        const upcoming = formattedOrders.filter(o => o.status !== 'Delivered');
+        setUpcomingOrders(upcoming); // Clear or update the list correctly
+      } else {
+        setOrderHistory([]);
+        setUpcomingOrders([]);
+      }
+    } catch (err) {
+      console.error("❌ [USER-DASHBOARD] Fetch Error:", err);
+    }
+  };
 
   useEffect(() => {
-    const fetchRealData = async () => {
-      try {
-        // Check all possible localStorage keys for user ID
-        const userInfo = JSON.parse(
-          localStorage.getItem("userInfo") ||
-          localStorage.getItem("user") ||
-          "{}"
-        );
-        const userId = userInfo._id || userInfo.id;
-        console.log("👤 [USER-DASHBOARD] User ID:", userId);
-
-        if (!userId) {
-          console.warn("⚠️ No user ID found in localStorage. Using fallback data.");
-          return;
-        }
-
-        // Fetch subscription
-        const subRes = await axios.get(`${API}/subscription/me/${userId}`).catch(() => null);
-        if (subRes?.data?.data) {
-          const s = subRes.data.data;
-          const planMap = { fit_start: 'Silver', healthy_life: 'Gold', total_wellness: 'Platinum' };
-          setSubscription({
-            plan: planMap[s.plan] || s.plan || 'Silver',
-            status: s.status || 'active',
-            nextBilling: s.endDate ? new Date(s.endDate).toLocaleDateString('en-IN') : 'N/A',
-            price: `₹${s.price || 499}/mo`
-          });
-          // Also update upcoming orders based on real plan
-          setUpcomingOrders(getUpcomingDeliveries(planMap[s.plan] || 'Silver', s.status));
-        }
-
-        // Fetch real orders for this user
-        const orderRes = await axios.get(`${API}/orders/user/${userId}`).catch(() => null);
-        if (orderRes?.data && Array.isArray(orderRes.data) && orderRes.data.length > 0) {
-          const formattedOrders = orderRes.data.map(o => ({
-            id: `#WL-${o._id.toString().slice(-4).toUpperCase()}`,
-            _id: o._id,
-            date: new Date(o.scheduledFor || o.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-            status: o.status === 'out_for_delivery' ? 'Out for Delivery' :
-                    o.status === 'delivered' ? 'Delivered' :
-                    o.status === 'pending' ? 'Scheduled' :
-                    o.status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-            items: o.items?.[0]?.name || 'Fresh Produce Box',
-            total: o.totalAmount ? `₹${o.totalAmount}` : 'Included'
-          }));
-          setOrderHistory(formattedOrders);
-          // Real orders also populate upcoming orders list
-          const upcoming = formattedOrders.filter(o => o.status !== 'Delivered');
-          if (upcoming.length > 0) setUpcomingOrders(upcoming);
-        }
-      } catch (err) {
-        console.error("Error fetching dashboard data:", err);
-      }
-    };
-    fetchRealData();
-    const refreshInterval = setInterval(fetchRealData, 30000);
-    return () => clearInterval(refreshInterval);
-
-    // Setup Socket.io with real user ID
-    const socketUserInfo = JSON.parse(
-      localStorage.getItem("userInfo") ||
-      localStorage.getItem("user") ||
-      "{}"
-    );
-    const userId = socketUserInfo._id || socketUserInfo.id || 'demo-user-id';
-    console.log("🔌 [SOCKET] Registering userId:", userId);
+    fetchUserData();
     
+    // Polling fallback: Refresh every 10 seconds to ensure sync even if sockets fail
+    const refreshInterval = setInterval(fetchUserData, 10000);
+    
+    // Setup Socket.io
+    const socketUserInfo = JSON.parse(localStorage.getItem("userInfo") || localStorage.getItem("user") || "{}");
+    const userId = socketUserInfo._id || socketUserInfo.id || 'demo-user-id';
     const socketBaseUrl = API.replace('/api', '');
     const socket = io(socketBaseUrl, {
       transports: ["polling", "websocket"],
       reconnection: true
     });
     
-    socket.emit("registerUser", userId);
-
     socket.on("connect", () => {
-      console.log("✅ Socket Connected:", socket.id);
-      socket.emit("registerUser", userId); // Re-register on reconnect
+      console.log("✅ [REAL-TIME] Socket Connected:", socket.id);
+      setSocketConnected(true);
+      socket.emit("registerUser", userId); 
     });
 
-    socket.on("orderStatusUpdated", (data) => {
-      console.log("🔔 [SOCKET] Order Status Update Received:", data);
-
-      const mapStatus = (s) => {
-        if (s === 'out_for_delivery') return 'Out for Delivery';
-        if (s === 'delivered') return 'Delivered';
-        if (s === 'pending') return 'Scheduled';
-        return s?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || s;
-      };
-
-      const newStatus = mapStatus(data.status);
-
-      // Update order history (by real _id)
-      setOrderHistory(prev => prev.map(o =>
-        (o._id === data.orderId || o._id?.toString() === data.orderId?.toString())
-          ? { ...o, status: newStatus }
-          : o
-      ));
-
-      // Update upcoming orders (by real _id or short ID suffix match)
-      setUpcomingOrders(prev => {
-        const updated = prev.map(o => {
-          const matchById = o._id === data.orderId || o._id?.toString() === data.orderId?.toString();
-          const matchBySuffix = data.orderId && o.id?.includes(data.orderId.toString().slice(-4).toUpperCase());
-          if (matchById || matchBySuffix) {
-            return { ...o, status: newStatus };
-          }
-          return o;
-        });
-
-        // If no match found, update the first non-delivered order
-        const hasMatch = updated.some((o, i) => o.status !== prev[i]?.status);
-        if (!hasMatch && newStatus !== 'Scheduled') {
-          const firstActive = updated.findIndex(o => o.status !== 'Delivered');
-          if (firstActive !== -1) {
-            updated[firstActive] = { ...updated[firstActive], status: newStatus };
-          }
-        }
-        return updated;
-      });
-
-      // Toast notification to user
-      if (newStatus === 'Out for Delivery') {
-        toast.success("🚚 Your order is on its way!", { duration: 5000 });
-      } else if (newStatus === 'Delivered') {
-        toast.success("✅ Your order has been delivered!", { duration: 5000 });
+    // Keep the handshake alive by re-registering every 5 seconds
+    const registrationInterval = setInterval(() => {
+      if (socket.connected && userId) {
+        socket.emit("registerUser", userId);
       }
+    }, 5000);
+
+    socket.on("connect_error", () => setSocketConnected(false));
+
+    socket.on("orderStatusUpdated", (data) => {
+      console.log("📡 [REAL-TIME] Update received:", data);
+      setLastSynced(new Date().toLocaleTimeString()); // Force UI repaint
+      fetchUserData(); 
+      toast.success("🚚 Real-time update received!", { position: 'bottom-right' });
     });
 
     socket.on("subscriptionExpiringSoon", (data) => {
@@ -292,6 +249,7 @@ export default function UserDashboard() {
     });
 
     return () => {
+      clearInterval(refreshInterval);
       socket.disconnect();
     };
   }, [API]);
@@ -480,6 +438,13 @@ export default function UserDashboard() {
               <Bell size={18} />
               <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
             </button>
+            
+            {/* Live Socket Indicator */}
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-widest transition-all ${socketConnected ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-rose-50 border-rose-100 text-rose-600'}`}>
+              <div className={`w-1.5 h-1.5 rounded-full ${socketConnected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></div>
+              {socketConnected ? 'Live' : 'Offline'}
+            </div>
+
             <button onClick={handleLogout} className="p-2 bg-white border border-gray-200 rounded text-slate-500 hover:text-red-600 transition"><LogOut size={18} /></button>
           </div>
         </header>
@@ -562,11 +527,23 @@ export default function UserDashboard() {
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                        <div className="flex gap-4">
                          <div className="w-12 h-12 bg-white/10 rounded flex items-center justify-center border border-white/10"><Truck className="text-blue-400" size={20} /></div>
-                         <div><h4 className="text-base font-semibold">Next Delivery</h4><p className="text-slate-400 text-sm mt-1">Tomorrow, 06:00 AM</p></div>
+                         <div>
+                            <h4 className="text-base font-semibold">Next Delivery</h4>
+                            <p className="text-slate-400 text-sm mt-1">
+                              {upcomingOrders.length > 0 
+                                ? new Date(upcomingOrders[0].date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+                                : 'Checking schedule...'}
+                            </p>
+                          </div>
                        </div>
                        <div className="flex gap-4">
                          <div className="w-12 h-12 bg-white/10 rounded flex items-center justify-center border border-white/10"><Clock className="text-blue-400" size={20} /></div>
-                         <div><h4 className="text-base font-semibold">Estimated Arrival</h4><p className="text-slate-400 text-sm mt-1">Within 14 hours</p></div>
+                         <div>
+                            <h4 className="text-base font-semibold">Current Status</h4>
+                            <p className="text-slate-400 text-sm mt-1">
+                              {upcomingOrders.length > 0 ? upcomingOrders[0].status : 'Waiting for Vendor'}
+                            </p>
+                          </div>
                        </div>
                      </div>
                      <button onClick={() => setShowTracking(true)} className="w-full mt-6 py-3 bg-white/10 border border-white/10 hover:bg-white/20 text-white rounded font-semibold text-sm transition-all">Track Order Live</button>

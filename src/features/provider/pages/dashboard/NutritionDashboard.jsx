@@ -158,53 +158,60 @@ const NutritionDashboard = () => {
         const vendorId = vendorData._id || vendorData.id || null;
         console.log("🛠️ [DEBUG] Vendor ID:", vendorId, "| Data keys:", Object.keys(vendorData));
 
-        const [catRes, prodRes] = await Promise.all([
+        // Fetch Categories and Products independently
+        Promise.all([
           axios.get(`${API}/category`).catch(() => ({ data: [] })),
-          axios.get(`${API}/product`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
-        ]);
+          axios.get(`${API}/product`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] }))
+        ]).then(([catRes, prodRes]) => {
+          setCategories(catRes.data || []);
+          setProducts(prodRes.data?.map(p => ({
+            id: p._id,
+            name: p.name,
+            price: `₹${p.price}`,
+            category: p.category?.name || 'General',
+            status: p.quantity > 0 ? 'In Stock' : 'Out of Stock'
+          })) || []);
+          setMarketProducts(prodRes.data || []);
+        });
 
-        // ✅ Use self-healing endpoint: auto-creates orders from subscriptions + returns all active orders
-        const orderRes = await axios.get(`${API}/orders/vendor-live`)
-          .catch(e => { console.warn('vendor-live fetch failed:', e.message); return { data: { orders: [] } }; });
-        
-        setCategories(catRes.data);
-        
-        // Products for Vendor Management
-        setProducts(prodRes.data.map(p => ({
-          id: p._id,
-          name: p.name,
-          price: `₹${p.price}`,
-          category: p.category?.name || 'General',
-          status: p.quantity > 0 ? 'In Stock' : 'Out of Stock'
-        })));
+        // ✅ Independent Order Fetching (Resilient)
+        console.log("📦 [DASHBOARD] Fetching live orders from sync endpoint...");
+        const orderRes = await axios.get(`${API}/orders/vendor-live`, {
+          timeout: 10000 // 10 second timeout for sync
+        }).catch(e => {
+          console.error('📦 [VENDOR-LIVE] Critical Fetch Error:', e.message);
+          return { data: { success: false, orders: [] } };
+        });
 
-        // Products for Marketplace/Customization
-        setMarketProducts(prodRes.data);
-
-        console.log("📦 [VENDOR-LIVE] Raw response:", orderRes.data?.syncResult);
-        const ordersData = orderRes.data?.orders || [];
+        const ordersData = orderRes?.data?.orders || [];
+        console.log(`📦 [DASHBOARD] Received ${ordersData.length} orders from server.`);
 
         if (Array.isArray(ordersData) && ordersData.length > 0) {
-          const liveOrders = ordersData.map(o => ({
-            id: o._id,
-            customer: o.userId?.name || o.userId?.email || 'Subscriber',
-            plan: o.items?.[0]?.name || 'Subscription Order',
-            product: o.items?.[0]?.name || o.type || 'Fresh Produce',
-            date: new Date(o.scheduledFor || o.createdAt).toLocaleDateString('en-IN'),
-            status: o.status === 'pending' ? 'Pending' :
-                    o.status === 'out_for_delivery' ? 'Out for Delivery' :
-                    o.status === 'delivered' ? 'Delivered' :
-                    o.status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-            type: 'Order'
-          }));
-          console.log(`✅ Loaded ${liveOrders.length} live orders into dashboard`);
+          const liveOrders = ordersData.map(o => {
+            const customerName = o.userId?.name || o.userId?.email || 'Subscriber';
+            const productLabel = o.items?.[0]?.name || 'Fresh Produce Box';
+            const rawStatus = o.status || 'pending';
+            
+            return {
+              id: o._id,
+              customer: customerName,
+              plan: productLabel,
+              product: productLabel,
+              date: new Date(o.scheduledFor || o.createdAt).toLocaleDateString('en-IN'),
+              status: rawStatus === 'pending' ? 'Pending' :
+                      rawStatus === 'out_for_delivery' ? 'Out for Delivery' :
+                      rawStatus === 'delivered' ? 'Delivered' :
+                      rawStatus.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+              type: 'Order'
+            };
+          });
           setOrders(liveOrders);
         } else {
-          console.warn("⚠️ No orders returned. Sync:", orderRes.data?.syncResult?.message);
+          console.warn("⚠️ [DASHBOARD] No orders returned from sync endpoint.");
           setOrders([]);
         }
       } catch (err) {
-        console.error("Failed to fetch data:", err);
+        console.error("❌ [DASHBOARD] Fatal Error in fetchData:", err);
       } finally {
         setLoading(false);
       }
@@ -545,6 +552,12 @@ const NutritionDashboard = () => {
                 {storeActive ? 'Live' : 'Offline'}
               </span>
             </button>
+
+            {/* Socket Status Indicator */}
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded border text-[10px] font-black uppercase tracking-wider transition-all ${socketConnected ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-rose-50 border-rose-100 text-rose-600'}`}>
+              <div className={`w-1.5 h-1.5 rounded-full ${socketConnected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></div>
+              {socketConnected ? 'Socket Live' : 'Socket Offline'}
+            </div>
 
             <button className="p-2 bg-white border border-gray-200 rounded text-slate-500 hover:text-blue-600 transition relative">
               <Bell size={18} />

@@ -72,11 +72,6 @@ const MOCK_ACTIVE = [
   { _id: 'mock-4', businessName: 'Precision Pathology', licenseNumber: 'LIC-2025-999', type: 'Laboratory', ownerName: 'Sarah Smith', email: 'sarah@precision.com', phone: '+91 65432 10987', verificationStatus: 'approved' },
 ];
 
-const INSURANCE = [
-  { id: 'INS-101', provider: 'Star Health', coverage: 'Full Medical', status: 'Verified' },
-  { id: 'INS-102', provider: 'HDFC Ergo', coverage: 'Critical Illness', status: 'Pending' },
-  { id: 'INS-103', provider: 'LIC Health', coverage: 'Surgical Care', status: 'Verified' },
-];
 
 
 
@@ -174,6 +169,7 @@ const DataTable = ({ title, columns, data }) => (
 
 
 const AdminDashboard = () => {
+  console.log("🛡️ ADMIN_DASHBOARD_RENDER_TRIGGERED");
   const navigate = useNavigate();
   const user = useAppStore((state) => state.auth.user);
   const logout = useAppStore((state) => state.logout);
@@ -221,9 +217,9 @@ const AdminDashboard = () => {
     try {
       setIsLoadingVendors(true);
       const response = await axios.get(`${API_URL}/provider/admin/pending`);
-      if (response.data.success) {
+      if (response.data && response.data.success) {
         // Always use real DB data — if empty, show empty (not mocks)
-        setPendingVendors(response.data.data);
+        setPendingVendors(Array.isArray(response.data.data) ? response.data.data : []);
       }
     } catch (err) {
       console.error("Failed to fetch pending vendors, using mock data:", err);
@@ -238,9 +234,9 @@ const AdminDashboard = () => {
     try {
       setIsLoadingVendors(true);
       const response = await axios.get(`${API_URL}/provider/admin/active`);
-      if (response.data.success) {
+      if (response.data && response.data.success) {
         // Always use real DB data — if empty, show empty (not mocks)
-        setActiveVendors(response.data.data);
+        setActiveVendors(Array.isArray(response.data.data) ? response.data.data : []);
       }
     } catch (err) {
       console.error("Failed to fetch active vendors, using mock data:", err);
@@ -327,20 +323,6 @@ const AdminDashboard = () => {
               <FacilityCard title="Pharmacy" status="OPEN" icon={<ShoppingBag size={18} />} statusColor="bg-emerald-50 text-emerald-600 border-emerald-100" />
               <FacilityCard title="Laboratory" status="BUSY" icon={<FlaskConical size={18} />} statusColor="bg-rose-50 text-rose-600 border-rose-100" />
             </div>
-          </div>
-        );
-      case 'Insurance':
-        return (
-          <div className="max-w-7xl mx-auto space-y-8">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-2">Insurance & Claims</h1>
-              <p className="text-slate-500 text-sm">Verify coverage and manage provider relationships.</p>
-            </div>
-            <DataTable 
-              title="Provider Network" 
-              columns={['ID', 'Provider', 'Coverage', 'Status']} 
-              data={INSURANCE} 
-            />
           </div>
         );
       case 'Vendors':
@@ -696,20 +678,20 @@ const AdminDashboard = () => {
         return (
           <div className="max-w-7xl mx-auto space-y-10">
             <div className="flex items-center gap-3 mb-2">
-              <span className="px-2 py-0.5 bg-blue-600/10 text-blue-600 text-[10px] font-bold uppercase tracking-widest rounded-md">Patient Management</span>
+              <span className="px-2 py-0.5 bg-blue-600/10 text-blue-600 text-[10px] font-bold uppercase tracking-widest rounded-md">System Administration</span>
               <span className="text-slate-300">/</span>
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Master View</span>
             </div>
             
             <div className="mb-10">
-              <h1 className="text-5xl font-bold text-slate-900 tracking-tight mb-2">Patient Central</h1>
+              <h1 className="text-5xl font-bold text-slate-900 tracking-tight mb-2">Admin Panel</h1>
               <p className="text-slate-500 text-base">Welcome back, your sanctuary is ready. You have <span className="text-blue-600 font-bold">3 pending notifications.</span></p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <MetricCard 
                 title="Active Partners" 
-                value={activeVendors.length} 
+                value={Array.isArray(activeVendors) ? activeVendors.length : 0} 
                 unit="Stores" 
                 icon={<ShoppingBag size={18} />} 
                 trend="up" 
@@ -717,7 +699,7 @@ const AdminDashboard = () => {
               />
               <MetricCard 
                 title="Approval Queue" 
-                value={pendingVendors.length} 
+                value={Array.isArray(pendingVendors) ? pendingVendors.length : 0} 
                 unit="Pending" 
                 icon={<Clock size={18} />} 
                 trend="down" 
@@ -987,7 +969,6 @@ const AdminDashboard = () => {
           <AdminNavItem icon={<Calendar size={18} />} label="Appointments" active={activeTab === 'Appointments'} onClick={() => setActiveTab('Appointments')} />
           <AdminNavItem icon={<FileText size={18} />} label="Records" active={activeTab === 'Records'} onClick={() => setActiveTab('Records')} />
           <AdminNavItem icon={<Building2 size={18} />} label="Facilities" active={activeTab === 'Facilities'} onClick={() => setActiveTab('Facilities')} />
-          <AdminNavItem icon={<ShieldCheck size={18} />} label="Insurance" active={activeTab === 'Insurance'} onClick={() => setActiveTab('Insurance')} />
           <AdminNavItem icon={<Users size={18} />} label="Vendors" active={activeTab === 'Vendors'} onClick={() => setActiveTab('Vendors')} />
           <AdminNavItem icon={<Settings size={18} />} label="Settings" active={activeTab === 'Settings'} onClick={() => setActiveTab('Settings')} />
         </nav>
@@ -1053,11 +1034,14 @@ const AdminDashboard = () => {
           </div>
 
           {/* Right Dedicated Panel - Only show if there's content */}
-          {renderRightPanel() && (
-            <div className="w-full lg:w-96 bg-white border-l border-slate-200 overflow-y-auto p-8 shrink-0 transition-all duration-300">
-              {renderRightPanel()}
-            </div>
-          )}
+          {(() => {
+            const panel = renderRightPanel();
+            return panel ? (
+              <div className="w-full lg:w-96 bg-white border-l border-slate-200 overflow-y-auto p-8 shrink-0 transition-all duration-300">
+                {panel}
+              </div>
+            ) : null;
+          })()}
         </div>
 
       </div>

@@ -28,7 +28,6 @@ import AdminCategories from "./features/dashboard/components/pages/AdminCategori
 // ProductCatalog is now integrated into UserDashboard as 'Vendor Products'
 import MedicalRecords from "./features/dashboard/components/pages/MedicalRecords";
 import Prescriptions from "./features/dashboard/components/pages/Prescriptions";
-import Insurance from "./features/dashboard/components/pages/Insurance";
 import Appointments from "./features/dashboard/components/pages/Appointments";
 import Doctors from "./features/dashboard/components/pages/Doctors";
 import Settings from "./features/dashboard/components/pages/Settings";
@@ -74,7 +73,6 @@ function App() {
           <Route path="/admin/manage" element={<AdminLayout />}>
             <Route path="medical-records" element={<MedicalRecords />} />
             <Route path="prescriptions" element={<Prescriptions />} />
-            <Route path="insurance" element={<Insurance />} />
             <Route path="appointments" element={<Appointments />} />
             <Route path="doctors" element={<Doctors />} />
             <Route path="settings" element={<Settings />} />
@@ -82,6 +80,14 @@ function App() {
             <Route path="categories" element={<AdminCategories />} />
             <Route path="verification" element={<ProviderVerification />} />
           </Route>
+
+          {/* ✅ Flat Admin Route Aliases to prevent 404s from Sidebar links */}
+          <Route path="/admin/appointments" element={<AdminLayout><Appointments /></AdminLayout>} />
+          <Route path="/admin/medical-records" element={<AdminLayout><MedicalRecords /></AdminLayout>} />
+          <Route path="/admin/vendors" element={<AdminLayout><AdminVendors /></AdminLayout>} />
+          <Route path="/admin/categories" element={<AdminLayout><AdminCategories /></AdminLayout>} />
+          <Route path="/admin/settings" element={<AdminLayout><Settings /></AdminLayout>} />
+          <Route path="/admin/verification" element={<AdminLayout><ProviderVerification /></AdminLayout>} />
 
           {/* ================= VENDOR ROUTES ================= */}
           

@@ -2,12 +2,12 @@ import React from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 
-export default function AdminLayout() {
+export default function AdminLayout({ children }) {
   return (
     <div className="flex min-h-screen bg-[#EEF3F4] font-[Inter] overflow-hidden">
       <Sidebar />
       <main className="flex-1 overflow-y-auto">
-        <Outlet />
+        {children || <Outlet />}
       </main>
     </div>
   );
