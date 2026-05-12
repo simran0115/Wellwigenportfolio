@@ -1054,7 +1054,9 @@ const AdminDashboard = () => {
           </div>
         );
       case 'Vendors':
+      case 'Subscriptions':
         return null;
+
       case 'Settings':
         return (
           <div className="space-y-10">
