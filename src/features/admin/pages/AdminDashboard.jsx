@@ -32,8 +32,17 @@ import {
   Sparkles,
   MapPin,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Pencil,
+
+  Trash2,
+  Power,
+  Ticket,
+  Plus,
+  ArrowLeft
 } from 'lucide-react';
+import { subscriptionPlanService } from '../../subscription/services/subscriptionPlanService';
+
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -183,11 +192,32 @@ const AdminDashboard = () => {
   const [selectedVendor, setSelectedVendor] = useState(null);
   const [locationData, setLocationData] = useState(null);
 
+  // Subscription State
+  const [plans, setPlans] = useState([]);
+  const [isSubLoading, setIsSubLoading] = useState(true);
+  const [showSubModal, setShowSubModal] = useState(false);
+  const [editingPlan, setEditingPlan] = useState(null);
+  const [subFormData, setSubFormData] = useState({
+    name: "",
+    description: "",
+    prices: { monthly: 0, quarterly: 0, annual: 0 },
+    features: [""],
+    status: "active",
+    deliveryDays: 0,
+    quantity: 0,
+    duration: "1 Month",
+    tag: "",
+    razorpayPlanIds: { monthly: "", quarterly: "", annual: "" }
+  });
+
+
   // Fetch vendor data on mount and when switching to relevant tabs
   useEffect(() => {
     fetchPendingVendors();
     fetchActiveVendors();
+    fetchPlans();
   }, []);
+
 
   useEffect(() => {
     console.log("🎯 ACTIVE_TAB_CHANGED:", activeTab);
@@ -277,6 +307,84 @@ const AdminDashboard = () => {
       toast.error("Deletion failed", { id: 'admin-delete' });
     }
   };
+
+  const fetchPlans = async () => {
+    try {
+      setIsSubLoading(true);
+      const res = await subscriptionPlanService.getAllPlans();
+      if (res.success) setPlans(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubLoading(false);
+    }
+  };
+
+  const handleOpenSubModal = (plan = null) => {
+    if (plan) {
+      setEditingPlan(plan);
+      setSubFormData({ ...plan, features: plan.features.length > 0 ? plan.features : [""] });
+    } else {
+      setEditingPlan(null);
+      setSubFormData({
+        name: "", description: "", prices: { monthly: 0, quarterly: 0, annual: 0 },
+        features: [""], status: "active", deliveryDays: 0, quantity: 0,
+        duration: "1 Month", tag: "", razorpayPlanIds: { monthly: "", quarterly: "", annual: "" }
+      });
+    }
+    setShowSubModal(true);
+  };
+
+  const handleSubSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      console.log("📤 Submitting Plan Data:", subFormData);
+      const res = editingPlan 
+
+        ? await subscriptionPlanService.updatePlan(editingPlan._id, subFormData)
+        : await subscriptionPlanService.createPlan(subFormData);
+      if (res.success) {
+        toast.success(editingPlan ? "Plan updated" : "Plan created");
+        setShowSubModal(false);
+        fetchPlans();
+      } else {
+        toast.error(res.message || "Operation failed");
+      }
+
+    } catch (err) {
+      console.error("Subscription Action Error:", err);
+      toast.error(err.message || "Operation failed");
+    }
+
+  };
+
+  const handleToggleSubStatus = async (id) => {
+    try {
+      const res = await subscriptionPlanService.togglePlanStatus(id);
+      if (res.success) {
+        toast.success(`Plan ${res.data.status}`);
+        fetchPlans();
+      }
+    } catch (err) {
+      toast.error(err.message || "Toggle failed");
+    }
+
+  };
+
+  const handleDeleteSub = async (id) => {
+    if (!window.confirm("Delete this plan?")) return;
+    try {
+      const res = await subscriptionPlanService.deletePlan(id);
+      if (res.success) {
+        toast.success("Plan removed");
+        fetchPlans();
+      }
+    } catch (err) {
+      toast.error(err.message || "Delete failed");
+    }
+
+  };
+
 
   const renderContent = () => {
     switch (activeTab) {
@@ -645,6 +753,122 @@ const AdminDashboard = () => {
           </div>
         );
 
+      case 'Subscriptions':
+        return (
+          <div className="max-w-7xl mx-auto space-y-8">
+
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-2">Subscription Plans</h1>
+                <p className="text-slate-500 text-sm">Manage tiers, pricing, and features for the platform.</p>
+              </div>
+              <button 
+                onClick={() => handleOpenSubModal()}
+                className="flex items-center gap-2 px-6 py-3 bg-[#009688] hover:bg-[#00796B] text-white rounded-xl font-bold text-sm shadow-sm transition-all"
+              >
+                <Plus size={18} />
+                Create New Tier
+              </button>
+            </div>
+
+            {isSubLoading ? (
+              <div className="py-20 text-center text-slate-400 text-xs font-bold uppercase tracking-widest">Loading...</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {plans.map((plan) => (
+                  <div key={plan._id} className={`p-6 bg-white border border-slate-200 rounded-lg shadow-sm hover:shadow-md transition-all relative flex flex-col ${plan.status === 'inactive' ? 'opacity-60 grayscale' : ''}`}>
+                    <div className="flex justify-between items-start mb-6">
+                      <div className="p-2.5 bg-slate-50 text-slate-400 rounded-lg">
+                        <Ticket size={20} />
+                      </div>
+                      {plan.tag && (
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-blue-50 text-blue-600 uppercase tracking-widest">
+                          {plan.tag}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <h4 className="text-sm font-bold text-slate-900 mb-1">{plan.name}</h4>
+                    <p className="text-xs text-slate-500 mb-6 line-clamp-2 leading-relaxed">{plan.description}</p>
+                    
+                    <div className="grid grid-cols-3 gap-4 mb-6 pt-6 border-t border-slate-50">
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Monthly</p>
+                        <p className="text-sm font-semibold text-slate-900">₹{plan.prices.monthly}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Annual</p>
+                        <p className="text-sm font-semibold text-slate-900">₹{plan.prices.annual}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Dlvrs</p>
+                        <p className="text-sm font-semibold text-slate-900">{plan.deliveryDays}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 mt-auto">
+                      <button onClick={() => handleOpenSubModal(plan)} className="flex-1 py-2 bg-slate-50 text-slate-600 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-slate-100 transition-all">Edit</button>
+                      <button onClick={() => handleToggleSubStatus(plan._id)} className={`flex-1 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${plan.status === 'active' ? 'bg-amber-50 text-amber-600 hover:bg-amber-100' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`}>
+                        {plan.status === 'active' ? 'Disable' : 'Enable'}
+                      </button>
+                      <button onClick={() => handleDeleteSub(plan._id)} className="flex-1 py-2 bg-rose-50 text-rose-600 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-rose-100 transition-all">Del</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Modal - Also simplified to match rest of dashboard */}
+            <AnimatePresence>
+              {showSubModal && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-xl w-full max-w-xl overflow-hidden shadow-2xl">
+                    <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                      <h2 className="text-lg font-bold text-slate-900">{editingPlan ? 'Edit Plan' : 'Create Plan'}</h2>
+                      <button onClick={() => setShowSubModal(false)} className="p-2 text-slate-400 hover:text-slate-900 transition-all"><CloseIcon size={20} /></button>
+                    </div>
+                    <form onSubmit={handleSubSubmit} className="p-8 space-y-6">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Plan Name</label>
+                          <input required value={subFormData.name} onChange={e => setSubFormData({...subFormData, name: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/10" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tag</label>
+                          <input value={subFormData.tag} onChange={e => setSubFormData({...subFormData, tag: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/10" placeholder="e.g. Popular" />
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Description</label>
+                        <textarea required value={subFormData.description} onChange={e => setSubFormData({...subFormData, description: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm min-h-[80px]" />
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Monthly ₹</label>
+                          <input type="number" value={subFormData.prices.monthly} onChange={e => setSubFormData({...subFormData, prices: {...subFormData.prices, monthly: Number(e.target.value)}})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Annual ₹</label>
+                          <input type="number" value={subFormData.prices.annual} onChange={e => setSubFormData({...subFormData, prices: {...subFormData.prices, annual: Number(e.target.value)}})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Deliveries</label>
+                          <input type="number" value={subFormData.deliveryDays} onChange={e => setSubFormData({...subFormData, deliveryDays: Number(e.target.value)})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm" />
+                        </div>
+                      </div>
+                      <div className="flex gap-3 pt-4">
+                        <button type="button" onClick={() => setShowSubModal(false)} className="flex-1 py-3 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-bold uppercase tracking-widest">Cancel</button>
+                        <button type="submit" className="flex-1 py-3 bg-slate-900 text-white rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-black transition-all shadow-lg">Save Changes</button>
+                      </div>
+                    </form>
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
+          </div>
+        );
+
+
       case 'Settings':
         return (
           <div className="max-w-7xl mx-auto space-y-8">
@@ -713,7 +937,16 @@ const AdminDashboard = () => {
                 trend="stable" 
                 trendValue="STABLE" 
               />
+              <MetricCard 
+                title="Active Tiers" 
+                value={plans.filter(p => p.status === 'active').length} 
+                unit="Plans" 
+                icon={<Ticket size={18} />} 
+                trend="up" 
+                trendValue="LIVE" 
+              />
             </div>
+
 
             <section className="mt-16">
               <div className="flex justify-between items-center mb-8">
@@ -970,7 +1203,9 @@ const AdminDashboard = () => {
           <AdminNavItem icon={<FileText size={18} />} label="Records" active={activeTab === 'Records'} onClick={() => setActiveTab('Records')} />
           <AdminNavItem icon={<Building2 size={18} />} label="Facilities" active={activeTab === 'Facilities'} onClick={() => setActiveTab('Facilities')} />
           <AdminNavItem icon={<Users size={18} />} label="Vendors" active={activeTab === 'Vendors'} onClick={() => setActiveTab('Vendors')} />
+          <AdminNavItem icon={<Ticket size={18} />} label="Subscriptions" active={activeTab === 'Subscriptions'} onClick={() => setActiveTab('Subscriptions')} />
           <AdminNavItem icon={<Settings size={18} />} label="Settings" active={activeTab === 'Settings'} onClick={() => setActiveTab('Settings')} />
+
         </nav>
 
         <div className="p-4 border-t border-gray-200 bg-[#f8f9fa] space-y-3">

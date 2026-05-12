@@ -1,6 +1,6 @@
 import React from 'react';
-import "./App.css";
-import "./index.css";
+import "./styles/App.css";
+import "./styles/index.css";
 import { Helmet } from 'react-helmet-async';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
@@ -23,17 +23,19 @@ import ConsultationForm from './features/auth/components/ConsultationForm';
 import Login from './features/auth/components/Login';
 
 // Admin Pages
-import UserDashboard from "./features/dashboard/components/pages/UserDashboard";
-import AdminCategories from "./features/dashboard/components/pages/AdminCategories";
+import UserDashboard from "./features/dashboard/pages/UserDashboard";
+import AdminCategories from "./features/admin/pages/AdminCategories";
 // ProductCatalog is now integrated into UserDashboard as 'Vendor Products'
-import MedicalRecords from "./features/dashboard/components/pages/MedicalRecords";
-import Prescriptions from "./features/dashboard/components/pages/Prescriptions";
-import Appointments from "./features/dashboard/components/pages/Appointments";
-import Doctors from "./features/dashboard/components/pages/Doctors";
-import Settings from "./features/dashboard/components/pages/Settings";
-import AdminVendors from "./features/dashboard/components/pages/AdminVendors";
+import MedicalRecords from "./features/dashboard/pages/MedicalRecords";
+import Prescriptions from "./features/dashboard/pages/Prescriptions";
+import Appointments from "./features/dashboard/pages/Appointments";
+import Doctors from "./features/dashboard/pages/Doctors";
+import Settings from "./features/dashboard/pages/Settings";
+import AdminVendors from "./features/admin/pages/AdminVendors";
 import ProviderVerification from "./features/admin/pages/ProviderVerification";
 import AdminDashboard from "./features/admin/pages/AdminDashboard";
+
+
 
 import Cart from "./features/shop/pages/Cart";
 
@@ -43,6 +45,8 @@ import Register from "./features/provider/pages/onboarding/OnboardingWizard";
 import OnboardingWizard from "./features/provider/pages/onboarding/OnboardingWizard";
 import ProviderStatus from "./features/provider/pages/onboarding/ProviderStatus";
 import UnifiedDashboard from "./features/provider/pages/dashboard/UnifiedDashboard";
+import PharmacyDashboard from "./features/provider/pages/dashboard/PharmacyDashboard";
+import TrainerDashboard from "./features/provider/pages/dashboard/TrainerDashboard";
 
 // Legacy Vendor Imports (to be migrated)
 import VendorLogin from "./features/provider/legacy/Login";
@@ -61,6 +65,9 @@ function App() {
       {!location.pathname.startsWith("/admin") &&
        !location.pathname.startsWith("/vendor") &&
        !location.pathname.startsWith("/provider") && 
+       !location.pathname.startsWith("/lab") && 
+       !location.pathname.startsWith("/pharmacy") && 
+       !location.pathname.startsWith("/trainer") && 
        !location.pathname.startsWith("/dashboard") && <Navbar />}
 
         <Routes location={location} key={location.pathname}>
@@ -81,6 +88,8 @@ function App() {
             <Route path="verification" element={<ProviderVerification />} />
           </Route>
 
+
+
           {/* ✅ Flat Admin Route Aliases to prevent 404s from Sidebar links */}
           <Route path="/admin/appointments" element={<AdminLayout><Appointments /></AdminLayout>} />
           <Route path="/admin/medical-records" element={<AdminLayout><MedicalRecords /></AdminLayout>} />
@@ -88,6 +97,8 @@ function App() {
           <Route path="/admin/categories" element={<AdminLayout><AdminCategories /></AdminLayout>} />
           <Route path="/admin/settings" element={<AdminLayout><Settings /></AdminLayout>} />
           <Route path="/admin/verification" element={<AdminLayout><ProviderVerification /></AdminLayout>} />
+
+
 
           {/* ================= VENDOR ROUTES ================= */}
           
@@ -109,6 +120,8 @@ function App() {
           <Route path="/vendor/dashboard" element={<UnifiedDashboard />} />
           <Route path="/lab/dashboard" element={<UnifiedDashboard />} />
           <Route path="/nutrition/dashboard" element={<UnifiedDashboard />} />
+          <Route path="/pharmacy/dashboard" element={<PharmacyDashboard />} />
+          <Route path="/trainer/dashboard" element={<TrainerDashboard />} />
           <Route path="/dashboard" element={<UserDashboard />} />
 
           {/* ================= TERMS ================= */}

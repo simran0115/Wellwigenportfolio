@@ -23,34 +23,39 @@ const PricingPage = () => {
     };
   }, []);
 
-  const handleSubscribeClick = (planId) => {
-    const planMap = {
-      'fit_start': { name: 'Silver', price: '₹499/mo' },
-      'healthy_life': { name: 'Gold', price: '₹999/mo' },
-      'total_wellness': { name: 'Platinum', price: '₹1,999/mo' }
-    };
-
-    const selectedPlan = planMap[planId] || { name: 'Silver', price: '₹499/mo' };
-    setSelectedPlanDetails(selectedPlan);
+  const handleSubscribeClick = (plan) => {
+    const price = plan.prices[billingCycle] || plan.prices.monthly;
+    setSelectedPlanDetails({
+      id: plan._id,
+      name: plan.name,
+      price: `₹${price.toLocaleString('en-IN')}/${billingCycle === 'annual' ? 'yr' : 'mo'}`,
+      rawPrice: price,
+      billingCycle: billingCycle
+    });
     setShowPaymentModal(true);
   };
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = async () => {
     setShowPaymentModal(false);
     
-    // Save the plan intent to localStorage
-    localStorage.setItem("userSubscription", JSON.stringify({
-      plan: selectedPlanDetails.name,
-      status: "Active",
-      nextBilling: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-      price: selectedPlanDetails.price
-    }));
+    try {
+      // Save the subscription state locally for immediate feedback
+      localStorage.setItem("userSubscription", JSON.stringify({
+        plan: selectedPlanDetails.name,
+        status: "Active",
+        nextBilling: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+        price: selectedPlanDetails.price
+      }));
 
-    toast.success(`Payment successful! ${selectedPlanDetails.name} Plan active. Please login to continue.`);
-    
-    // Redirect to login after buying
-    navigate('/login');
+      toast.success(`Payment successful! ${selectedPlanDetails.name} Plan active.`);
+      
+      // Redirect to login or dashboard
+      navigate('/login');
+    } catch (err) {
+      toast.error("Error finalizing subscription");
+    }
   };
+
 
   return (
     <section

@@ -1,80 +1,82 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Check, Star, Shield, Zap } from 'lucide-react';
+import { subscriptionPlanService } from '../services/subscriptionPlanService';
 
-const plans = [
-  {
-    id: 'fit_start',
-    name: 'Fit Start',
-    icon: <Zap className="w-5 h-5 text-amber-500" />,
-    monthlyPrice: 499,
-    features: [
-      '2 fruit deliveries/week',
-      '1 GP consultation/month',
-      '1 basic lab panel/month',
-      'Standard support',
-    ],
-  },
-  {
-    id: 'healthy_life',
-    name: 'Healthy Life',
-    icon: <Star className="w-5 h-5 text-teal-600" />,
-    monthlyPrice: 999,
-    popular: true,
-    features: [
-      '3 fruit deliveries/week',
-      '3 consultations/month',
-      '2 lab panels/month',
-      '8 trainer sessions/month',
-      'Pharmacy auto-refill',
-    ],
-  },
-  {
-    id: 'total_wellness',
-    name: 'Total Wellness',
-    icon: <Shield className="w-5 h-5 text-blue-500" />,
-    monthlyPrice: 1999,
-    features: [
-      'Daily fruit delivery',
-      'Unlimited consultations',
-      'Comprehensive quarterly labs',
-      'Unlimited trainer sessions',
-      'Up to 4 family members',
-    ],
-  },
-];
+const PricingCards = ({ billingCycle, onSelectPlan, isLoading: isSubmitting }) => {
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-const PricingCards = ({ billingCycle, onSelectPlan, isLoading }) => {
-  const getPrice = (base) => {
-    if (billingCycle === 'quarterly') return Math.floor(base * 3 * 0.95);
-    if (billingCycle === 'annual') return Math.floor(base * 12 * 0.85);
-    return base;
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const res = await subscriptionPlanService.getActivePlans();
+        if (res.success) {
+          setPlans(res.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch plans:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPlans();
+  }, []);
+
+  const getPrice = (plan) => {
+    if (!plan.prices) return 0;
+    return plan.prices[billingCycle] || plan.prices.monthly;
   };
 
   const periodLabel = billingCycle === 'annual' ? 'yr' : billingCycle === 'quarterly' ? '3mo' : 'mo';
 
+  const getIcon = (plan) => {
+    const name = plan.name.toLowerCase();
+    if (name.includes('platinum') || name.includes('total')) return <Shield className="w-5 h-5 text-blue-500" />;
+    if (name.includes('gold') || plan.tag?.toLowerCase().includes('popular')) return <Star className="w-5 h-5 text-teal-600" />;
+    return <Zap className="w-5 h-5 text-amber-500" />;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+      </div>
+    );
+  }
+
+  if (plans.length === 0) {
+    return (
+      <div className="text-center py-20 text-gray-500 font-medium">
+        No subscription plans available at the moment.
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl mx-auto">
       {plans.map((plan) => {
-        const price = getPrice(plan.monthlyPrice);
+        const price = getPrice(plan);
+        const isPopular = plan.tag?.toLowerCase().includes('popular') || plan.tag?.toLowerCase().includes('gold');
+        
         return (
           <div
-            key={plan.id}
+            key={plan._id}
             className={`relative flex flex-col rounded-2xl p-7 border ${
-              plan.popular
+              isPopular
                 ? 'bg-white border-teal-300 shadow-md ring-2 ring-teal-500/20'
                 : 'bg-gray-50 border-gray-200 shadow-sm'
             }`}
           >
-            {plan.popular && (
+            {plan.tag && (
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-teal-600 text-white text-[10px] font-bold px-4 py-1 rounded-full uppercase tracking-wider whitespace-nowrap">
-                Most Popular
+                {plan.tag}
               </div>
             )}
 
             {/* Plan header */}
             <div className="flex items-center gap-3 mb-5">
-              <div className={`p-2.5 rounded-xl border ${plan.popular ? 'bg-teal-50 border-teal-100' : 'bg-white border-gray-200'}`}>
-                {plan.icon}
+              <div className={`p-2.5 rounded-xl border ${isPopular ? 'bg-teal-50 border-teal-100' : 'bg-white border-gray-200'}`}>
+                {getIcon(plan)}
               </div>
               <h3 className="text-lg font-bold text-gray-900">{plan.name}</h3>
             </div>
@@ -87,7 +89,7 @@ const PricingCards = ({ billingCycle, onSelectPlan, isLoading }) => {
               </div>
               {billingCycle !== 'monthly' && (
                 <p className="text-xs text-teal-600 font-medium mt-1">
-                  {billingCycle === 'annual' ? '15% off' : '5% off'} applied
+                  {billingCycle === 'annual' ? 'Annual savings' : 'Quarterly savings'} applied
                 </p>
               )}
             </div>
@@ -104,15 +106,15 @@ const PricingCards = ({ billingCycle, onSelectPlan, isLoading }) => {
 
             {/* CTA */}
             <button
-              disabled={isLoading}
-              onClick={() => onSelectPlan(plan.id)}
+              disabled={isSubmitting}
+              onClick={() => onSelectPlan(plan)}
               className={`w-full py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                plan.popular
+                isPopular
                   ? 'bg-teal-600 text-white hover:bg-teal-700'
                   : 'bg-white border border-gray-200 text-gray-800 hover:bg-gray-100'
               }`}
             >
-              {isLoading ? 'Processing...' : 'Subscribe Now'}
+              {isSubmitting ? 'Processing...' : 'Subscribe Now'}
             </button>
           </div>
         );
@@ -122,3 +124,5 @@ const PricingCards = ({ billingCycle, onSelectPlan, isLoading }) => {
 };
 
 export default PricingCards;
+
+

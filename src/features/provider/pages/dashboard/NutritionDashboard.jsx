@@ -39,7 +39,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { io } from "socket.io-client";
-import socket from '../../../../socket';
+import socket from '../../../../config/socket';
 
 const NavItem = ({ icon, label, active, onClick }) => (
   <button 

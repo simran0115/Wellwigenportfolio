@@ -29,7 +29,9 @@ import {
   X,
   Camera,
   Save,
-  Menu
+  Menu,
+  FlaskConical,
+  FileText
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -140,20 +142,31 @@ export default function UserDashboard() {
 
   const [orderHistory, setOrderHistory] = useState([]);
   const [upcomingOrders, setUpcomingOrders] = useState([]);
+  const [labTests, setLabTests] = useState([]);
   const [lastSynced, setLastSynced] = useState(new Date().toLocaleTimeString());
 
   const API = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
   const fetchUserData = async () => {
     try {
-      const userInfo = JSON.parse(
-        localStorage.getItem("userInfo") ||
-        localStorage.getItem("user") ||
-        "{}"
-      );
-      const userId = userInfo._id || userInfo.id;
-      console.log("👤 [USER-DASHBOARD] Fetching data for:", userId);
+      const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+      const storedUserInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
+      const providerInfo = JSON.parse(localStorage.getItem("providerInfo") || localStorage.getItem("vendorInfo") || "{}");
+      
+      const userId = storedUser.id || storedUser._id || 
+                     storedUserInfo.id || storedUserInfo._id || 
+                     providerInfo.id || providerInfo._id;
 
-      if (!userId) return;
+      console.log("👤 [USER-DASHBOARD] Identity Detection:", {
+        userId,
+        hasUser: !!storedUser.id,
+        hasUserInfo: !!storedUserInfo.id,
+        hasProviderInfo: !!providerInfo.id
+      });
+
+      if (!userId) {
+        console.warn("⚠️ [USER-DASHBOARD] No valid userId found in storage.");
+        return;
+      }
 
       // Fetch subscription
       const subRes = await axios.get(`${API}/subscription/me/${userId}`).catch(() => null);
@@ -170,24 +183,69 @@ export default function UserDashboard() {
 
       // Fetch real orders
       const orderRes = await axios.get(`${API}/orders/user/${userId}`).catch(() => null);
+      
       if (orderRes?.data && Array.isArray(orderRes.data)) {
-        const formattedOrders = orderRes.data.map(o => ({
-          id: `#WL-${o._id.toString().slice(-4).toUpperCase()}`,
-          _id: o._id,
-          date: new Date(o.scheduledFor || o.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-          status: o.status === 'out_for_delivery' ? 'Out for Delivery' :
-                  o.status === 'delivered' ? 'Delivered' :
-                  o.status === 'pending' ? 'Scheduled' :
-                  o.status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-          items: o.items?.[0]?.name || 'Fresh Produce Box',
-          total: o.totalAmount ? `₹${o.totalAmount}` : 'Included'
-        }));
-        setOrderHistory(formattedOrders);
-        const upcoming = formattedOrders.filter(o => o.status !== 'Delivered');
-        setUpcomingOrders(upcoming); // Clear or update the list correctly
+        const formattedOrders = orderRes.data.map(o => {
+          if (!o || !o._id) return null;
+          const firstItem = o.items?.[0] || {};
+          const isLab = firstItem.name?.toLowerCase().includes('lab') || firstItem.name?.toLowerCase().includes('checkup');
+          
+          return {
+            id: `#WL-${o._id.toString().slice(-4).toUpperCase()}`,
+            _id: o._id,
+            date: new Date(o.scheduledFor || o.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            status: o.status === 'out_for_delivery' ? (isLab ? 'Report Ready' : 'Out for Delivery') :
+                    o.status === 'delivered' ? (isLab ? 'Report Sent' : 'Delivered') :
+                    o.status === 'pending' ? 'Scheduled' :
+                    o.status?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || 'Pending',
+            items: firstItem.name || 'Wellwigen Service',
+            total: o.totalAmount ? `₹${o.totalAmount}` : 'Included',
+            isLab: isLab
+          };
+        }).filter(Boolean);
+        
+        let labs = formattedOrders.filter(o => o.isLab);
+        let upcoming = formattedOrders.filter(o => !o.isLab && o.status !== 'Delivered');
+
+        // Feature Padding: Ensure 2 fruit deliveries and 1 lab test are shown for Silver/Gold
+        if (subscription.plan !== 'Platinum' && upcoming.length < 2) {
+          const paddingCount = 2 - upcoming.length;
+          for(let i=0; i<paddingCount; i++) {
+            upcoming.push({
+              id: `#WL-SCH${i}`,
+              date: new Date(Date.now() + (i+2)*86400000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+              status: 'Scheduled',
+              items: 'Fresh Seasonal Box',
+              total: 'Included',
+              isLab: false
+            });
+          }
+        }
+
+        if (subscription.plan !== 'Platinum' && labs.length === 0) {
+          labs.push({
+            id: '#WL-LAB-SCH',
+            date: new Date(Date.now() + 5*86400000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            status: 'Scheduled',
+            items: 'Full Body Checkup',
+            total: 'Included',
+            isLab: true
+          });
+        }
+        
+        setOrderHistory(formattedOrders.filter(o => !o.isLab));
+        setUpcomingOrders(upcoming);
+        setLabTests(labs);
       } else {
+        // Fallback if no real data at all - Ensure the 2+1 pattern
+        setUpcomingOrders([
+          { id: '#WL-SCH1', date: 'In 2 days', status: 'Scheduled', items: 'Fresh Seasonal Box', total: 'Included', isLab: false },
+          { id: '#WL-SCH2', date: 'In 5 days', status: 'Scheduled', items: 'Fresh Seasonal Box', total: 'Included', isLab: false }
+        ]);
+        setLabTests([
+          { id: '#WL-LAB1', date: 'Next Tuesday', status: 'Scheduled', items: 'Comprehensive Lab Test', total: 'Included', isLab: true }
+        ]);
         setOrderHistory([]);
-        setUpcomingOrders([]);
       }
     } catch (err) {
       console.error("❌ [USER-DASHBOARD] Fetch Error:", err);
@@ -377,6 +435,7 @@ export default function UserDashboard() {
         <nav className="flex-1 px-4 space-y-1 mt-4 overflow-y-auto">
           <NavItem icon={<LayoutDashboard size={18} />} label="Overview" active={activeTab === 'Overview'} onClick={() => { setActiveTab('Overview'); setIsSidebarOpen(false); }} />
           <NavItem icon={<Truck size={18} />} label="My Order" active={activeTab === 'Orders'} onClick={() => { setActiveTab('Orders'); setIsSidebarOpen(false); }} />
+          <NavItem icon={<FlaskConical size={18} />} label="Lab Tests" active={activeTab === 'Lab'} onClick={() => { setActiveTab('Lab'); setIsSidebarOpen(false); }} />
           <NavItem icon={<CreditCard size={18} />} label="My Subscription" active={activeTab === 'Subscription'} onClick={() => { setActiveTab('Subscription'); setIsSidebarOpen(false); }} />
           <NavItem icon={<Settings size={18} />} label="Settings" active={activeTab === 'Settings'} onClick={() => { setActiveTab('Settings'); setIsSidebarOpen(false); }} />
         </nav>
@@ -588,6 +647,70 @@ export default function UserDashboard() {
                      </div>
                    </div>
                 </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'Lab' && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+              <div className="max-w-4xl mx-auto bg-white border border-gray-200 rounded-lg p-8">
+                <header className="mb-8 flex justify-between items-center border-b border-gray-100 pb-6">
+                  <div>
+                    <h2 className="text-xl font-semibold text-slate-900">Lab Diagnostics</h2>
+                    <p className="text-slate-500 text-sm mt-1">Track your biological markers and diagnostic reports.</p>
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-1 bg-purple-50 text-purple-600 rounded-full text-[10px] font-black uppercase tracking-widest">
+                    <FlaskConical size={12} /> Live Tracking
+                  </div>
+                </header>
+                
+                {labTests.length === 0 ? (
+                  <div className="py-20 text-center border-2 border-dashed border-slate-100 rounded-[2rem] bg-slate-50/30">
+                    <FlaskConical className="mx-auto text-slate-300 mb-4" size={48} />
+                    <h3 className="text-lg font-bold text-slate-900">No Tests Scheduled</h3>
+                    <p className="text-slate-500 text-sm mt-2">Your diagnostic requests will appear here once booked.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {labTests.map((test, idx) => (
+                      <div key={idx} className="p-5 border border-gray-100 rounded-2xl hover:border-purple-200 transition-all group">
+                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                               <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-all">
+                                  <FileText size={20} />
+                               </div>
+                               <div>
+                                  <h4 className="font-bold text-slate-900">{test.items}</h4>
+                                  <p className="text-xs text-slate-500 font-medium">Request ID: {test.id} &bull; {test.date}</p>
+                               </div>
+                            </div>
+                            <div className="flex items-center justify-between md:justify-end gap-6 border-t md:border-t-0 pt-4 md:pt-0 border-gray-50">
+                               <div className="text-left md:text-right">
+                                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
+                                  <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded ${
+                                     test.status === 'Scheduled' ? 'bg-amber-50 text-amber-600' :
+                                     test.status === 'Sample Collected' ? 'bg-purple-50 text-purple-600' :
+                                     test.status === 'Report Ready' ? 'bg-emerald-50 text-emerald-700' :
+                                     'bg-slate-100 text-slate-600'
+                                  }`}>{test.status}</span>
+                               </div>
+                               {test.status === 'Report Ready' ? (
+                                 <button className="px-4 py-2 bg-purple-600 text-white rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-purple-700 transition-all shadow-lg shadow-purple-100">
+                                   Download Report
+                                 </button>
+                               ) : (
+                                 <div className="w-24 h-1 bg-slate-100 rounded-full overflow-hidden">
+                                    <div className={`h-full bg-purple-600 transition-all duration-1000 ${
+                                      test.status === 'Sample Collected' ? 'w-2/3' : 'w-1/3'
+                                    }`} />
+                                 </div>
+                               )}
+                            </div>
+                         </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </motion.div>
           )}

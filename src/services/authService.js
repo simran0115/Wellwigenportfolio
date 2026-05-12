@@ -1,5 +1,5 @@
 import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db } from '../config/firebase';
 import apiClient from './apiClient';
 import { ENDPOINTS } from './apiConstants';
 

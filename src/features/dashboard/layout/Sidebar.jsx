@@ -40,8 +40,10 @@ export default function Sidebar() {
     { name: "Medical Records", icon: FileText, route: "/admin/medical-records" },
     { name: "Vendor Partners", icon: Users, route: "/admin/vendors" },
     { name: "Health Categories", icon: Tag, route: "/admin/categories" },
+    { name: "Subscription Plans", icon: Sparkles, route: "/admin/subscriptions" },
     { name: "System Config", icon: Settings, route: "/admin/settings" },
   ];
+
 
   return (
     <aside className="w-72 min-h-screen bg-[#0F172A] border-r border-slate-800 flex flex-col sticky top-0 h-screen overflow-hidden font-sans text-slate-400">
