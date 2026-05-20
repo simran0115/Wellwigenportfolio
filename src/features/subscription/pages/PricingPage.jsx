@@ -49,13 +49,12 @@ const PricingPage = () => {
 
       toast.success(`Payment successful! ${selectedPlanDetails.name} Plan active.`);
       
-      // Redirect to login or dashboard
-      navigate('/login');
+      // Redirect to dashboard
+      navigate('/dashboard');
     } catch (err) {
       toast.error("Error finalizing subscription");
     }
   };
-
 
   return (
     <section

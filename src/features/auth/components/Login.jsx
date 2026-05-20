@@ -28,8 +28,19 @@ const Login = () => {
         }
 
         try {
-            await login(formData);
-            setTimeout(() => navigate('/dashboard', { replace: true }), 1200);
+            const user = await login(formData);
+            
+            // Save user to local storage so dashboard can read it
+            localStorage.setItem("user", JSON.stringify(user));
+
+            setTimeout(() => {
+                const hasSubscription = localStorage.getItem("userSubscription");
+                if (hasSubscription) {
+                    navigate('/dashboard', { replace: true });
+                } else {
+                    navigate('/pricing', { replace: true });
+                }
+            }, 1200);
         } catch {
             // Error state is managed by zustand store.
         }

@@ -37,6 +37,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { io } from "socket.io-client";
+import useAppStore from "../../../store/useAppStore";
 
 const getUpcomingDeliveries = (plan, status) => {
   if (status && (status.toLowerCase() === 'expired' || status.toLowerCase() === 'cancelled')) return [];
@@ -110,10 +111,27 @@ export default function UserDashboard() {
     { id: 1, type: "VISA", last4: "4242", expiry: "12/28", isDefault: true }
   ]);
   
-  // Simulated User Data with local persistence
+  // Get active user from global store
+  const authUser = useAppStore((state) => state.auth?.user);
+
+  // Simulated User Data with local persistence & dynamic fallback
   const [userData, setUserData] = useState(() => {
     const saved = localStorage.getItem("userData");
-    return saved ? JSON.parse(saved) : {
+    if (saved) return JSON.parse(saved);
+    
+    // Fallback to real logged-in user details if available
+    const storedUser = authUser || JSON.parse(localStorage.getItem("user") || localStorage.getItem("userInfo") || "{}");
+    if (storedUser && storedUser.name) {
+      return {
+        name: storedUser.name,
+        email: storedUser.email || "",
+        phone: storedUser.phone || storedUser.mobile || "",
+        avatar: storedUser.avatar || "https://i.pravatar.cc/150?img=32",
+        joinDate: storedUser.joinDate || new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+      };
+    }
+
+    return {
       name: "Rajesh Kumar",
       email: "rajesh@example.com",
       phone: "+91 98765 43210",
