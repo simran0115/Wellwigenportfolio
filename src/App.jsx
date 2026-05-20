@@ -2,7 +2,7 @@ import React from 'react';
 import "./styles/App.css";
 import "./styles/index.css";
 import { Helmet } from 'react-helmet-async';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
 import Navbar from "./components/common/Navbar";
@@ -21,6 +21,7 @@ import Footer from './components/common/Footer';
 import TermsAndConditions from './components/TermsAndConditions';
 import ConsultationForm from './features/auth/components/ConsultationForm';
 import Login from './features/auth/components/Login';
+import TrainerForm from './components/TrainerForm';
 
 // Admin Pages
 import UserDashboard from "./features/dashboard/pages/UserDashboard";
@@ -52,6 +53,77 @@ import TrainerDashboard from "./features/provider/pages/dashboard/TrainerDashboa
 import VendorLogin from "./features/provider/legacy/Login";
 import AddProduct from "./features/provider/legacy/AddProduct";
 // import MyStore from "./vendor/MyStore";
+
+// Route guard to prevent wrong dashboard access and enforce approved status
+function ProviderProtectedRoute({ children, allowedRole }) {
+  const token = localStorage.getItem("providerToken") || localStorage.getItem("vendorToken");
+  const infoRaw = localStorage.getItem("providerInfo") || localStorage.getItem("vendorInfo");
+  const status = localStorage.getItem("providerStatus") || localStorage.getItem("vendorStatus");
+  
+  if (!token || !infoRaw) {
+    return <Navigate to="/vendor/login" replace />;
+  }
+  
+  let info = {};
+  try {
+    info = JSON.parse(infoRaw);
+  } catch (e) {
+    console.error("Failed to parse providerInfo:", e);
+    return <Navigate to="/vendor/login" replace />;
+  }
+  
+  const type = (info.type || "").toUpperCase(); // e.g. "DOCTOR", "LAB", "PHARMACY", "TRAINER", "NUTRITION", "VENDOR"
+  
+  // Enforce Approved Status
+  if (status !== "approved") {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.08)] p-8 border border-slate-100">
+          <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 font-bold">⚠️</div>
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Access Restricted</h2>
+          <p className="mt-2 text-sm text-slate-500 leading-relaxed">
+            Your application is currently in status: <span className="font-bold uppercase text-amber-600 bg-amber-50 px-2 py-0.5 rounded">{status || "pending"}</span>.
+          </p>
+          <p className="mt-2 text-xs text-slate-400 leading-relaxed">
+            Once administrators approve your application, you will receive an email with your credentials to access your secure portal.
+          </p>
+          <button 
+            onClick={() => { localStorage.clear(); window.location.href = "/vendor/login"; }} 
+            className="mt-8 w-full py-3.5 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-slate-200"
+          >
+            Return to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
+  // Enforce Role Alignment & Prevent Wrong Dashboard Access
+  if (allowedRole && type !== allowedRole.toUpperCase()) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.08)] p-8 border border-slate-100">
+          <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 font-bold">🚫</div>
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Access Prohibited</h2>
+          <p className="mt-2 text-sm text-slate-500 leading-relaxed">
+            You are registered as a <span className="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase">{type}</span>.
+          </p>
+          <p className="mt-2 text-xs text-slate-400 leading-relaxed">
+            You do not have authorization to view the <span className="font-bold text-rose-600 uppercase">{allowedRole}</span> dashboard.
+          </p>
+          <button 
+            onClick={() => { window.location.href = `/${type.toLowerCase()}/dashboard`; }} 
+            className="mt-8 w-full py-3.5 bg-[#009688] text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[#00796B] transition-all shadow-xl shadow-emerald-200"
+          >
+            Go to My Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
+  return children;
+}
 
 function App() {
   const location = useLocation();
@@ -115,13 +187,13 @@ function App() {
           } />
 
           {/* ✅ Role-Specific Provider Dashboards */}
-          <Route path="/provider/dashboard" element={<UnifiedDashboard />} />
-          <Route path="/doctor/dashboard" element={<UnifiedDashboard />} />
-          <Route path="/vendor/dashboard" element={<UnifiedDashboard />} />
-          <Route path="/lab/dashboard" element={<UnifiedDashboard />} />
-          <Route path="/nutrition/dashboard" element={<UnifiedDashboard />} />
-          <Route path="/pharmacy/dashboard" element={<PharmacyDashboard />} />
-          <Route path="/trainer/dashboard" element={<TrainerDashboard />} />
+          <Route path="/provider/dashboard" element={<ProviderProtectedRoute><UnifiedDashboard /></ProviderProtectedRoute>} />
+          <Route path="/doctor/dashboard" element={<ProviderProtectedRoute allowedRole="DOCTOR"><UnifiedDashboard /></ProviderProtectedRoute>} />
+          <Route path="/vendor/dashboard" element={<ProviderProtectedRoute allowedRole="VENDOR"><UnifiedDashboard /></ProviderProtectedRoute>} />
+          <Route path="/lab/dashboard" element={<ProviderProtectedRoute allowedRole="LAB"><UnifiedDashboard /></ProviderProtectedRoute>} />
+          <Route path="/nutrition/dashboard" element={<ProviderProtectedRoute allowedRole="NUTRITION"><UnifiedDashboard /></ProviderProtectedRoute>} />
+          <Route path="/pharmacy/dashboard" element={<ProviderProtectedRoute allowedRole="PHARMACY"><PharmacyDashboard /></ProviderProtectedRoute>} />
+          <Route path="/trainer/dashboard" element={<ProviderProtectedRoute allowedRole="TRAINER"><TrainerDashboard /></ProviderProtectedRoute>} />
           <Route path="/dashboard" element={<UserDashboard />} />
 
           {/* ================= TERMS ================= */}
@@ -167,10 +239,12 @@ function App() {
           />
 
           {/* ================= OTHER ROUTES ================= */}
+          <Route path="/services" element={<PageWrapper><ResponsiveSection><Dashboard /></ResponsiveSection><Footer /></PageWrapper>} />
           <Route path="/ecosystem" element={<PageWrapper><Ecosystem /><Footer /></PageWrapper>} />
           <Route path="/pricing" element={<PageWrapper><Pricing /><Footer /></PageWrapper>} />
           <Route path="/testimonial" element={<PageWrapper><Testimonials /><Footer /></PageWrapper>} />
           <Route path="/contactus" element={<PageWrapper><ContactUs /><Footer /></PageWrapper>} />
+          <Route path="/join-as-trainer" element={<PageWrapper><TrainerForm /><Footer /></PageWrapper>} />
 
           {/* ================= REGISTER ================= */}
           <Route path="/register" element={

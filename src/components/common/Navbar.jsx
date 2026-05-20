@@ -28,7 +28,7 @@ const Navbar = () => {
     { name: "Home", path: "/", icon: <LayoutDashboard size={18} /> },
     { name: "How it Works", path: "/ecosystem", icon: <Calendar size={18} /> },
     { name: "Pricing", path: "/pricing", icon: <CreditCard size={18} /> },
-    { name: "Services", path: "/dashboard", icon: <Sparkles size={18} /> },
+    { name: "Services", path: "/services", icon: <Sparkles size={18} /> },
     { name: "About Us", path: "/testimonial", icon: <Info size={18} /> },
     { name: "Contact Us", path: "/contactus", icon: <MessageCircle size={18} /> },
   ];
@@ -79,10 +79,10 @@ const Navbar = () => {
           {/* DESKTOP BUTTON */}
           <div className="hidden md:flex">
             <button
-              onClick={() => navigate("/register")}
+              onClick={() => navigate("/login")}
               className="px-4 py-2 text-sm font-medium rounded-lg bg-teal-500 text-white hover:bg-teal-600 transition"
             >
-              Register
+              Login
             </button>
           </div>
 
@@ -123,15 +123,15 @@ const Navbar = () => {
               );
             })}
 
-            {/* MOBILE REGISTER */}
+            {/* MOBILE LOGIN */}
             <button
               onClick={() => {
-                navigate("/register");
+                navigate("/login");
                 setIsOpen(false);
               }}
               className="w-full py-2 rounded-lg text-sm bg-teal-500 text-white hover:bg-teal-600 transition"
             >
-              Register
+              Login
             </button>
           </div>
         </div>

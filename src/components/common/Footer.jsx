@@ -34,7 +34,7 @@ const Footer = () => {
                         <ul className="space-y-3 text-sm sm:text-base text-gray-400">
                             <li><a href="/" className="hover:text-teal-500 transition-colors">Home</a></li>
                             <li><a href="#about" className="hover:text-teal-500 transition-colors">About Us</a></li>
-                            <li><a href="#services" className="hover:text-teal-500 transition-colors">Services</a></li>
+                            <li><a href="/services" className="hover:text-teal-500 transition-colors">Services</a></li>
                             <li><a href="/join-as-trainer" className="hover:text-teal-500 transition-colors">Become a Trainer</a></li>
                             <li><a href="/provider/onboarding" className="hover:text-teal-500 transition-colors">Join as Provider</a></li>
                             <li><a href="/vendor/login" className="hover:text-teal-500 transition-colors">Provider Login</a></li>
@@ -46,10 +46,12 @@ const Footer = () => {
                     <div>
                         <h4 className="font-semibold text-white mb-6">Services</h4>
                         <ul className="space-y-3 text-sm sm:text-base text-gray-400">
-                            <li><a href="#" className="hover:text-teal-500 transition-colors">Personal Training</a></li>
-                            <li><a href="#" className="hover:text-teal-500 transition-colors">Yoga Classes</a></li>
-                            <li><a href="#" className="hover:text-teal-500 transition-colors">Physiotherapy</a></li>
-                            <li><a href="#" className="hover:text-teal-500 transition-colors">Diet Consultation</a></li>
+                            <li><a href="/services" className="hover:text-teal-500 transition-colors">Doctors Consultation</a></li>
+                            <li><a href="/services" className="hover:text-teal-500 transition-colors">Fitness Training</a></li>
+                            <li><a href="/services" className="hover:text-teal-500 transition-colors">Lab Tests</a></li>
+                            <li><a href="/services" className="hover:text-teal-500 transition-colors">Medicine Delivery</a></li>
+                            <li><a href="/services" className="hover:text-teal-500 transition-colors">Nutrition & Food</a></li>
+                            <li><a href="/services" className="hover:text-teal-500 transition-colors">Fruit Marketplace</a></li>
                         </ul>
                     </div>
 

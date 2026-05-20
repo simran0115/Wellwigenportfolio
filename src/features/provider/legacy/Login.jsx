@@ -38,7 +38,7 @@ function Login() {
       toast.success("Welcome back to Wellwigen Portal");
       
       const type = res.provider.type.toLowerCase();
-      if (["doctor", "vendor", "lab", "nutrition"].includes(type)) {
+      if (["doctor", "vendor", "lab", "nutrition", "pharmacy", "trainer"].includes(type)) {
         navigate(`/${type}/dashboard`);
       } else {
         navigate("/provider/dashboard");

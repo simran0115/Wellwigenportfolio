@@ -16,7 +16,7 @@ const Dashboard = () => {
         backgroundSize: '24px 24px',
       }}
     >
-      <section className="px-4 sm:px-6 md:px-10 lg:px-16 py-12 sm:py-16 md:py-20">
+      <section id="services" className="px-4 sm:px-6 md:px-10 lg:px-16 py-12 sm:py-16 md:py-20">
 
         {/* Heading */}
         <p className="text-center text-teal-600 text-xs tracking-widest uppercase font-semibold mb-3">

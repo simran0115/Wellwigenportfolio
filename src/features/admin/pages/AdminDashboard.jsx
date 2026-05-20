@@ -530,47 +530,81 @@ const AdminDashboard = () => {
                         <td colSpan="5" className="py-20 text-center text-slate-400 text-sm font-medium">Loading applications...</td>
                       </tr>
                     ) : vendorTab === 'Pending' && pendingVendors.length > 0 ? (
-                      pendingVendors.map((vendor) => (
-                        <tr key={vendor._id} className="hover:bg-slate-50/50 transition-colors">
-                          <td className="px-8 py-5">
-                            <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-xs uppercase">
-                                {vendor.businessName.substring(0, 2)}
-                              </div>
-                              <div className="flex flex-col">
-                                <span className="text-sm font-bold text-slate-900">{vendor.businessName}</span>
-                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{vendor.licenseNumber}</span>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-8 py-5">
-                            <div className="flex flex-col">
-                              <span className="text-sm font-semibold text-slate-700">{vendor.type}</span>
-                              <span className="text-xs text-slate-500">{vendor.ownerName}</span>
-                            </div>
-                          </td>
-                          <td className="px-8 py-5">
-                            <div className="flex flex-col">
-                              <span className="text-sm font-medium text-slate-600">{vendor.email}</span>
-                              <span className="text-[10px] text-slate-400">{vendor.phone}</span>
-                            </div>
-                          </td>
-                          <td className="px-8 py-5">
-                            <span className="px-2 py-1 bg-amber-50 text-amber-600 rounded text-[10px] font-bold uppercase tracking-widest">Awaiting Review</span>
-                          </td>
-                          <td className="px-8 py-5">
-                            <div className="flex justify-end">
-                              <button 
-                                onClick={() => setSelectedVendor(vendor)}
-                                className="px-5 py-2 bg-[#009688] hover:bg-[#00796B] text-white rounded-lg text-xs font-bold shadow-md shadow-emerald-900/10 transition-all flex items-center gap-2"
-                              >
-                                Review
-                                <ChevronRight size={14} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
+                      (() => {
+                        const grouped = pendingVendors.reduce((acc, vendor) => {
+                          const type = (vendor.type || "VENDOR").toUpperCase();
+                          if (!acc[type]) acc[type] = [];
+                          acc[type].push(vendor);
+                          return acc;
+                        }, {});
+
+                        const PROVIDER_CATEGORIES = {
+                          DOCTOR: "🩺 Medical Professionals (Doctors)",
+                          LAB: "🔬 Diagnostic Laboratories",
+                          PHARMACY: "💊 Pharmacies",
+                          NUTRITION: "🥗 Nutrition & Diet",
+                          TRAINER: "🏋️ Fitness Trainers",
+                          VENDOR: "🛒 Retail Vendors"
+                        };
+
+                        return Object.entries(grouped).map(([category, list]) => (
+                          <React.Fragment key={category}>
+                            <tr className="bg-slate-100/70 border-y border-slate-200/80">
+                              <td colSpan="5" className="px-8 py-3.5">
+                                <div className="flex items-center gap-3">
+                                  <span className="text-xs font-black text-[#009688] tracking-widest uppercase">
+                                    {PROVIDER_CATEGORIES[category] || `${category}s`}
+                                  </span>
+                                  <span className="px-2.5 py-0.5 bg-emerald-50 text-[#009688] text-[10px] font-bold rounded-full">
+                                    {list.length} pending
+                                  </span>
+                                </div>
+                              </td>
+                            </tr>
+                            {list.map((vendor) => (
+                              <tr key={vendor._id} className="hover:bg-slate-50/50 transition-colors">
+                                <td className="px-8 py-5">
+                                  <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-xs uppercase">
+                                      {vendor.businessName.substring(0, 2)}
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span className="text-sm font-bold text-slate-900">{vendor.businessName}</span>
+                                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{vendor.licenseNumber}</span>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-8 py-5">
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-semibold text-slate-700">{vendor.type}</span>
+                                    <span className="text-xs text-slate-500">{vendor.ownerName}</span>
+                                  </div>
+                                </td>
+                                <td className="px-8 py-5">
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-medium text-slate-600">{vendor.email}</span>
+                                    <span className="text-[10px] text-slate-400">{vendor.phone}</span>
+                                  </div>
+                                </td>
+                                <td className="px-8 py-5">
+                                  <span className="px-2 py-1 bg-amber-50 text-amber-600 rounded text-[10px] font-bold uppercase tracking-widest">Awaiting Review</span>
+                                </td>
+                                <td className="px-8 py-5">
+                                  <div className="flex justify-end">
+                                    <button 
+                                      onClick={() => setSelectedVendor(vendor)}
+                                      className="px-5 py-2 bg-[#009688] hover:bg-[#00796B] text-white rounded-lg text-xs font-bold shadow-md shadow-emerald-900/10 transition-all flex items-center gap-2"
+                                    >
+                                      Review
+                                      <ChevronRight size={14} />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </React.Fragment>
+                        ));
+                      })()
                       ) : vendorTab === 'Active' && activeVendors.length > 0 ? (
                         activeVendors.map((vendor) => (
                           <tr key={vendor._id} className="hover:bg-slate-50/50 transition-colors">
