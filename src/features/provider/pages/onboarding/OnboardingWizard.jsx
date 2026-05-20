@@ -101,7 +101,11 @@ const OnboardingWizard = () => {
   const handleTypeSelect = (type) => {
     setSelectedType(type);
     updateField('type', type);
-    nextStep();
+    
+    const next = step + 1;
+    setStep(next);
+    saveProgress({ ...formData, type, onboardingStep: next });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const nextStep = () => {

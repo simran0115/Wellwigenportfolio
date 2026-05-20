@@ -51,6 +51,9 @@ const ConsultationForm = () => {
                 password: formData.password,
             });
 
+            // Clear any old local storage state to prevent testing leaks
+            localStorage.clear();
+
             setFormData({
                 name: '',
                 mobile: '',

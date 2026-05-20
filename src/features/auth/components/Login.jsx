@@ -1,14 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Modal from '../../../components/common/Modal';
 import { Eye, EyeOff } from 'lucide-react';
 import useAppStore from '../../../store/useAppStore';
+import apiClient from '../../../services/apiClient';
 
 const Login = () => {
     const navigate = useNavigate();
 
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [showPassword, setShowPassword] = useState(false);
+
+    // Redirect provider if they are already logged in
+    useEffect(() => {
+        const providerToken = localStorage.getItem("providerToken") || localStorage.getItem("vendorToken");
+        const providerInfoRaw = localStorage.getItem("providerInfo") || localStorage.getItem("vendorInfo");
+        if (providerToken && providerInfoRaw) {
+            try {
+                const info = JSON.parse(providerInfoRaw);
+                const type = (info.type || info.role || info.category || "").toLowerCase();
+                if (type) {
+                    navigate(`/${type}/dashboard`, { replace: true });
+                } else {
+                    navigate("/provider/dashboard", { replace: true });
+                }
+            } catch (e) {
+                console.error("Error redirecting provider from user login page:", e);
+            }
+        }
+    }, [navigate]);
 
     const auth = useAppStore((state) => state.auth);
     const login = useAppStore((state) => state.login);
@@ -32,15 +52,36 @@ const Login = () => {
             
             // Save user to local storage so dashboard can read it
             localStorage.setItem("user", JSON.stringify(user));
+            localStorage.removeItem("userSubscription");
 
-            setTimeout(() => {
-                const hasSubscription = localStorage.getItem("userSubscription");
-                if (hasSubscription) {
-                    navigate('/dashboard', { replace: true });
-                } else {
-                    navigate('/pricing', { replace: true });
-                }
-            }, 1200);
+             setTimeout(async () => {
+                 try {
+                     const userId = user.id || user._id;
+                     const subRes = await apiClient.get(`/api/subscription/me/${userId}`);
+                     if (subRes?.data?.data && (subRes.data.data.status === 'active' || subRes.data.data.status === 'Active')) {
+                         const s = subRes.data.data;
+                         const planMap = { fit_start: 'Silver', healthy_life: 'Gold', total_wellness: 'Platinum' };
+                         localStorage.setItem("userSubscription", JSON.stringify({
+                             plan: planMap[s.plan] || s.plan || 'Silver',
+                             status: "Active",
+                             nextBilling: s.endDate ? new Date(s.endDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'N/A',
+                             price: `₹${s.price || 499}/mo`
+                         }));
+                         navigate('/dashboard', { replace: true });
+                     } else {
+                         localStorage.removeItem("userSubscription");
+                         navigate('/pricing', { replace: true });
+                     }
+                 } catch (err) {
+                     console.error("Error checking subscription on login:", err);
+                     const hasSubscription = localStorage.getItem("userSubscription");
+                     if (hasSubscription) {
+                         navigate('/dashboard', { replace: true });
+                     } else {
+                         navigate('/pricing', { replace: true });
+                     }
+                 }
+             }, 1200);
         } catch {
             // Error state is managed by zustand store.
         }
@@ -115,6 +156,15 @@ const Login = () => {
                                 onClick={() => navigate('/register')}
                             >
                                 Register
+                            </span>
+                        </p>
+                        <p className="text-center mt-2 text-gray-500 text-sm">
+                            Are you a health provider?{' '}
+                            <span
+                                className="text-blue-600 cursor-pointer font-bold hover:underline"
+                                onClick={() => navigate('/vendor/login')}
+                            >
+                                Provider Portal
                             </span>
                         </p>
                     </form>

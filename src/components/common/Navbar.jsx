@@ -24,6 +24,44 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const providerToken = localStorage.getItem("providerToken") || localStorage.getItem("vendorToken");
+  const providerInfoRaw = localStorage.getItem("providerInfo") || localStorage.getItem("vendorInfo");
+  const userToken = localStorage.getItem("user") || localStorage.getItem("userInfo");
+  const adminToken = localStorage.getItem("adminToken");
+
+  const getCtaButton = () => {
+    if (adminToken) {
+      return {
+        label: "Admin Panel",
+        onClick: () => navigate("/admin/dashboard")
+      };
+    }
+    if (providerToken && providerInfoRaw) {
+      try {
+        const info = JSON.parse(providerInfoRaw);
+        const type = (info.type || info.role || info.category || "").toLowerCase();
+        return {
+          label: "Dashboard",
+          onClick: () => navigate(type ? `/${type}/dashboard` : "/provider/dashboard")
+        };
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    if (userToken) {
+      return {
+        label: "Dashboard",
+        onClick: () => navigate("/dashboard")
+      };
+    }
+    return {
+      label: "Login",
+      onClick: () => navigate("/login")
+    };
+  };
+
+  const cta = getCtaButton();
+
   const navLinks = [
     { name: "Home", path: "/", icon: <LayoutDashboard size={18} /> },
     { name: "How it Works", path: "/ecosystem", icon: <Calendar size={18} /> },
@@ -79,10 +117,10 @@ const Navbar = () => {
           {/* DESKTOP BUTTON */}
           <div className="hidden md:flex">
             <button
-              onClick={() => navigate("/login")}
+              onClick={cta.onClick}
               className="px-4 py-2 text-sm font-medium rounded-lg bg-teal-500 text-white hover:bg-teal-600 transition"
             >
-              Login
+              {cta.label}
             </button>
           </div>
 
@@ -126,12 +164,12 @@ const Navbar = () => {
             {/* MOBILE LOGIN */}
             <button
               onClick={() => {
-                navigate("/login");
+                cta.onClick();
                 setIsOpen(false);
               }}
               className="w-full py-2 rounded-lg text-sm bg-teal-500 text-white hover:bg-teal-600 transition"
             >
-              Login
+              {cta.label}
             </button>
           </div>
         </div>

@@ -98,6 +98,71 @@ export default function UserDashboard() {
   
   const [activeTab, setActiveTab] = useState(location.state?.activeTab || "Overview");
   const [showTracking, setShowTracking] = useState(false);
+
+  // Auth and Route Guard
+  useEffect(() => {
+    const providerToken = localStorage.getItem("providerToken") || localStorage.getItem("vendorToken");
+    const providerInfoRaw = localStorage.getItem("providerInfo") || localStorage.getItem("vendorInfo");
+    const userToken = localStorage.getItem("user") || localStorage.getItem("userInfo");
+
+    // Redirect provider to their dashboard if they land here by mistake
+    if (providerToken && providerInfoRaw && !userToken) {
+      try {
+        const info = JSON.parse(providerInfoRaw);
+        const type = (info.type || info.role || info.category || "").toLowerCase();
+        if (type) {
+          navigate(`/${type}/dashboard`, { replace: true });
+        } else {
+          navigate("/provider/dashboard", { replace: true });
+        }
+      } catch (e) {
+        console.error("Error parsing providerInfo in UserDashboard:", e);
+      }
+      return;
+    }
+
+    // Redirect logged-out visitors to login page
+    if (!userToken && !providerToken) {
+      navigate("/login", { replace: true });
+      return;
+    }
+
+    // Ensure logged-in user has an active subscription
+    if (userToken) {
+      const hasSubscription = localStorage.getItem("userSubscription");
+      if (!hasSubscription) {
+        const checkBackendSub = async () => {
+          try {
+            const user = JSON.parse(userToken);
+            const userId = user.id || user._id;
+            if (userId) {
+              const apiEndpoint = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+              const res = await axios.get(`${apiEndpoint}/subscription/me/${userId}`).catch(() => null);
+              if (res?.data?.data && (res.data.data.status === 'active' || res.data.data.status === 'Active')) {
+                const s = res.data.data;
+                const planMap = { fit_start: 'Silver', healthy_life: 'Gold', total_wellness: 'Platinum' };
+                localStorage.setItem("userSubscription", JSON.stringify({
+                  plan: planMap[s.plan] || s.plan || 'Silver',
+                  status: "Active",
+                  nextBilling: s.endDate ? new Date(s.endDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'N/A',
+                  price: `₹${s.price || 499}/mo`
+                }));
+                // Reload to refresh state
+                window.location.reload();
+                return;
+              }
+            }
+            // Redirect to pricing if no active subscription exists
+            navigate('/pricing', { replace: true });
+          } catch (err) {
+            console.error("Error checking subscription on dashboard load:", err);
+            navigate('/pricing', { replace: true });
+          }
+        };
+        checkBackendSub();
+      }
+    }
+  }, [navigate]);
   const [isEditing, setIsEditing] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 

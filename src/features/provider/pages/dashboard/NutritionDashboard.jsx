@@ -358,8 +358,8 @@ const NutritionDashboard = () => {
     setTimeout(() => {
       toast.success("Order placed successfully!", { id: "order" });
       setCart({});
-      // Redirect to User Dashboard as requested
-      navigate('/dashboard', { state: { activeTab: 'Overview' } });
+      // Set active tab to Orders to show the placed order in provider portal
+      setActiveTab('Orders');
     }, 1500);
   };
 
@@ -702,7 +702,7 @@ const NutritionDashboard = () => {
                    <h2 className="text-2xl font-bold text-slate-900 mb-3">Store is Currently Closed</h2>
                    <p className="text-slate-500 max-w-md mx-auto mb-6 text-sm">The vendor has temporarily disabled product placement. Please check back later or contact support if you have an urgent delivery request.</p>
                    <button 
-                     onClick={() => navigate('/dashboard')}
+                     onClick={() => setActiveTab('Overview')}
                      className="px-6 py-3 bg-slate-900 text-white rounded font-semibold text-sm shadow-sm"
                    >
                      Back to Dashboard

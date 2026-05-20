@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { motion } from 'framer-motion';
@@ -15,6 +15,25 @@ function Login() {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+
+  // Redirect provider if they are already logged in
+  useEffect(() => {
+    const providerToken = localStorage.getItem("providerToken") || localStorage.getItem("vendorToken");
+    const providerInfoRaw = localStorage.getItem("providerInfo") || localStorage.getItem("vendorInfo");
+    if (providerToken && providerInfoRaw) {
+      try {
+        const info = JSON.parse(providerInfoRaw);
+        const type = (info.type || info.role || info.category || "").toLowerCase();
+        if (type) {
+          navigate(`/${type}/dashboard`, { replace: true });
+        } else {
+          navigate("/provider/dashboard", { replace: true });
+        }
+      } catch (e) {
+        console.error("Error redirecting provider from provider login page:", e);
+      }
+    }
+  }, [navigate]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -163,12 +182,16 @@ function Login() {
               </button>
             </form>
 
-            <div className="pt-6 border-t border-gray-100">
-              <p className="text-[11px] text-gray-500 font-medium text-center">
-                New to the platform?{' '}
-                <a href="/provider/onboarding" className="text-blue-600 font-bold hover:underline">Apply for an account</a>
-              </p>
-            </div>
+             <div className="pt-6 border-t border-gray-100 space-y-2">
+               <p className="text-[11px] text-gray-500 font-medium text-center">
+                 New to the platform?{' '}
+                 <a href="/provider/onboarding" className="text-blue-600 font-bold hover:underline">Apply for an account</a>
+               </p>
+               <p className="text-[11px] text-gray-500 font-medium text-center">
+                 Looking for user login?{' '}
+                 <span onClick={() => navigate("/login")} className="text-teal-600 font-bold hover:underline cursor-pointer">User Portal</span>
+               </p>
+             </div>
           </div>
         </div>
       </div>

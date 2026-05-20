@@ -4,6 +4,7 @@ import PricingCards from '../components/PricingCards';
 import { useSubscriptionStore } from '../store/useSubscriptionStore';
 import DummyPaymentGateway from '../components/DummyPaymentGateway';
 import toast from 'react-hot-toast';
+import apiClient from '../../../services/apiClient';
 
 const PricingPage = () => {
   const [billingCycle, setBillingCycle] = useState('monthly');
@@ -23,6 +24,33 @@ const PricingPage = () => {
     };
   }, []);
 
+  // Check if user already has an active backend subscription and recover it
+  useEffect(() => {
+    const checkActiveSubscription = async () => {
+      const storedUser = JSON.parse(localStorage.getItem("user") || localStorage.getItem("userInfo") || "{}");
+      const userId = storedUser.id || storedUser._id;
+      if (userId) {
+        try {
+          const res = await apiClient.get(`/api/subscription/me/${userId}`);
+          if (res?.data?.data && (res.data.data.status === 'active' || res.data.data.status === 'Active')) {
+            const s = res.data.data;
+            const planMap = { fit_start: 'Silver', healthy_life: 'Gold', total_wellness: 'Platinum' };
+            localStorage.setItem("userSubscription", JSON.stringify({
+              plan: planMap[s.plan] || s.plan || 'Silver',
+              status: "Active",
+              nextBilling: s.endDate ? new Date(s.endDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'N/A',
+              price: `₹${s.price || 499}/mo`
+            }));
+            navigate('/dashboard', { replace: true });
+          }
+        } catch (err) {
+          console.error("Error checking active subscription:", err);
+        }
+      }
+    };
+    checkActiveSubscription();
+  }, [navigate]);
+
   const handleSubscribeClick = (plan) => {
     const price = plan.prices[billingCycle] || plan.prices.monthly;
     setSelectedPlanDetails({
@@ -39,6 +67,29 @@ const PricingPage = () => {
     setShowPaymentModal(false);
     
     try {
+      const storedUser = JSON.parse(localStorage.getItem("user") || localStorage.getItem("userInfo") || "{}");
+      const userId = storedUser.id || storedUser._id;
+      
+      if (userId) {
+        // Map UI plan name to backend plan slug
+        let planSlug = "healthy_life";
+        const planName = selectedPlanDetails.name.toLowerCase();
+        if (planName.includes("silver") || planName.includes("start")) {
+          planSlug = "fit_start";
+        } else if (planName.includes("gold") || planName.includes("healthy")) {
+          planSlug = "healthy_life";
+        } else if (planName.includes("platinum") || planName.includes("total")) {
+          planSlug = "total_wellness";
+        }
+
+        // Call backend API to create and activate subscription in MongoDB
+        await apiClient.post('/api/subscription/create-active', {
+          userId,
+          plan: planSlug,
+          billingCycle: selectedPlanDetails.billingCycle || 'monthly'
+        });
+      }
+
       // Save the subscription state locally for immediate feedback
       localStorage.setItem("userSubscription", JSON.stringify({
         plan: selectedPlanDetails.name,
@@ -52,6 +103,7 @@ const PricingPage = () => {
       // Redirect to dashboard
       navigate('/dashboard');
     } catch (err) {
+      console.error("Error finalizing subscription on backend:", err);
       toast.error("Error finalizing subscription");
     }
   };
