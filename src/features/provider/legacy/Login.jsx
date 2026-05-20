@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { motion } from 'framer-motion';
-import { Mail, Lock, ShieldCheck, ArrowRight, Activity, Heart, Stethoscope } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Mail, Lock, ShieldCheck, ArrowRight, Activity, Heart, Stethoscope, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { providerService } from "../services/providerService";
@@ -13,6 +13,8 @@ function Login() {
     password: "",
   });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
 
   const navigate = useNavigate();
 
@@ -69,6 +71,20 @@ function Login() {
     }
   };
 
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (!form.email) return toast.error("Please enter your business email first.");
+    setLoading(true);
+    
+    // Simulating API call for password reset
+    setTimeout(() => {
+      toast.success("If your email is registered, a reset link has been sent.");
+      setIsForgotPassword(false);
+      setLoading(false);
+      setForm({ ...form, password: "" });
+    }, 1500);
+  };
+
   return (
     <div className="h-screen w-full bg-[#f8fafc] flex items-center justify-center p-4 md:p-8 font-sans selection:bg-blue-100 overflow-hidden">
 
@@ -123,64 +139,134 @@ function Login() {
           <div className="max-w-sm mx-auto w-full space-y-8">
 
             <div className="space-y-2">
-              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Sign in</h1>
-              <p className="text-xs text-gray-500 font-medium">Enter your credentials to access your workspace.</p>
+              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+                {isForgotPassword ? "Reset Password" : "Sign in"}
+              </h1>
+              <p className="text-xs text-gray-500 font-medium">
+                {isForgotPassword 
+                  ? "Enter your email to receive a password reset link." 
+                  : "Enter your credentials to access your workspace."}
+              </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Business Email</label>
-                  <div className="relative group">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors">
-                      <Mail size={16} strokeWidth={2} />
+            <AnimatePresence mode="wait">
+              {isForgotPassword ? (
+                <motion.form 
+                  key="reset"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  onSubmit={handleResetPassword} 
+                  className="space-y-5"
+                >
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Business Email</label>
+                      <div className="relative group">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors">
+                          <Mail size={16} strokeWidth={2} />
+                        </div>
+                        <input
+                          name="email"
+                          type="email"
+                          required
+                          value={form.email}
+                          onChange={handleChange}
+                          className="block w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-900 placeholder-gray-300 focus:border-blue-600 focus:ring-4 focus:ring-blue-50 transition-all outline-none"
+                          placeholder="e.g. dr.smith@wellwigen.com"
+                        />
+                      </div>
                     </div>
-                    <input
-                      name="email"
-                      type="email"
-                      required
-                      value={form.email}
-                      onChange={handleChange}
-                      className="block w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-900 placeholder-gray-300 focus:border-blue-600 focus:ring-4 focus:ring-blue-50 transition-all outline-none"
-                      placeholder="e.g. dr.smith@wellwigen.com"
-                    />
                   </div>
-                </div>
 
-                <div className="space-y-1.5">
-                  <div className="flex justify-between items-center px-1">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Security Password</label>
-                    <a href="#" className="text-[10px] font-bold text-blue-600 hover:text-blue-700 uppercase tracking-widest">Forgot?</a>
+                  <div className="space-y-3">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-blue-200 disabled:opacity-50"
+                    >
+                      {loading ? 'Sending Link...' : 'Send Reset Link'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsForgotPassword(false)}
+                      className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white hover:bg-gray-50 text-gray-600 border border-gray-200 text-[11px] font-bold uppercase tracking-widest rounded-xl transition-all"
+                    >
+                      Back to Sign In
+                    </button>
                   </div>
-                  <div className="relative group">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors">
-                      <Lock size={16} strokeWidth={2} />
+                </motion.form>
+              ) : (
+                <motion.form 
+                  key="login"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  onSubmit={handleSubmit} 
+                  className="space-y-5"
+                >
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Business Email</label>
+                      <div className="relative group">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors">
+                          <Mail size={16} strokeWidth={2} />
+                        </div>
+                        <input
+                          name="email"
+                          type="email"
+                          required
+                          value={form.email}
+                          onChange={handleChange}
+                          className="block w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-900 placeholder-gray-300 focus:border-blue-600 focus:ring-4 focus:ring-blue-50 transition-all outline-none"
+                          placeholder="e.g. dr.smith@wellwigen.com"
+                        />
+                      </div>
                     </div>
-                    <input
-                      name="password"
-                      type="password"
-                      required
-                      value={form.password}
-                      onChange={handleChange}
-                      className="block w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-900 placeholder-gray-300 focus:border-blue-600 focus:ring-4 focus:ring-blue-50 transition-all outline-none"
-                      placeholder="••••••••"
-                    />
-                  </div>
-                </div>
-              </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-gray-900 hover:bg-black text-white text-[11px] font-bold uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-gray-200 disabled:opacity-50"
-              >
-                {loading ? 'Authenticating...' : (
-                  <>
-                    Sign in to Portal <ArrowRight size={16} />
-                  </>
-                )}
-              </button>
-            </form>
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between items-center px-1">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Security Password</label>
+                        <button type="button" onClick={() => setIsForgotPassword(true)} className="text-[10px] font-bold text-blue-600 hover:text-blue-700 uppercase tracking-widest">Forgot?</button>
+                      </div>
+                      <div className="relative group">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors">
+                          <Lock size={16} strokeWidth={2} />
+                        </div>
+                        <input
+                          name="password"
+                          type={showPassword ? "text" : "password"}
+                          required
+                          value={form.password}
+                          onChange={handleChange}
+                          className="block w-full pl-11 pr-12 py-3 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-900 placeholder-gray-300 focus:border-blue-600 focus:ring-4 focus:ring-blue-50 transition-all outline-none"
+                          placeholder="••••••••"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                        >
+                          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-gray-900 hover:bg-black text-white text-[11px] font-bold uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-gray-200 disabled:opacity-50"
+                  >
+                    {loading ? 'Authenticating...' : (
+                      <>
+                        Sign in to Portal <ArrowRight size={16} />
+                      </>
+                    )}
+                  </button>
+                </motion.form>
+              )}
+            </AnimatePresence>
 
              <div className="pt-6 border-t border-gray-100 space-y-2">
                <p className="text-[11px] text-gray-500 font-medium text-center">
