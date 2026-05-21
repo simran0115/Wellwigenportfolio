@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import NotificationBell from "./NotificationBell";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -115,7 +116,8 @@ const Navbar = () => {
           </div>
 
           {/* DESKTOP BUTTON */}
-          <div className="hidden md:flex">
+          <div className="hidden md:flex items-center gap-4">
+            <NotificationBell />
             <button
               onClick={cta.onClick}
               className="px-4 py-2 text-sm font-medium rounded-lg bg-teal-500 text-white hover:bg-teal-600 transition"
@@ -125,7 +127,8 @@ const Navbar = () => {
           </div>
 
           {/* MOBILE MENU BUTTON */}
-          <div className="md:hidden">
+          <div className="md:hidden flex items-center gap-4">
+            <NotificationBell />
             <button onClick={() => setIsOpen(!isOpen)} className="text-gray-800">
               {isOpen ? <X size={26} /> : <Menu size={26} />}
             </button>

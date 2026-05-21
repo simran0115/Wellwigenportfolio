@@ -6,6 +6,7 @@ import { Mail, Lock, ShieldCheck, ArrowRight, Activity, Heart, Stethoscope, Eye,
 import toast from 'react-hot-toast';
 
 import { providerService } from "../services/providerService";
+import { requestNotificationPermission } from "../../../services/notificationService";
 
 function Login() {
   const [form, setForm] = useState({
@@ -58,6 +59,12 @@ function Login() {
 
       toast.success("Welcome back to Wellwigen Portal");
       
+      try {
+        await requestNotificationPermission(res.token, res.provider.type || 'provider');
+      } catch (err) {
+        console.warn("Failed to request notification permission:", err);
+      }
+
       const type = res.provider.type.toLowerCase();
       if (["doctor", "vendor", "lab", "nutrition", "pharmacy", "trainer"].includes(type)) {
         navigate(`/${type}/dashboard`);

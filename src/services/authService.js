@@ -1,42 +1,32 @@
-import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
-import { db } from '../config/firebase';
 import apiClient from './apiClient';
 import { ENDPOINTS } from './apiConstants';
 
 export const loginUser = async ({ email, password }) => {
-  const usersRef = collection(db, 'users');
-  const q = query(usersRef, where('email', '==', email));
-  const querySnapshot = await getDocs(q);
-
-  if (querySnapshot.empty) {
-    throw new Error('Email not registered. Please register first.');
-  }
-
-  let user = null;
-  querySnapshot.forEach((doc) => {
-    const userData = doc.data();
-    if (userData.password === password) {
-      user = { id: doc.id, ...userData };
+  try {
+    const response = await apiClient.post('/api/user/login', { email, password });
+    
+    // The backend typically returns { message: "...", user: {...}, token: "..." }
+    // or just the user data. Let's return the user payload.
+    if (response.data && response.data.user) {
+        return {
+            ...response.data.user,
+            token: response.data.token
+        };
     }
-  });
-
-  if (!user) {
-    throw new Error('Incorrect password. Try again.');
+    
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || error.message || 'Login failed');
   }
-
-  return user;
 };
 
 export const registerUser = async (payload) => {
   try {
-    const usersRef = collection(db, 'users');
-    const docRef = await addDoc(usersRef, {
-      ...payload,
-      createdAt: new Date().toISOString(),
-      role: 'user'
-    });
-    return { id: docRef.id, message: "Registration successful" };
+    // payload usually has name, email, mobile, password
+    const response = await apiClient.post('/api/user/register', payload);
+    return response.data;
   } catch (error) {
-    throw new Error("Registration failed: " + error.message);
+    throw new Error(error.response?.data?.message || error.message || 'Registration failed');
   }
 };
+

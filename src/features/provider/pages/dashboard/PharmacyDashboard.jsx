@@ -424,7 +424,15 @@ const PharmacyDashboard = () => {
                 <button className="p-2 bg-white border border-gray-200 rounded text-slate-500 hover:text-blue-600 transition shadow-sm">
                   <Bell size={18} />
                 </button>
-                <button onClick={() => navigate('/vendor/login')} className="p-2 bg-white border border-gray-200 rounded text-slate-500 hover:text-red-600 transition shadow-sm">
+                <button onClick={() => {
+                  localStorage.removeItem("providerToken");
+                  localStorage.removeItem("providerInfo");
+                  localStorage.removeItem("providerStatus");
+                  localStorage.removeItem("vendorToken");
+                  localStorage.removeItem("vendorInfo");
+                  localStorage.removeItem("vendorStatus");
+                  navigate('/vendor/login');
+                }} className="p-2 bg-white border border-gray-200 rounded text-slate-500 hover:text-red-600 transition shadow-sm">
                   <LogOut size={18} />
                 </button>
               </div>

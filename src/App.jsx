@@ -3,10 +3,13 @@ import "./styles/App.css";
 import "./styles/index.css";
 import { Helmet } from 'react-helmet-async';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
+import { onMessage } from 'firebase/messaging';
+import { messaging } from './config/firebase.js';
 
 import Navbar from "./components/common/Navbar";
 import AdminLayout from "./features/dashboard/layout/AdminLayout";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // Home / Website Pages
 import Hero from './features/home/components/Hero';
@@ -125,9 +128,29 @@ function ProviderProtectedRoute({ children, allowedRole }) {
   return children;
 }
 
+
+
 function App() {
   const location = useLocation();
   const BASE_URL = import.meta.env.VITE_API_URL;
+
+  React.useEffect(() => {
+    if (messaging) {
+      const unsubscribe = onMessage(messaging, (payload) => {
+        console.log('Message received in foreground:', payload);
+        toast(
+          (t) => (
+            <div>
+              <p className="font-bold">{payload.notification?.title}</p>
+              <p className="text-sm">{payload.notification?.body}</p>
+            </div>
+          ),
+          { duration: 5000 }
+        );
+      });
+      return () => unsubscribe();
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-white text-black">
@@ -142,6 +165,7 @@ function App() {
        !location.pathname.startsWith("/trainer") && 
        !location.pathname.startsWith("/dashboard") && <Navbar />}
 
+        <ErrorBoundary>
         <Routes location={location} key={location.pathname}>
 
           {/* ================= ADMIN ROUTES ================= */}
@@ -267,6 +291,7 @@ function App() {
           } />
 
         </Routes>
+        </ErrorBoundary>
     </div>
   );
 }

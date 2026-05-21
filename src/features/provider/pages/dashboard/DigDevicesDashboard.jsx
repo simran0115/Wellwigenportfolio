@@ -304,8 +304,6 @@ const DigDevicesDashboard = () => {
             </motion.div>
           )}
         </AnimatePresence>
-
-        </AnimatePresence>
       </main>
     </div>
   );

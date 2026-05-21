@@ -38,19 +38,11 @@ const UnifiedDashboard = () => {
     }
   };
 
-  try {
-    return (
-      <div id="unified-dashboard-container">
-        {renderDashboard()}
-      </div>
-    );
-  } catch (error) {
-    console.error("Dashboard Render Error:", error);
-    return <div className="p-20 text-red-500 text-center">
-      <h2 className="text-2xl font-bold">Error loading dashboard</h2>
-      <p className="mt-2 text-slate-500">Please check console or try logging in again.</p>
-    </div>;
-  }
+  return (
+    <div id="unified-dashboard-container">
+      {renderDashboard()}
+    </div>
+  );
 };
 
 export default UnifiedDashboard;

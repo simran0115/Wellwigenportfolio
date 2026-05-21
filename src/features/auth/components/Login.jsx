@@ -4,6 +4,7 @@ import Modal from '../../../components/common/Modal';
 import { Eye, EyeOff } from 'lucide-react';
 import useAppStore from '../../../store/useAppStore';
 import apiClient from '../../../services/apiClient';
+import { requestNotificationPermission } from '../../../services/notificationService';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -53,6 +54,13 @@ const Login = () => {
             // Save user to local storage so dashboard can read it
             localStorage.setItem("user", JSON.stringify(user));
             localStorage.removeItem("userSubscription");
+
+            // Ask for notification permission
+            try {
+                await requestNotificationPermission(user.token, 'user');
+            } catch (err) {
+                console.warn("Failed to request notification permission:", err);
+            }
 
              setTimeout(async () => {
                  try {
