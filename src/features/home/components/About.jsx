@@ -18,18 +18,18 @@ const About = () => {
 
                     <div className="order-1 lg:order-2">
                         <h2 className="text-3xl sm:text-4xl font-bold text-dark mb-6">
-                            Why Choose <span className="text-primary">Wellwigen Fitness</span>?
+                            Why Choose <span className="text-primary">Wellwigen AI Health Platform</span>?
                         </h2>
                         <p className="text-text mb-8 text-lg leading-relaxed">
-                            We believe fitness should be accessible, personalized, and enjoyable. Our platform connects you with top-tier professionals who are dedicated to your success.
+                            We believe preventive healthcare, digital nutrition, and virtual fitness should be accessible, personalized, and seamless. Our telemedicine platform connects you with certified online personal trainers and board-certified online doctors who are dedicated to your long-term health and success.
                         </p>
 
                         <div className="space-y-4">
                             {[
-                                'Certified and Verified Trainers',
-                                'Flexible Scheduling at Your Convenience',
-                                'Customized Workout & Diet Plans',
-                                'Progress Tracking & Analytics',
+                                'Certified Online Personal Trainers',
+                                '24/7 Telehealth Consultations & Online Doctors',
+                                'Customized Workout & AI Diet Plans',
+                                'Real-Time Biometric & Progress Analytics',
                             ].map((item, index) => (
                                 <div key={index} className="flex items-center gap-3">
                                     <CheckCircle className="w-6 h-6 text-primary flex-shrink-0" />

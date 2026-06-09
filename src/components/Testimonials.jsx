@@ -30,7 +30,7 @@ const Testimonials = () => {
   ];
 
   return (
-    <section className="py-24 bg-white relative overflow-hidden">
+    <section id="about" className="py-24 bg-white relative overflow-hidden">
       {/* Soft background gradient */}
       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-white to-teal-50/50 rounded-3xl"></div>
 

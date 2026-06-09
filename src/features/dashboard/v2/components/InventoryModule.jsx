@@ -130,6 +130,3 @@ const InventoryModule = ({ providerType }) => {
 };
 
 export default InventoryModule;
-
-
-export default InventoryModule;

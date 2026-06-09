@@ -17,7 +17,7 @@ const Diet = () => {
       </h2>
 
       <p className="text-center text-gray-500 mt-2 sm:mt-4 max-w-xl sm:max-w-2xl mx-auto text-sm sm:text-base">
-        AI-Powered Nutrition. Automatically Optimized for You.
+        Your personalized AI nutrition app & AI meal planner. Get customized diet plans for weight loss, diabetes management, and athletic performance.
       </p>
 
       {/* SUB HEADING */}
@@ -26,7 +26,7 @@ const Diet = () => {
         <div>
           <p className="text-xs sm:text-sm text-teal-500 mb-1">PRECISION NUTRITION</p>
           <h3 className="text-lg sm:text-xl font-semibold text-gray-800">
-            AI-Powered Meal Recommendations
+            AI Meal Planner Recommendations
           </h3>
         </div>
 
@@ -59,7 +59,7 @@ const Diet = () => {
         >
           <img
             src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=1000&auto=format&fit=crop"
-            alt="salmon bowl"
+            alt="Omega Salmon Bowl - Diabetic-Friendly Meal Plan from Wellwigen"
             className="w-full h-48 sm:h-56 md:h-48 lg:h-56 object-cover"
           />
 
@@ -86,7 +86,7 @@ const Diet = () => {
         >
           <img
             src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=1000&auto=format&fit=crop"
-            alt="salad"
+            alt="Zen Garden Salad - High Protein Meal Plan Recommendation"
             className="w-full h-48 sm:h-56 md:h-48 lg:h-56 object-cover"
           />
 
@@ -113,7 +113,7 @@ const Diet = () => {
         >
           <img
             src="https://images.pexels.com/photos/410648/pexels-photo-410648.jpeg"
-            alt="grill"
+            alt="Protein Power Grill - Vitamin-Rich Meal Plan recommendation"
             className="w-full h-48 sm:h-56 md:h-48 lg:h-56 object-cover"
           />
 

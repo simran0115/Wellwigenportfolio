@@ -4,8 +4,9 @@ import PricingCards from '../components/PricingCards';
 import { useSubscriptionStore } from '../store/useSubscriptionStore';
 import DummyPaymentGateway from '../components/DummyPaymentGateway';
 import toast from 'react-hot-toast';
+import apiClient from '../../../services/apiClient';
 
-const PricingPage = () => {
+const PricingPage = ({ isSubSection = false }) => {
   const [billingCycle, setBillingCycle] = useState('monthly');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPlanDetails, setSelectedPlanDetails] = useState(null);
@@ -23,37 +24,95 @@ const PricingPage = () => {
     };
   }, []);
 
-  const handleSubscribeClick = (planId) => {
-    const planMap = {
-      'fit_start': { name: 'Silver', price: '₹499/mo' },
-      'healthy_life': { name: 'Gold', price: '₹999/mo' },
-      'total_wellness': { name: 'Platinum', price: '₹1,999/mo' }
+  // Check if user already has an active backend subscription and recover it
+  useEffect(() => {
+    const checkActiveSubscription = async () => {
+      const storedUser = JSON.parse(localStorage.getItem("user") || localStorage.getItem("userInfo") || "{}");
+      const userId = storedUser.id || storedUser._id;
+      if (userId) {
+        try {
+          const res = await apiClient.get(`/api/subscription/me/${userId}`);
+          if (res?.data?.data && (res.data.data.status === 'active' || res.data.data.status === 'Active')) {
+            const s = res.data.data;
+            const planMap = { fit_start: 'Silver', healthy_life: 'Gold', total_wellness: 'Platinum' };
+            localStorage.setItem("userSubscription", JSON.stringify({
+              plan: planMap[s.plan] || s.plan || 'Silver',
+              status: "Active",
+              nextBilling: s.endDate ? new Date(s.endDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'N/A',
+              price: `₹${s.price || 499}/mo`
+            }));
+            if (!isSubSection) {
+              navigate('/dashboard', { replace: true });
+            }
+          }
+        } catch (err) {
+          console.error("Error checking active subscription:", err);
+        }
+      }
     };
+    checkActiveSubscription();
+  }, [navigate]);
 
-    const selectedPlan = planMap[planId] || { name: 'Silver', price: '₹499/mo' };
-    setSelectedPlanDetails(selectedPlan);
+  const handleSubscribeClick = (plan) => {
+    const price = plan.prices[billingCycle] || plan.prices.monthly;
+    setSelectedPlanDetails({
+      id: plan._id,
+      name: plan.name,
+      price: `₹${price.toLocaleString('en-IN')}/${billingCycle === 'annual' ? 'yr' : 'mo'}`,
+      rawPrice: price,
+      billingCycle: billingCycle
+    });
     setShowPaymentModal(true);
   };
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = async () => {
     setShowPaymentModal(false);
     
-    // Save the plan intent to localStorage
-    localStorage.setItem("userSubscription", JSON.stringify({
-      plan: selectedPlanDetails.name,
-      status: "Active",
-      nextBilling: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-      price: selectedPlanDetails.price
-    }));
+    try {
+      const storedUser = JSON.parse(localStorage.getItem("user") || localStorage.getItem("userInfo") || "{}");
+      const userId = storedUser.id || storedUser._id;
+      
+      if (userId) {
+        // Map UI plan name to backend plan slug
+        let planSlug = "healthy_life";
+        const planName = selectedPlanDetails.name.toLowerCase();
+        if (planName.includes("silver") || planName.includes("start")) {
+          planSlug = "fit_start";
+        } else if (planName.includes("gold") || planName.includes("healthy")) {
+          planSlug = "healthy_life";
+        } else if (planName.includes("platinum") || planName.includes("total")) {
+          planSlug = "total_wellness";
+        }
 
-    toast.success(`Payment successful! ${selectedPlanDetails.name} Plan active. Please login to continue.`);
-    
-    // Redirect to login after buying
-    navigate('/login');
+        // Call backend API to create and activate subscription in MongoDB
+        await apiClient.post('/api/subscription/create-active', {
+          userId,
+          plan: planSlug,
+          billingCycle: selectedPlanDetails.billingCycle || 'monthly'
+        });
+      }
+
+      // Save the subscription state locally for immediate feedback
+      localStorage.setItem("userSubscription", JSON.stringify({
+        plan: selectedPlanDetails.name,
+        status: "Active",
+        nextBilling: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+        price: selectedPlanDetails.price
+      }));
+
+      toast.success(`Payment successful! ${selectedPlanDetails.name} Plan active.`);
+      
+      // Redirect to dashboard
+      navigate('/dashboard');
+    } catch (err) {
+      console.error("Error finalizing subscription on backend:", err);
+      toast.error("Error finalizing subscription");
+    }
   };
 
   return (
     <section
+      id="pricing"
       className="w-full py-20 relative overflow-hidden"
       style={{
         backgroundColor: '#f8fafc',
@@ -82,10 +141,17 @@ const PricingPage = () => {
       <div className="relative z-10 flex flex-col items-center px-4">
         <p className="text-teal-600 text-xs tracking-widest uppercase font-semibold mb-4">Pricing</p>
 
-        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 text-center mb-5 leading-tight">
-          One Subscription.<br />
-          <span className="text-teal-600">Complete Health. For Life.</span>
-        </h1>
+        {isSubSection ? (
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 text-center mb-5 leading-tight">
+            One Subscription.<br />
+            <span className="text-teal-600">Complete Health. For Life.</span>
+          </h2>
+        ) : (
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 text-center mb-5 leading-tight">
+            One Subscription.<br />
+            <span className="text-teal-600">Complete Health. For Life.</span>
+          </h1>
+        )}
 
         <p className="text-gray-500 text-base md:text-lg max-w-2xl text-center mb-10">
           Choose the plan that fits your lifestyle. Get fresh produce, unlimited doctor consultations, and fitness training all in one app.

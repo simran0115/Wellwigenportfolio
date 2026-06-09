@@ -29,14 +29,18 @@ import {
   X,
   Camera,
   Save,
-  Menu
+  Menu,
+  FlaskConical,
+  FileText
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { io } from "socket.io-client";
+import useAppStore from "../../../store/useAppStore";
 
-const getUpcomingDeliveries = (plan) => {
+const getUpcomingDeliveries = (plan, status) => {
+  if (status && (status.toLowerCase() === 'expired' || status.toLowerCase() === 'cancelled')) return [];
   const today = new Date();
   const deliveries = [];
   const deliveredIds = JSON.parse(localStorage.getItem("deliveredDeliveries_v3") || "[]");
@@ -94,6 +98,71 @@ export default function UserDashboard() {
   
   const [activeTab, setActiveTab] = useState(location.state?.activeTab || "Overview");
   const [showTracking, setShowTracking] = useState(false);
+
+  // Auth and Route Guard
+  useEffect(() => {
+    const providerToken = localStorage.getItem("providerToken") || localStorage.getItem("vendorToken");
+    const providerInfoRaw = localStorage.getItem("providerInfo") || localStorage.getItem("vendorInfo");
+    const userToken = localStorage.getItem("user") || localStorage.getItem("userInfo");
+
+    // Redirect provider to their dashboard if they land here by mistake
+    if (providerToken && providerInfoRaw && !userToken) {
+      try {
+        const info = JSON.parse(providerInfoRaw);
+        const type = (info.type || info.role || info.category || "").toLowerCase();
+        if (type) {
+          navigate(`/${type}/dashboard`, { replace: true });
+        } else {
+          navigate("/provider/dashboard", { replace: true });
+        }
+      } catch (e) {
+        console.error("Error parsing providerInfo in UserDashboard:", e);
+      }
+      return;
+    }
+
+    // Redirect logged-out visitors to login page
+    if (!userToken && !providerToken) {
+      navigate("/login", { replace: true });
+      return;
+    }
+
+    // Ensure logged-in user has an active subscription
+    if (userToken) {
+      const hasSubscription = localStorage.getItem("userSubscription");
+      if (!hasSubscription) {
+        const checkBackendSub = async () => {
+          try {
+            const user = JSON.parse(userToken);
+            const userId = user.id || user._id;
+            if (userId) {
+              const apiEndpoint = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+              const res = await axios.get(`${apiEndpoint}/subscription/me/${userId}`).catch(() => null);
+              if (res?.data?.data && (res.data.data.status === 'active' || res.data.data.status === 'Active')) {
+                const s = res.data.data;
+                const planMap = { fit_start: 'Silver', healthy_life: 'Gold', total_wellness: 'Platinum' };
+                localStorage.setItem("userSubscription", JSON.stringify({
+                  plan: planMap[s.plan] || s.plan || 'Silver',
+                  status: "Active",
+                  nextBilling: s.endDate ? new Date(s.endDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'N/A',
+                  price: `₹${s.price || 499}/mo`
+                }));
+                // Reload to refresh state
+                window.location.reload();
+                return;
+              }
+            }
+            // Redirect to pricing if no active subscription exists
+            navigate('/pricing', { replace: true });
+          } catch (err) {
+            console.error("Error checking subscription on dashboard load:", err);
+            navigate('/pricing', { replace: true });
+          }
+        };
+        checkBackendSub();
+      }
+    }
+  }, [navigate]);
   const [isEditing, setIsEditing] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -107,10 +176,27 @@ export default function UserDashboard() {
     { id: 1, type: "VISA", last4: "4242", expiry: "12/28", isDefault: true }
   ]);
   
-  // Simulated User Data with local persistence
+  // Get active user from global store
+  const authUser = useAppStore((state) => state.auth?.user);
+
+  // Simulated User Data with local persistence & dynamic fallback
   const [userData, setUserData] = useState(() => {
     const saved = localStorage.getItem("userData");
-    return saved ? JSON.parse(saved) : {
+    if (saved) return JSON.parse(saved);
+    
+    // Fallback to real logged-in user details if available
+    const storedUser = authUser || JSON.parse(localStorage.getItem("user") || localStorage.getItem("userInfo") || "{}");
+    if (storedUser && storedUser.name) {
+      return {
+        name: storedUser.name,
+        email: storedUser.email || "",
+        phone: storedUser.phone || storedUser.mobile || "",
+        avatar: storedUser.avatar || "https://i.pravatar.cc/150?img=32",
+        joinDate: storedUser.joinDate || new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+      };
+    }
+
+    return {
       name: "Rajesh Kumar",
       email: "rajesh@example.com",
       phone: "+91 98765 43210",
@@ -135,117 +221,176 @@ export default function UserDashboard() {
     return saved ? JSON.parse(saved) : null;
   });
 
-  const [orderHistory, setOrderHistory] = useState([
-    { id: "#WL-8812", date: "May 03, 2026", status: "Delivered", items: "Mangoes, Pineapple", total: "₹320" },
-    { id: "#WL-8756", date: "Apr 28, 2026", status: "Delivered", items: "Oranges, Grapes", total: "₹280" }
-  ]);
-  const [upcomingOrders, setUpcomingOrders] = useState(() => getUpcomingDeliveries("Gold"));
+  const [socketConnected, setSocketConnected] = useState(false);
+
+  const [orderHistory, setOrderHistory] = useState([]);
+  const [upcomingOrders, setUpcomingOrders] = useState([]);
+  const [labTests, setLabTests] = useState([]);
+  const [lastSynced, setLastSynced] = useState(new Date().toLocaleTimeString());
 
   const API = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+  const fetchUserData = async () => {
+    try {
+      const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+      const storedUserInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
+      const providerInfo = JSON.parse(localStorage.getItem("providerInfo") || localStorage.getItem("vendorInfo") || "{}");
+      
+      const userId = storedUser.id || storedUser._id || 
+                     storedUserInfo.id || storedUserInfo._id || 
+                     providerInfo.id || providerInfo._id;
 
-  useEffect(() => {
-    const fetchRealData = async () => {
-      try {
-        const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
-        if (userInfo._id) {
-          const subRes = await axios.get(`${API}/subscription/user/${userInfo._id}`);
-          if (subRes.data) {
-            setSubscription({
-              plan: subRes.data.plan || "Gold",
-              status: subRes.data.status || "active",
-              expiry: subRes.data.endDate || "N/A"
+      console.log("👤 [USER-DASHBOARD] Identity Detection:", {
+        userId,
+        hasUser: !!storedUser.id,
+        hasUserInfo: !!storedUserInfo.id,
+        hasProviderInfo: !!providerInfo.id
+      });
+
+      if (!userId) {
+        console.warn("⚠️ [USER-DASHBOARD] No valid userId found in storage.");
+        return;
+      }
+
+      // Fetch subscription
+      const subRes = await axios.get(`${API}/subscription/me/${userId}`).catch(() => null);
+      if (subRes?.data?.data) {
+        const s = subRes.data.data;
+        const planMap = { fit_start: 'Silver', healthy_life: 'Gold', total_wellness: 'Platinum' };
+        setSubscription({
+          plan: planMap[s.plan] || s.plan || 'Silver',
+          status: s.status || 'active',
+          nextBilling: s.endDate ? new Date(s.endDate).toLocaleDateString('en-IN') : 'N/A',
+          price: `₹${s.price || 499}/mo`
+        });
+      }
+
+      // Fetch real orders
+      const orderRes = await axios.get(`${API}/orders/user/${userId}`).catch(() => null);
+      
+      if (orderRes?.data && Array.isArray(orderRes.data)) {
+        const formattedOrders = orderRes.data.map(o => {
+          if (!o || !o._id) return null;
+          const firstItem = o.items?.[0] || {};
+          const isLab = firstItem.name?.toLowerCase().includes('lab') || firstItem.name?.toLowerCase().includes('checkup');
+          
+          return {
+            id: `#WL-${o._id.toString().slice(-4).toUpperCase()}`,
+            _id: o._id,
+            date: new Date(o.scheduledFor || o.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            status: o.status === 'out_for_delivery' ? (isLab ? 'Report Ready' : 'Out for Delivery') :
+                    o.status === 'delivered' ? (isLab ? 'Report Sent' : 'Delivered') :
+                    o.status === 'pending' ? 'Scheduled' :
+                    o.status?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || 'Pending',
+            items: firstItem.name || 'Wellwigen Service',
+            total: o.totalAmount ? `₹${o.totalAmount}` : 'Included',
+            isLab: isLab
+          };
+        }).filter(Boolean);
+        
+        let labs = formattedOrders.filter(o => o.isLab);
+        let upcoming = formattedOrders.filter(o => !o.isLab && o.status !== 'Delivered');
+
+        // Feature Padding: Ensure 2 fruit deliveries and 1 lab test are shown for Silver/Gold
+        if (subscription.plan !== 'Platinum' && upcoming.length < 2) {
+          const paddingCount = 2 - upcoming.length;
+          for(let i=0; i<paddingCount; i++) {
+            upcoming.push({
+              id: `#WL-SCH${i}`,
+              date: new Date(Date.now() + (i+2)*86400000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+              status: 'Scheduled',
+              items: 'Fresh Seasonal Box',
+              total: 'Included',
+              isLab: false
             });
           }
-
-          const orderRes = await axios.get(`${API}/orders/user/${userInfo._id}`);
-          const formattedOrders = orderRes.data.map(o => ({
-            id: `#WL-${o._id.toString().slice(-4).toUpperCase()}`,
-            date: new Date(o.scheduledFor).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-            status: o.status.charAt(0).toUpperCase() + o.status.slice(1),
-            items: o.productName || "Fresh Produce Box",
-            total: `₹${o.totalAmount || 'Included'}`
-          }));
-          setOrderHistory(formattedOrders);
         }
-      } catch (err) {
-        console.error("Error fetching dashboard data:", err);
-      }
-    };
-    fetchRealData();
 
-    // Setup Socket.io
-    const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
-    const userId = userInfo._id || 'demo-user-id';
+        if (subscription.plan !== 'Platinum' && labs.length === 0) {
+          labs.push({
+            id: '#WL-LAB-SCH',
+            date: new Date(Date.now() + 5*86400000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            status: 'Scheduled',
+            items: 'Full Body Checkup',
+            total: 'Included',
+            isLab: true
+          });
+        }
+        
+        setOrderHistory(formattedOrders.filter(o => !o.isLab));
+        setUpcomingOrders(upcoming);
+        setLabTests(labs);
+      } else {
+        // Fallback if no real data at all - Ensure the 2+1 pattern
+        setUpcomingOrders([
+          { id: '#WL-SCH1', date: 'In 2 days', status: 'Scheduled', items: 'Fresh Seasonal Box', total: 'Included', isLab: false },
+          { id: '#WL-SCH2', date: 'In 5 days', status: 'Scheduled', items: 'Fresh Seasonal Box', total: 'Included', isLab: false }
+        ]);
+        setLabTests([
+          { id: '#WL-LAB1', date: 'Next Tuesday', status: 'Scheduled', items: 'Comprehensive Lab Test', total: 'Included', isLab: true }
+        ]);
+        setOrderHistory([]);
+      }
+    } catch (err) {
+      console.error("❌ [USER-DASHBOARD] Fetch Error:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserData();
     
+    // Polling fallback: Refresh every 10 seconds to ensure sync even if sockets fail
+    const refreshInterval = setInterval(fetchUserData, 10000);
+    
+    // Setup Socket.io
+    const socketUserInfo = JSON.parse(localStorage.getItem("userInfo") || localStorage.getItem("user") || "{}");
+    const userId = socketUserInfo._id || socketUserInfo.id || 'demo-user-id';
     const socketBaseUrl = API.replace('/api', '');
     const socket = io(socketBaseUrl, {
       transports: ["polling", "websocket"],
       reconnection: true
     });
     
-    socket.emit("registerUser", userId);
-
     socket.on("connect", () => {
-      console.log("✅ Socket Connected:", socket.id);
-      toast.success("Live Sync Connected", { id: 'socket-conn' });
+      console.log("✅ [REAL-TIME] Socket Connected:", socket.id);
+      setSocketConnected(true);
+      socket.emit("registerUser", userId); 
     });
 
+    // Keep the handshake alive by re-registering every 5 seconds
+    const registrationInterval = setInterval(() => {
+      if (socket.connected && userId) {
+        socket.emit("registerUser", userId);
+      }
+    }, 5000);
+
+    socket.on("connect_error", () => setSocketConnected(false));
+
     socket.on("orderStatusUpdated", (data) => {
-      console.log("🔔 Status Update Received:", data);
-      console.log("🔔 Status Update Received:", data);
+      console.log("📡 [REAL-TIME] Update received:", data);
+      setLastSynced(new Date().toLocaleTimeString()); // Force UI repaint
+      fetchUserData(); 
+      toast.success("🚚 Real-time update received!", { position: 'bottom-right' });
+    });
 
-      // Update upcoming orders
-      setUpcomingOrders(prev => {
-        let updated = false;
-        const newList = prev.map(o => {
-          const isMatch = o.id === data.orderId || 
-                         (data.orderId && o.id.includes(data.orderId.toString().slice(-4).toUpperCase()));
-          if (isMatch) {
-            updated = true;
-            return { ...o, status: data.status === 'out for delivery' ? 'Out for Delivery' : data.status === 'delivered' ? 'Delivered' : 'Scheduled' };
-          }
-          return o;
-        });
+    socket.on("subscriptionExpiringSoon", (data) => {
+      console.log("🔔 Subscription Expiring Soon:", data);
+      toast(data.message, { icon: '⚠️', duration: 6000 });
+      setSubscription(prev => ({ ...prev, status: "Expiring Soon" }));
+    });
 
-        const isMockId = data.orderId?.toString().startsWith('mock_') || 
-                        data.orderId === '1' || 
-                        data.orderId === '2' ||
-                        data.orderId?.toString().startsWith('#WL-');
+    socket.on("subscriptionExpired", (data) => {
+      console.log("🛑 Subscription Expired:", data);
+      toast.error(data.message, { duration: 6000 });
+      setSubscription(prev => ({ ...prev, status: "Expired" }));
+    });
 
-        if (!updated && isMockId) {
-          if (data.status === 'out for delivery') {
-            const firstScheduledIdx = newList.findIndex(o => o.status === 'Scheduled');
-            if (firstScheduledIdx !== -1) {
-              newList[firstScheduledIdx] = { ...newList[firstScheduledIdx], status: 'Out for Delivery' };
-              const outIds = JSON.parse(localStorage.getItem("outForDeliveryDeliveries_v3") || "[]");
-              outIds.push(newList[firstScheduledIdx].id);
-              localStorage.setItem("outForDeliveryDeliveries_v3", JSON.stringify(outIds));
-            }
-          } else if (data.status === 'delivered') {
-            // Find the first one that is Out for Delivery, or fallback to Scheduled
-            let targetIdx = newList.findIndex(o => o.status === 'Out for Delivery');
-            if (targetIdx === -1) targetIdx = newList.findIndex(o => o.status === 'Scheduled');
-            
-            if (targetIdx !== -1) {
-              const targetId = newList[targetIdx].id;
-              newList[targetIdx] = { ...newList[targetIdx], status: 'Delivered' };
-              
-              // Move from Out for Delivery array to Delivered array
-              let outIds = JSON.parse(localStorage.getItem("outForDeliveryDeliveries_v3") || "[]");
-              outIds = outIds.filter(id => id !== targetId);
-              localStorage.setItem("outForDeliveryDeliveries_v3", JSON.stringify(outIds));
-
-              const deliveredIds = JSON.parse(localStorage.getItem("deliveredDeliveries_v3") || "[]");
-              deliveredIds.push(targetId);
-              localStorage.setItem("deliveredDeliveries_v3", JSON.stringify(deliveredIds));
-            }
-          }
-        }
-        return newList;
-      });
+    socket.on("storesClosed", (data) => {
+      console.log("🛑 Stores Closed Alert:", data);
+      toast.error(data.message, { icon: '🏪', duration: 8000 });
     });
 
     return () => {
+      clearInterval(refreshInterval);
       socket.disconnect();
     };
   }, [API]);
@@ -328,9 +473,16 @@ export default function UserDashboard() {
   const currentFeatures = planFeatures[subscription.plan] || planFeatures.Silver;
 
 
+  const getBadgeStyle = (status) => {
+    const s = status.toLowerCase();
+    if (s === 'active') return 'text-blue-700 bg-blue-50';
+    if (s === 'expiring soon') return 'text-amber-700 bg-amber-50';
+    return 'text-rose-700 bg-rose-50';
+  };
+
   useEffect(() => {
-    setUpcomingOrders(getUpcomingDeliveries(subscription.plan));
-  }, [subscription.plan]);
+    setUpcomingOrders(getUpcomingDeliveries(subscription.plan, subscription.status));
+  }, [subscription.plan, subscription.status]);
 
   const upcomingDeliveries = upcomingOrders;
   return (
@@ -366,6 +518,7 @@ export default function UserDashboard() {
         <nav className="flex-1 px-4 space-y-1 mt-4 overflow-y-auto">
           <NavItem icon={<LayoutDashboard size={18} />} label="Overview" active={activeTab === 'Overview'} onClick={() => { setActiveTab('Overview'); setIsSidebarOpen(false); }} />
           <NavItem icon={<Truck size={18} />} label="My Order" active={activeTab === 'Orders'} onClick={() => { setActiveTab('Orders'); setIsSidebarOpen(false); }} />
+          <NavItem icon={<FlaskConical size={18} />} label="Lab Tests" active={activeTab === 'Lab'} onClick={() => { setActiveTab('Lab'); setIsSidebarOpen(false); }} />
           <NavItem icon={<CreditCard size={18} />} label="My Subscription" active={activeTab === 'Subscription'} onClick={() => { setActiveTab('Subscription'); setIsSidebarOpen(false); }} />
           <NavItem icon={<Settings size={18} />} label="Settings" active={activeTab === 'Settings'} onClick={() => { setActiveTab('Settings'); setIsSidebarOpen(false); }} />
         </nav>
@@ -427,6 +580,13 @@ export default function UserDashboard() {
               <Bell size={18} />
               <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
             </button>
+            
+            {/* Live Socket Indicator */}
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-widest transition-all ${socketConnected ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-rose-50 border-rose-100 text-rose-600'}`}>
+              <div className={`w-1.5 h-1.5 rounded-full ${socketConnected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></div>
+              {socketConnected ? 'Live' : 'Offline'}
+            </div>
+
             <button onClick={handleLogout} className="p-2 bg-white border border-gray-200 rounded text-slate-500 hover:text-red-600 transition"><LogOut size={18} /></button>
           </div>
         </header>
@@ -444,7 +604,7 @@ export default function UserDashboard() {
                 <div className="lg:col-span-4 bg-white border border-gray-200 rounded-lg p-6">
                   <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
                     <h2 className="text-lg font-semibold text-gray-900">Your {subscription.plan} Perks</h2>
-                    <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded">Active</span>
+                    <span className={`text-xs font-bold px-2 py-1 rounded uppercase tracking-wider ${getBadgeStyle(subscription.status)}`}>{subscription.status}</span>
                   </div>
                   <div className="space-y-4">
                     {currentFeatures.map((feature, i) => (
@@ -493,7 +653,10 @@ export default function UserDashboard() {
                             <p className="text-xs font-black text-gray-300 uppercase tracking-widest">Order Status</p>
                             <p className="text-sm font-bold text-gray-900">{latestOrder ? latestOrder.orderId : 'Not Yet Placed'}</p>
                           </div>
-                          <button onClick={handleBrowseProducts} className="px-4 py-2 bg-blue-600 text-white rounded text-xs font-bold uppercase tracking-widest hover:bg-blue-700 transition-all">
+                          <button 
+                            onClick={handleBrowseProducts} 
+                            disabled={['expired', 'cancelled'].includes(subscription.status.toLowerCase())}
+                            className={`px-4 py-2 text-white rounded text-xs font-bold uppercase tracking-widest transition-all ${['expired', 'cancelled'].includes(subscription.status.toLowerCase()) ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>
                             {latestOrder ? 'Update Basket' : 'Place Now'}
                           </button>
                        </div>
@@ -506,11 +669,23 @@ export default function UserDashboard() {
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                        <div className="flex gap-4">
                          <div className="w-12 h-12 bg-white/10 rounded flex items-center justify-center border border-white/10"><Truck className="text-blue-400" size={20} /></div>
-                         <div><h4 className="text-base font-semibold">Next Delivery</h4><p className="text-slate-400 text-sm mt-1">Tomorrow, 06:00 AM</p></div>
+                         <div>
+                            <h4 className="text-base font-semibold">Next Delivery</h4>
+                            <p className="text-slate-400 text-sm mt-1">
+                              {upcomingOrders.length > 0 
+                                ? new Date(upcomingOrders[0].date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+                                : 'Checking schedule...'}
+                            </p>
+                          </div>
                        </div>
                        <div className="flex gap-4">
                          <div className="w-12 h-12 bg-white/10 rounded flex items-center justify-center border border-white/10"><Clock className="text-blue-400" size={20} /></div>
-                         <div><h4 className="text-base font-semibold">Estimated Arrival</h4><p className="text-slate-400 text-sm mt-1">Within 14 hours</p></div>
+                         <div>
+                            <h4 className="text-base font-semibold">Current Status</h4>
+                            <p className="text-slate-400 text-sm mt-1">
+                              {upcomingOrders.length > 0 ? upcomingOrders[0].status : 'Waiting for Vendor'}
+                            </p>
+                          </div>
                        </div>
                      </div>
                      <button onClick={() => setShowTracking(true)} className="w-full mt-6 py-3 bg-white/10 border border-white/10 hover:bg-white/20 text-white rounded font-semibold text-sm transition-all">Track Order Live</button>
@@ -528,7 +703,12 @@ export default function UserDashboard() {
                     <h2 className="text-xl font-semibold text-slate-900">Upcoming Deliveries</h2>
                     <p className="text-slate-500 text-sm mt-1">Track your scheduled fresh produce deliveries based on your {subscription.plan} plan.</p>
                   </div>
-                  <button onClick={handleBrowseProducts} className="px-4 py-2 bg-blue-600 text-white rounded font-semibold text-sm transition-all hover:bg-blue-700">Customize Next Box</button>
+                  <button 
+                    onClick={handleBrowseProducts} 
+                    disabled={['expired', 'cancelled'].includes(subscription.status.toLowerCase())}
+                    className={`px-4 py-2 text-white rounded font-semibold text-sm transition-all ${['expired', 'cancelled'].includes(subscription.status.toLowerCase()) ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>
+                    Customize Next Box
+                  </button>
                 </header>
                 <div className="space-y-4">
                    {/* Real Orders from Backend */}
@@ -554,6 +734,70 @@ export default function UserDashboard() {
             </motion.div>
           )}
 
+          {activeTab === 'Lab' && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+              <div className="max-w-4xl mx-auto bg-white border border-gray-200 rounded-lg p-8">
+                <header className="mb-8 flex justify-between items-center border-b border-gray-100 pb-6">
+                  <div>
+                    <h2 className="text-xl font-semibold text-slate-900">Lab Diagnostics</h2>
+                    <p className="text-slate-500 text-sm mt-1">Track your biological markers and diagnostic reports.</p>
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-1 bg-purple-50 text-purple-600 rounded-full text-[10px] font-black uppercase tracking-widest">
+                    <FlaskConical size={12} /> Live Tracking
+                  </div>
+                </header>
+                
+                {labTests.length === 0 ? (
+                  <div className="py-20 text-center border-2 border-dashed border-slate-100 rounded-[2rem] bg-slate-50/30">
+                    <FlaskConical className="mx-auto text-slate-300 mb-4" size={48} />
+                    <h3 className="text-lg font-bold text-slate-900">No Tests Scheduled</h3>
+                    <p className="text-slate-500 text-sm mt-2">Your diagnostic requests will appear here once booked.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {labTests.map((test, idx) => (
+                      <div key={idx} className="p-5 border border-gray-100 rounded-2xl hover:border-purple-200 transition-all group">
+                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                               <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-all">
+                                  <FileText size={20} />
+                               </div>
+                               <div>
+                                  <h4 className="font-bold text-slate-900">{test.items}</h4>
+                                  <p className="text-xs text-slate-500 font-medium">Request ID: {test.id} &bull; {test.date}</p>
+                               </div>
+                            </div>
+                            <div className="flex items-center justify-between md:justify-end gap-6 border-t md:border-t-0 pt-4 md:pt-0 border-gray-50">
+                               <div className="text-left md:text-right">
+                                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
+                                  <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded ${
+                                     test.status === 'Scheduled' ? 'bg-amber-50 text-amber-600' :
+                                     test.status === 'Sample Collected' ? 'bg-purple-50 text-purple-600' :
+                                     test.status === 'Report Ready' ? 'bg-emerald-50 text-emerald-700' :
+                                     'bg-slate-100 text-slate-600'
+                                  }`}>{test.status}</span>
+                               </div>
+                               {test.status === 'Report Ready' ? (
+                                 <button className="px-4 py-2 bg-purple-600 text-white rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-purple-700 transition-all shadow-lg shadow-purple-100">
+                                   Download Report
+                                 </button>
+                               ) : (
+                                 <div className="w-24 h-1 bg-slate-100 rounded-full overflow-hidden">
+                                    <div className={`h-full bg-purple-600 transition-all duration-1000 ${
+                                      test.status === 'Sample Collected' ? 'w-2/3' : 'w-1/3'
+                                    }`} />
+                                 </div>
+                               )}
+                            </div>
+                         </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
           {activeTab === 'Subscription' && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
               <div className="max-w-4xl mx-auto space-y-6">
@@ -561,11 +805,7 @@ export default function UserDashboard() {
                 <div className="bg-white border border-gray-200 rounded-lg p-6">
                   <div className="flex justify-between items-start mb-6 flex-col md:flex-row gap-6 border-b border-gray-100 pb-6">
                     <div>
-                      <span className={`text-xs font-bold px-2 py-1 rounded uppercase ${
-                        subscription.status.toLowerCase() === 'active' 
-                          ? 'text-blue-700 bg-blue-50' 
-                          : 'text-rose-700 bg-rose-50'
-                      }`}>
+                      <span className={`text-xs font-bold px-2 py-1 rounded uppercase ${getBadgeStyle(subscription.status)}`}>
                         {subscription.status}
                       </span>
                       <h2 className="text-xl font-semibold mt-3 text-gray-900">{subscription.plan} Plan</h2>

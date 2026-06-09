@@ -10,7 +10,8 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import NotificationBell from "./NotificationBell";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -24,12 +25,63 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const handleNavClick = (e, path) => {
+    if (path.startsWith("/#")) {
+      const targetId = path.substring(2);
+      if (location.pathname === "/") {
+        e.preventDefault();
+        const element = document.getElementById(targetId);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      }
+    }
+    setIsOpen(false);
+  };
+
+  const providerToken = localStorage.getItem("providerToken") || localStorage.getItem("vendorToken");
+  const providerInfoRaw = localStorage.getItem("providerInfo") || localStorage.getItem("vendorInfo");
+  const userToken = localStorage.getItem("user") || localStorage.getItem("userInfo");
+  const adminToken = localStorage.getItem("adminToken");
+
+  const getCtaButton = () => {
+    if (adminToken) {
+      return {
+        label: "Admin Panel",
+        onClick: () => navigate("/admin/dashboard")
+      };
+    }
+    if (providerToken && providerInfoRaw) {
+      try {
+        const info = JSON.parse(providerInfoRaw);
+        const type = (info.type || info.role || info.category || "").toLowerCase();
+        return {
+          label: "Dashboard",
+          onClick: () => navigate(type ? `/${type}/dashboard` : "/provider/dashboard")
+        };
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    if (userToken) {
+      return {
+        label: "Dashboard",
+        onClick: () => navigate("/dashboard")
+      };
+    }
+    return {
+      label: "Login",
+      onClick: () => navigate("/login")
+    };
+  };
+
+  const cta = getCtaButton();
+
   const navLinks = [
-    { name: "Home", path: "/", icon: <LayoutDashboard size={18} /> },
-    { name: "How it Works", path: "/ecosystem", icon: <Calendar size={18} /> },
-    { name: "Pricing", path: "/pricing", icon: <CreditCard size={18} /> },
-    { name: "Services", path: "/dashboard", icon: <Sparkles size={18} /> },
-    { name: "About Us", path: "/testimonial", icon: <Info size={18} /> },
+    { name: "How it Works", path: "/#ecosystem", icon: <Calendar size={18} /> },
+    { name: "Pricing", path: "/#pricing", icon: <CreditCard size={18} /> },
+    { name: "Services", path: "/#services", icon: <Sparkles size={18} /> },
+    { name: "About Us", path: "/#about", icon: <Info size={18} /> },
     { name: "Contact Us", path: "/contactus", icon: <MessageCircle size={18} /> },
   ];
 
@@ -45,24 +97,26 @@ const Navbar = () => {
         <div className="flex justify-between items-center">
 
           {/* LOGO */}
-          <div
-            onClick={() => navigate("/")}
+          <Link
+            to="/"
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             className="flex items-center gap-2 font-semibold text-lg sm:text-xl cursor-pointer text-gray-900"
           >
             <div className="bg-teal-500 text-white w-8 h-8 flex items-center justify-center rounded-lg font-bold">
               W
             </div>
             <span className="hidden sm:inline">WellWigen</span>
-          </div>
+          </Link>
 
           {/* DESKTOP NAV */}
           <div className="hidden md:flex items-center gap-2">
             {navLinks.map((link) => {
-              const isActive = location.pathname === link.path;
+              const isActive = location.pathname === link.path || (link.path.startsWith("/#") && location.pathname === "/" && window.location.hash === link.path.substring(1));
               return (
-                <button
+                <Link
                   key={link.name}
-                  onClick={() => navigate(link.path)}
+                  to={link.path}
+                  onClick={(e) => handleNavClick(e, link.path)}
                   className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition ${
                     isActive
                       ? "bg-teal-500 text-white shadow"
@@ -71,23 +125,25 @@ const Navbar = () => {
                 >
                   {link.icon}
                   <span>{link.name}</span>
-                </button>
+                </Link>
               );
             })}
           </div>
 
           {/* DESKTOP BUTTON */}
-          <div className="hidden md:flex">
+          <div className="hidden md:flex items-center gap-4">
+            <NotificationBell />
             <button
-              onClick={() => navigate("/register")}
+              onClick={cta.onClick}
               className="px-4 py-2 text-sm font-medium rounded-lg bg-teal-500 text-white hover:bg-teal-600 transition"
             >
-              Register
+              {cta.label}
             </button>
           </div>
 
           {/* MOBILE MENU BUTTON */}
-          <div className="md:hidden">
+          <div className="md:hidden flex items-center gap-4">
+            <NotificationBell />
             <button onClick={() => setIsOpen(!isOpen)} className="text-gray-800">
               {isOpen ? <X size={26} /> : <Menu size={26} />}
             </button>
@@ -103,14 +159,12 @@ const Navbar = () => {
           <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-md space-y-3">
 
             {navLinks.map((link) => {
-              const isActive = location.pathname === link.path;
+              const isActive = location.pathname === link.path || (link.path.startsWith("/#") && location.pathname === "/" && window.location.hash === link.path.substring(1));
               return (
-                <button
+                <Link
                   key={link.name}
-                  onClick={() => {
-                    navigate(link.path);
-                    setIsOpen(false);
-                  }}
+                  to={link.path}
+                  onClick={(e) => handleNavClick(e, link.path)}
                   className={`flex items-center gap-3 w-full text-left px-3 py-2 rounded-lg text-sm ${
                     isActive
                       ? "bg-teal-100 text-teal-600"
@@ -119,19 +173,19 @@ const Navbar = () => {
                 >
                   {link.icon}
                   {link.name}
-                </button>
+                </Link>
               );
             })}
 
-            {/* MOBILE REGISTER */}
+            {/* MOBILE LOGIN */}
             <button
               onClick={() => {
-                navigate("/register");
+                cta.onClick();
                 setIsOpen(false);
               }}
               className="w-full py-2 rounded-lg text-sm bg-teal-500 text-white hover:bg-teal-600 transition"
             >
-              Register
+              {cta.label}
             </button>
           </div>
         </div>

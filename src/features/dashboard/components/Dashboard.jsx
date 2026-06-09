@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { Stethoscope, Dumbbell, FlaskConical, Pill, Apple, ShoppingBasket } from "lucide-react";
 
 const dotGrid = {
@@ -16,7 +17,7 @@ const Dashboard = () => {
         backgroundSize: '24px 24px',
       }}
     >
-      <section className="px-4 sm:px-6 md:px-10 lg:px-16 py-12 sm:py-16 md:py-20">
+      <section id="services" className="px-4 sm:px-6 md:px-10 lg:px-16 py-12 sm:py-16 md:py-20">
 
         {/* Heading */}
         <p className="text-center text-teal-600 text-xs tracking-widest uppercase font-semibold mb-3">
@@ -46,14 +47,14 @@ const Dashboard = () => {
               <div className="bg-white/20 p-2.5 rounded-xl backdrop-blur-sm">
                 <Stethoscope size={22} />
               </div>
-              <h3 className="text-xl font-bold tracking-tight">Doctors Consultation</h3>
+              <h3 className="text-xl font-bold tracking-tight">24/7 Online Doctor Consultation</h3>
             </div>
             <p className="relative text-sm text-white/80 max-w-md leading-relaxed">
-              24/7 access to board-certified specialists via secure, lag-free clinical uplinks. Instant prescriptions and referrals.
+              Immediate virtual care and 24/7 online doctor consultations with board-certified specialists. Secure video calls, digital prescriptions, and expert medical referrals.
             </p>
-            <button className="relative mt-5 text-sm font-semibold flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg w-fit transition-colors border border-white/20">
+            <Link to="/register" className="relative mt-5 text-sm font-semibold flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg w-fit transition-colors border border-white/20">
               CONNECT NOW →
-            </button>
+            </Link>
           </div>
 
           {/* Fitness Training — dark slate */}
@@ -71,10 +72,10 @@ const Dashboard = () => {
               <div className="bg-teal-500/20 p-2 rounded-lg border border-teal-500/30">
                 <Dumbbell size={18} className="text-teal-400" />
               </div>
-              <h3 className="text-lg font-bold tracking-tight">Fitness Training</h3>
+              <h3 className="text-lg font-bold tracking-tight">Online Personal Training</h3>
             </div>
             <p className="relative text-xs text-gray-400 leading-relaxed">
-              Movement protocols that adapt dynamically to your morning HRV and recovery metrics.
+              Connect with a virtual fitness trainer for custom workout plans that adapt dynamically to your morning HRV and recovery biometrics.
             </p>
           </div>
 
@@ -90,10 +91,10 @@ const Dashboard = () => {
               <div className="bg-white/20 p-2 rounded-lg">
                 <FlaskConical size={16} />
               </div>
-              <h3 className="text-base font-bold tracking-tight">Lab Tests</h3>
+              <h3 className="text-base font-bold tracking-tight">Home Lab Tests</h3>
             </div>
             <p className="relative text-xs text-white/75 leading-relaxed">
-              Advanced diagnostics powered by AI.
+              Convenient home blood sample collection and diagnostic lab tests with comprehensive AI reporting.
             </p>
           </div>
 
@@ -109,10 +110,10 @@ const Dashboard = () => {
               <div className="bg-white/20 p-2 rounded-lg">
                 <Pill size={16} />
               </div>
-              <h3 className="text-base font-bold tracking-tight">Medicine Delivery</h3>
+              <h3 className="text-base font-bold tracking-tight">Online Medicine Delivery</h3>
             </div>
             <p className="relative text-xs text-white/75 leading-relaxed">
-              Cold-chain pharmaceutical delivery tracked in real-time to your door.
+              Fast, cold-chain prescription medicine delivery online, tracked in real-time directly to your door.
             </p>
           </div>
 
@@ -129,10 +130,10 @@ const Dashboard = () => {
                 <div className="bg-white/20 p-1.5 rounded-md">
                   <Apple size={14} />
                 </div>
-                <h4 className="text-sm font-bold tracking-tight">Nutrition & Food</h4>
+                <h4 className="text-sm font-bold tracking-tight">AI Meal Planner & Nutrition</h4>
               </div>
               <p className="relative text-xs text-white/80 leading-snug">
-                Macronutrient-aligned meal planning
+                Macronutrient-aligned, personalized AI meal plans tailored to your metabolism and recovery.
               </p>
             </div>
 

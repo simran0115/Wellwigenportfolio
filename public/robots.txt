@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /admin/*
+Disallow: /provider/dashboard
+Disallow: /doctor/dashboard
+Disallow: /vendor/dashboard
+Disallow: /lab/dashboard
+Disallow: /nutrition/dashboard
+Disallow: /pharmacy/dashboard
+Disallow: /trainer/dashboard
+Disallow: /dashboard
+
+Sitemap: https://wellwigen.com/sitemap.xml

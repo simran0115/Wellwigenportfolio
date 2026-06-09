@@ -39,7 +39,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { io } from "socket.io-client";
-import socket from '../../../../socket';
+import socket from '../../../../config/socket';
 
 const NavItem = ({ icon, label, active, onClick }) => (
   <button 
@@ -80,26 +80,23 @@ const NutritionDashboard = () => {
   });
   
   // States for Vendor view
-  const [orders, setOrders] = useState(() => {
-    const saved = localStorage.getItem("vendorDummyOrders_v3");
-    if (saved) return JSON.parse(saved);
-    
-    // Sync dates and IDs with User Dashboard's "Silver" plan logic (Tuesday & Friday)
-    const today = new Date();
-    const d1 = new Date(today);
-    d1.setDate(today.getDate() + ((2 + 7 - today.getDay()) % 7 || 7)); 
-    const d2 = new Date(today);
-    d2.setDate(today.getDate() + ((5 + 7 - today.getDay()) % 7 || 7));
-    
-    const formatDate = (d) => d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-    const id1 = `#WL-S${d1.getTime().toString().slice(-4)}`;
-    const id2 = `#WL-S${d2.getTime().toString().slice(-4)}`;
-
-    return [
-      { id: id1, customer: 'Rajesh Kumar', plan: 'Silver Plan', product: 'Fresh Seasonal Box', date: formatDate(d1), status: 'Pending', type: 'Order' },
-      { id: id2, customer: 'Rajesh Kumar', plan: 'Silver Plan', product: 'Fresh Seasonal Box', date: formatDate(d2), status: 'Pending', type: 'Order' },
-    ];
-  });
+  const [orders, setOrders] = useState([]);
+  
+  // 🧹 One-time Cleanup: Purge legacy demo data to ensure only real backend data is shown
+  useEffect(() => {
+    const legacyKeys = ["vendorDummyOrders_v3", "deliveredDeliveries_v3", "outForDeliveryDeliveries_v3"];
+    let cleaned = false;
+    legacyKeys.forEach(key => {
+      if (localStorage.getItem(key)) {
+        localStorage.removeItem(key);
+        cleaned = true;
+      }
+    });
+    if (cleaned) {
+      console.log("🧹 Legacy demo data purged. Dashboard is now strictly real-time.");
+      window.location.reload();
+    }
+  }, []);
   const [products, setProducts] = useState(() => {
     const saved = localStorage.getItem("vendorProducts");
     const locals = saved ? JSON.parse(saved) : [];
@@ -152,49 +149,78 @@ const NutritionDashboard = () => {
       localStorage.setItem("storeActive", JSON.stringify(storeActive));
       
       try {
-        const vendorData = JSON.parse(localStorage.getItem("providerInfo") || localStorage.getItem("vendorInfo") || "{}");
-        const vendorId = vendorData._id || 'demo-vendor-id';
+        const vendorData = JSON.parse(
+          localStorage.getItem("providerInfo") ||
+          localStorage.getItem("vendorInfo") ||
+          localStorage.getItem("user") ||
+          "{}"
+        );
+        const vendorId = vendorData._id || vendorData.id || null;
+        console.log("🛠️ [DEBUG] Vendor ID:", vendorId, "| Data keys:", Object.keys(vendorData));
 
-        const [catRes, prodRes, orderRes] = await Promise.all([
-          axios.get(`${API}/category`),
-          axios.get(`${API}/product`, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(`${API}/orders/vendor/${vendorId}`).catch(() => ({ data: [] }))
-        ]);
-        
-        setCategories(catRes.data);
-        
-        // Products for Vendor Management
-        setProducts(prodRes.data.map(p => ({
-          id: p._id,
-          name: p.name,
-          price: `₹${p.price}`,
-          category: p.category?.name || 'General',
-          status: p.quantity > 0 ? 'In Stock' : 'Out of Stock'
-        })));
+        // Fetch Categories and Products independently
+        Promise.all([
+          axios.get(`${API}/category`).catch(() => ({ data: [] })),
+          axios.get(`${API}/product`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] }))
+        ]).then(([catRes, prodRes]) => {
+          setCategories(catRes.data || []);
+          setProducts(prodRes.data?.map(p => ({
+            id: p._id,
+            name: p.name,
+            price: `₹${p.price}`,
+            category: p.category?.name || 'General',
+            status: p.quantity > 0 ? 'In Stock' : 'Out of Stock'
+          })) || []);
+          setMarketProducts(prodRes.data || []);
+        });
 
-        // Products for Marketplace/Customization
-        setMarketProducts(prodRes.data);
+        // ✅ Independent Order Fetching (Resilient)
+        console.log("📦 [DASHBOARD] Fetching live orders from sync endpoint...");
+        const orderRes = await axios.get(`${API}/orders/vendor-live`, {
+          timeout: 10000 // 10 second timeout for sync
+        }).catch(e => {
+          console.error('📦 [VENDOR-LIVE] Critical Fetch Error:', e.message);
+          return { data: { success: false, orders: [] } };
+        });
 
-        // Fetch Live Orders (Fallback to dummy data if DB is empty as requested)
-        if (orderRes.data && orderRes.data.length > 0) {
-          const liveOrders = orderRes.data.map(o => ({
-            id: o._id,
-            customer: o.userId?.name || 'Live Customer',
-            plan: 'Automated Order',
-            product: o.productId?.name || o.type || 'Fresh Produce',
-            date: new Date(o.scheduledFor || o.createdAt).toLocaleDateString(),
-            status: o.status === 'pending' ? 'Pending' : o.status === 'delivered' ? 'Delivered' : 'Pending',
-            type: 'Order'
-          }));
+        const ordersData = orderRes?.data?.orders || [];
+        console.log(`📦 [DASHBOARD] Received ${ordersData.length} orders from server.`);
+
+        if (Array.isArray(ordersData) && ordersData.length > 0) {
+          const liveOrders = ordersData.map(o => {
+            const customerName = o.userId?.name || o.userId?.email || 'Subscriber';
+            const productLabel = o.items?.[0]?.name || 'Fresh Produce Box';
+            const rawStatus = o.status || 'pending';
+            
+            return {
+              id: o._id,
+              customer: customerName,
+              plan: productLabel,
+              product: productLabel,
+              date: new Date(o.scheduledFor || o.createdAt).toLocaleDateString('en-IN'),
+              status: rawStatus === 'pending' ? 'Pending' :
+                      rawStatus === 'out_for_delivery' ? 'Out for Delivery' :
+                      rawStatus === 'delivered' ? 'Delivered' :
+                      rawStatus.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+              type: 'Order'
+            };
+          });
           setOrders(liveOrders);
+        } else {
+          console.warn("⚠️ [DASHBOARD] No orders returned from sync endpoint.");
+          setOrders([]);
         }
       } catch (err) {
-        console.error("Failed to fetch data:", err);
+        console.error("❌ [DASHBOARD] Fatal Error in fetchData:", err);
       } finally {
         setLoading(false);
       }
     };
     fetchData();
+    
+    // Set up polling interval as a backup to sockets
+    const interval = setInterval(fetchData, 30000); // 30 seconds
+    return () => clearInterval(interval);
   }, [API, token]);
 
   useEffect(() => {
@@ -237,25 +263,31 @@ const NutritionDashboard = () => {
 
     // Listen for Live Notifications
     newSocket.on("newOrder", (newOrder) => {
-      console.log("🔔 REAL-TIME: New order received via socket!", newOrder);
+      console.log("🔔 REAL-TIME: New order/reminder received via socket!", newOrder);
       
-      // Add new order to list in real-time
-      setOrders(prev => [newOrder, ...prev]);
+      // Prevent duplicates
+      setOrders(prev => {
+        if (prev.some(o => o.id === newOrder.id)) return prev;
+        return [newOrder, ...prev];
+      });
 
       // Show Premium Toast
+      const isReminder = newOrder.type === "Reminder";
       toast.custom((t) => (
         <div className={`${t.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} max-w-md w-full bg-white shadow-2xl rounded-[2rem] pointer-events-auto flex ring-1 ring-black ring-opacity-5 border border-teal-100 overflow-hidden transition-all duration-500 ease-out`}>
           <div className="flex-1 w-0 p-6">
             <div className="flex items-start">
               <div className="flex-shrink-0 pt-0.5">
-                <div className="h-12 w-12 rounded-2xl bg-teal-600 flex items-center justify-center text-white shadow-lg shadow-teal-100">
-                  <ShoppingBag size={24} />
+                <div className={`h-12 w-12 rounded-2xl ${isReminder ? 'bg-amber-500' : 'bg-teal-600'} flex items-center justify-center text-white shadow-lg shadow-teal-100`}>
+                  {isReminder ? <Clock size={24} /> : <ShoppingBag size={24} />}
                 </div>
               </div>
               <div className="ml-4 flex-1">
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-teal-600 mb-1">Incoming Order</p>
-                <p className="text-sm font-black text-slate-900">{newOrder.customer} placed an order</p>
-                <p className="mt-1 text-sm font-bold text-slate-400 uppercase tracking-widest">{newOrder.product} · {newOrder.plan}</p>
+                <p className={`text-xs font-black uppercase tracking-[0.2em] ${isReminder ? 'text-amber-600' : 'text-teal-600'} mb-1`}>
+                  {isReminder ? 'Order Reminder' : 'Incoming Order'}
+                </p>
+                <p className="text-sm font-black text-slate-900">{newOrder.customer} {isReminder ? 'has a pending order' : 'placed an order'}</p>
+                <p className="mt-1 text-sm font-bold text-slate-400 uppercase tracking-widest">{newOrder.product}</p>
               </div>
             </div>
           </div>
@@ -326,8 +358,8 @@ const NutritionDashboard = () => {
     setTimeout(() => {
       toast.success("Order placed successfully!", { id: "order" });
       setCart({});
-      // Redirect to User Dashboard as requested
-      navigate('/dashboard', { state: { activeTab: 'Overview' } });
+      // Set active tab to Orders to show the placed order in provider portal
+      setActiveTab('Orders');
     }, 1500);
   };
 
@@ -348,11 +380,15 @@ const NutritionDashboard = () => {
   const providerName = vendorInfo.ownerName || vendorInfo.name || 'Ramesh Fruits & Vegetables';
   const vendorLocation = vendorInfo.location || vendorInfo.storeAddress || 'Gomti Nagar, Lucknow';
 
+  const pendingCount = orders.filter(o => o.status === 'Pending').length;
+  const outForDeliveryCount = orders.filter(o => o.status === 'Out for Delivery').length;
+  const totalActive = orders.filter(o => o.status !== 'Delivered').length;
+
   const dashboardMetrics = [
-    { label: "Today's Orders", value: '34', note: '+8 vs yesterday', positive: true },
-    { label: 'Pending', value: '7', note: 'Dispatch by 10 AM', positive: false },
-    { label: 'This Week', value: '18.4k', note: '+12%', positive: true },
-    { label: 'Avg Rating', value: '4.6', note: '+0.2 pts', positive: true },
+    { label: "Active Orders", value: String(totalActive), note: totalActive > 0 ? 'Needs action' : 'All clear', positive: totalActive === 0 },
+    { label: 'Pending', value: String(pendingCount), note: pendingCount > 0 ? 'Dispatch soon' : 'None pending', positive: pendingCount === 0 },
+    { label: 'Out for Delivery', value: String(outForDeliveryCount), note: outForDeliveryCount > 0 ? 'In transit' : 'None in transit', positive: outForDeliveryCount > 0 },
+    { label: 'Total Orders', value: String(orders.length), note: 'All time', positive: true },
   ];
 
   const handleLogout = () => {
@@ -360,64 +396,30 @@ const NutritionDashboard = () => {
     navigate("/vendor/login");
   };
 
-  const resetDemoState = () => {
-    localStorage.removeItem("vendorDummyOrders_v3");
-    localStorage.removeItem("deliveredDeliveries_v3");
-    localStorage.removeItem("outForDeliveryDeliveries_v3");
-    toast.success("Demo state reset! Refreshing...");
-    setTimeout(() => window.location.reload(), 1000);
-  };
+
 
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
       console.log(`🔘 Order status update triggered: ID=${orderId}, Status=${newStatus}`);
       const activeSocket = socketRef.current;
-
-      if (orderId === '1' || orderId === '2' || orderId.toString().startsWith('mock_') || orderId.toString().startsWith('#WL-')) {
-        setOrders(prev => {
-          const next = prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o);
-          localStorage.setItem("vendorDummyOrders_v3", JSON.stringify(next));
-          return next;
-        });
-        
-        if (newStatus === 'Out for Delivery') {
-          const outIds = JSON.parse(localStorage.getItem("outForDeliveryDeliveries_v3") || "[]");
-          if (!outIds.includes(orderId)) outIds.push(orderId);
-          localStorage.setItem("outForDeliveryDeliveries_v3", JSON.stringify(outIds));
-        } else if (newStatus === 'Delivered') {
-          // Cleanup Out for Delivery
-          let outIds = JSON.parse(localStorage.getItem("outForDeliveryDeliveries_v3") || "[]");
-          outIds = outIds.filter(id => id !== orderId);
-          localStorage.setItem("outForDeliveryDeliveries_v3", JSON.stringify(outIds));
-
-          // Add to Delivered
-          const deliveredIds = JSON.parse(localStorage.getItem("deliveredDeliveries_v3") || "[]");
-          if (!deliveredIds.includes(orderId)) deliveredIds.push(orderId);
-          localStorage.setItem("deliveredDeliveries_v3", JSON.stringify(deliveredIds));
-        }
-
-        // Emit to server to re-broadcast to User Dashboard
-        if (activeSocket && activeSocket.connected) {
-          console.log("📡 Emitting updateOrderStatus to server...");
-          activeSocket.emit("updateOrderStatus", {
-            orderId: orderId,
-            status: newStatus.toLowerCase(),
-            type: "produce"
-          });
-          toast.success("Syncing status with user dashboard...");
-        } else {
-          console.warn("⚠️ Socket not connected, sync failed");
-          toast.error("Real-time sync unavailable (Socket disconnected)");
-        }
-
-        setSuccessPopup(true);
-        setTimeout(() => setSuccessPopup(false), 3000);
-        return;
-      }
       
-      const res = await axios.put(`${API}/orders/${orderId}/status`, { status: newStatus.toLowerCase() });
+      const vendorData = JSON.parse(localStorage.getItem("providerInfo") || localStorage.getItem("vendorInfo") || "{}");
+      const currentVendorId = vendorData._id || 'demo-vendor-id';
+
+
+      
+      const res = await axios.put(`${API}/orders/${orderId}/status`, { 
+        status: newStatus.toLowerCase(),
+        vendorId: currentVendorId
+      });
       if (res.data.success) {
-        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+        if (newStatus.toLowerCase() === 'delivered') {
+          // Remove from list immediately to keep dashboard focused on active tasks
+          setOrders(prev => prev.filter(o => o.id !== orderId));
+          toast.success("Order delivered and synced successfully!");
+        } else {
+          setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+        }
         setSuccessPopup(true);
         setTimeout(() => setSuccessPopup(false), 3000);
       }
@@ -551,6 +553,12 @@ const NutritionDashboard = () => {
               </span>
             </button>
 
+            {/* Socket Status Indicator */}
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded border text-[10px] font-black uppercase tracking-wider transition-all ${socketConnected ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-rose-50 border-rose-100 text-rose-600'}`}>
+              <div className={`w-1.5 h-1.5 rounded-full ${socketConnected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></div>
+              {socketConnected ? 'Socket Live' : 'Socket Offline'}
+            </div>
+
             <button className="p-2 bg-white border border-gray-200 rounded text-slate-500 hover:text-blue-600 transition relative">
               <Bell size={18} />
               <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
@@ -582,33 +590,90 @@ const NutritionDashboard = () => {
                   <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
                     <div className="p-4 border-b border-gray-100 flex justify-between items-center">
                       <h3 className="font-semibold text-gray-900 text-sm">Recent Orders</h3>
+                      <button onClick={() => setActiveTab('Orders')} className="text-xs font-bold text-blue-600 uppercase tracking-widest hover:text-blue-700">View All</button>
                     </div>
                     <div className="p-0">
-                      <table className="w-full">
-                        <tbody className="divide-y divide-gray-100">
-                          {orders.map((order) => (
-                            <tr key={order.id} className="group hover:bg-gray-50 transition-colors">
-                              <td className="py-4 px-4">
-                                <div className="flex items-center gap-4">
-                                  <div className="w-10 h-10 bg-gray-50 rounded flex items-center justify-center text-gray-500"><Truck size={18} /></div>
-                                  <div>
-                                    <span className="text-sm font-semibold text-gray-900">{order.product}</span>
-                                    <p className="text-sm text-gray-500 mt-0.5">{order.customer}</p>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="py-4 px-4">
-                                <span className={`text-xs font-bold uppercase px-2 py-1 rounded ${
-                                  order.status === 'Delivered' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'
-                                }`}>
-                                  {order.status}
-                                </span>
-                              </td>
-                              <td className="py-4 px-4 text-gray-400 text-right"><ChevronRight size={16} /></td>
+                      {orders.length === 0 ? (
+                        <div className="py-12 text-center flex flex-col items-center justify-center gap-3">
+                          <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center text-slate-300">
+                            <ShoppingBag size={24} />
+                          </div>
+                          <p className="text-slate-400 text-sm font-medium">No orders yet.</p>
+                          <p className="text-slate-300 text-xs">Orders will appear here as subscriptions are activated.</p>
+                        </div>
+                      ) : (
+                        <table className="w-full">
+                          <thead>
+                            <tr className="bg-slate-50 border-b border-gray-100">
+                              <th className="py-2 px-4 text-left text-[10px] font-black uppercase tracking-widest text-slate-400">Customer</th>
+                              <th className="py-2 px-4 text-left text-[10px] font-black uppercase tracking-widest text-slate-400">Date</th>
+                              <th className="py-2 px-4 text-right text-[10px] font-black uppercase tracking-widest text-slate-400">Action</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100">
+                            {orders.slice(0, 5).map((order) => {
+                              const orderDate = new Date(order.date);
+                              const today = new Date();
+                              const tomorrow = new Date(); tomorrow.setDate(today.getDate() + 1);
+                              const isToday = orderDate.toDateString() === today.toDateString();
+                              const isTomorrow = orderDate.toDateString() === tomorrow.toDateString();
+                              const dateLabel = isToday ? 'Today' : isTomorrow ? 'Tomorrow' : order.date;
+
+                              return (
+                                <tr key={order.id} className="group hover:bg-blue-50/30 transition-colors">
+                                  <td className="py-3 px-4">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-9 h-9 bg-gray-50 rounded flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all flex-shrink-0">
+                                        <Truck size={16} />
+                                      </div>
+                                      <div>
+                                        <span className="text-sm font-semibold text-gray-900">{order.customer}</span>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{order.product}</p>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded ${
+                                      isToday ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'
+                                    }`}>
+                                      {dateLabel}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    <div className="flex items-center justify-end gap-2">
+                                      <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded ${
+                                        order.status === 'Pending' ? 'bg-amber-50 text-amber-600' :
+                                        order.status === 'Out for Delivery' ? 'bg-blue-50 text-blue-600' :
+                                        'bg-green-50 text-green-700'
+                                      }`}>
+                                        {order.status}
+                                      </span>
+                                      {order.status === 'Pending' && (
+                                        <button
+                                          onClick={() => updateOrderStatus(order.id, 'Out for Delivery')}
+                                          className="px-2 py-1 bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors flex items-center gap-1 text-[10px] font-black uppercase tracking-wider"
+                                          title="Dispatch Order"
+                                        >
+                                          <Truck size={11} /> Dispatch
+                                        </button>
+                                      )}
+                                      {order.status === 'Out for Delivery' && (
+                                        <button
+                                          onClick={() => updateOrderStatus(order.id, 'Delivered')}
+                                          className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center gap-1 text-[10px] font-black uppercase tracking-wider"
+                                          title="Mark as Delivered"
+                                        >
+                                          <CheckCircle size={11} /> Deliver
+                                        </button>
+                                      )}
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -637,7 +702,7 @@ const NutritionDashboard = () => {
                    <h2 className="text-2xl font-bold text-slate-900 mb-3">Store is Currently Closed</h2>
                    <p className="text-slate-500 max-w-md mx-auto mb-6 text-sm">The vendor has temporarily disabled product placement. Please check back later or contact support if you have an urgent delivery request.</p>
                    <button 
-                     onClick={() => navigate('/dashboard')}
+                     onClick={() => setActiveTab('Overview')}
                      className="px-6 py-3 bg-slate-900 text-white rounded font-semibold text-sm shadow-sm"
                    >
                      Back to Dashboard
@@ -721,7 +786,7 @@ const NutritionDashboard = () => {
                   {Object.keys(cart).length > 0 && (
                     <motion.div 
                       initial={{ y: 100 }} animate={{ y: 0 }}
-                      className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-400px)] max-w-2xl bg-slate-900 text-white p-4 rounded-lg shadow-xl flex items-center justify-between border border-slate-700"
+                      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] sm:w-[calc(100%-2rem)] lg:w-[calc(100%-420px)] max-w-2xl bg-slate-900 text-white p-4 rounded-lg shadow-xl flex items-center justify-between border border-slate-700"
                     >
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 bg-blue-600 rounded flex items-center justify-center"><ShoppingBasket size={20} /></div>
@@ -743,59 +808,70 @@ const NutritionDashboard = () => {
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
               <div className="bg-white border border-gray-200 rounded-lg p-8 shadow-sm">
                 <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
-                  <div className="flex items-center gap-4">
-                    <h3 className="text-xl font-semibold text-slate-900">Active Orders</h3>
-                    <button onClick={resetDemoState} className="text-xs bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-600 px-3 py-1 rounded font-bold uppercase transition-colors">
-                      Reset Demo
-                    </button>
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-2xl font-bold text-slate-900">Active Orders</h1>
                   </div>
                   <div className="flex gap-2">
-                    <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-bold uppercase tracking-wider">Live: 12</span>
-                    <span className="px-2 py-1 bg-amber-50 text-amber-700 rounded text-xs font-bold uppercase tracking-wider">Pending: 3</span>
+                    <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-bold uppercase tracking-wider">
+                      Live: {orders.length}
+                    </span>
+                    <span className="px-2 py-1 bg-amber-50 text-amber-700 rounded text-xs font-bold uppercase tracking-wider">
+                      Pending: {orders.filter(o => o.status === 'Pending').length}
+                    </span>
                   </div>
                 </div>
                 <div className="space-y-4">
-                  {orders.map(order => (
-                    <div key={order.id} className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50/30 transition-all flex items-center justify-between group">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-gray-50 rounded flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                          <ShoppingBag size={18} />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-slate-900">{order.customer}</h4>
-                          <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">{order.product} · {order.type}</p>
-                        </div>
+                  {orders.length === 0 ? (
+                    <div className="py-20 text-center flex flex-col items-center justify-center gap-4">
+                      <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-300">
+                        <ShoppingBag size={32} />
                       </div>
-                      <div className="text-right flex flex-col items-end gap-2">
-                        <div className="flex items-center gap-2">
-                          {order.status === 'Pending' && (
-                            <button 
-                              onClick={() => updateOrderStatus(order.id, 'Out for Delivery')}
-                              className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1 shadow-sm"
-                            >
-                              <Truck size={12} /> Dispatch
-                            </button>
-                          )}
-                          {order.status === 'Out for Delivery' && (
-                            <button 
-                              onClick={() => updateOrderStatus(order.id, 'Delivered')}
-                              className="px-3 py-1 bg-slate-900 hover:bg-blue-600 text-white rounded text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1 shadow-sm"
-                            >
-                              <CheckCircle size={12} /> Deliver
-                            </button>
-                          )}
-                          <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wider ${
-                            order.status === 'Pending' ? 'bg-amber-50 text-amber-700' : 
-                            order.status === 'Out for Delivery' ? 'bg-blue-50 text-blue-600' :
-                            'bg-blue-50 text-blue-700'
-                          }`}>
-                            {order.status}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">{order.date}</p>
-                      </div>
+                      <p className="text-slate-400 font-medium text-sm">No active orders requiring action.</p>
+                      <p className="text-xs text-slate-300">New orders will appear here in real-time as they are placed.</p>
                     </div>
-                  ))}
+                  ) : (
+                    orders.map(order => (
+                      <div key={order.id} className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50/30 transition-all flex items-center justify-between group">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-gray-50 rounded flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                            <ShoppingBag size={18} />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-slate-900">{order.customer}</h4>
+                            <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">{order.product}</p>
+                          </div>
+                        </div>
+                        <div className="text-right flex flex-col items-end gap-2">
+                          <div className="flex items-center gap-2">
+                            {order.status === 'Pending' && (
+                              <button 
+                                onClick={() => updateOrderStatus(order.id, 'Out for Delivery')}
+                                className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1 shadow-sm"
+                              >
+                                <Truck size={12} /> Dispatch
+                              </button>
+                            )}
+                            {order.status === 'Out for Delivery' && (
+                              <button 
+                                onClick={() => updateOrderStatus(order.id, 'Delivered')}
+                                className="px-3 py-1 bg-slate-900 hover:bg-blue-600 text-white rounded text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1 shadow-sm"
+                              >
+                                <CheckCircle size={12} /> Deliver
+                              </button>
+                            )}
+                            <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wider ${
+                              order.status === 'Pending' ? 'bg-amber-50 text-amber-700' : 
+                              order.status === 'Out for Delivery' ? 'bg-blue-50 text-blue-600' :
+                              'bg-blue-50 text-blue-700'
+                            }`}>
+                              {order.status}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">{order.date}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </motion.div>
