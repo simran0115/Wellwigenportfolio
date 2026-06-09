@@ -1,9 +1,10 @@
 import React from "react";
 import { Droplet, Moon, Pill } from "lucide-react";
 
-const Ecosystem = () => {
+const Ecosystem = ({ isSubSection = true }) => {
   return (
     <section
+      id="ecosystem"
       className="w-full py-16 relative overflow-hidden"
       style={{
         backgroundColor: '#f8fafc',
@@ -39,9 +40,15 @@ const Ecosystem = () => {
           Intelligence Core
         </p>
 
-        <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold text-gray-900">
-          The Wellwigen <span className="text-teal-600">Health Engine</span>
-        </h1>
+        {isSubSection ? (
+          <h2 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold text-gray-900">
+            The Wellwigen <span className="text-teal-600">Health Engine</span>
+          </h2>
+        ) : (
+          <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold text-gray-900">
+            The Wellwigen <span className="text-teal-600">Health Engine</span>
+          </h1>
+        )}
 
         <p className="text-gray-500 mt-3 max-w-2xl mx-auto text-xs sm:text-sm md:text-base">
           Beyond monitoring. Our neural architecture decodes biological markers in real-time to predict health trajectories before they manifest.

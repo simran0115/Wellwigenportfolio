@@ -21,7 +21,8 @@ import {
   X,
   PlusCircle,
   Trash2,
-  Edit2
+  Edit2,
+  Menu
 } from 'lucide-react';
 import AccountProfile from '../../components/AccountProfile';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -31,6 +32,7 @@ import axios from 'axios';
 const DigDevicesDashboard = () => {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'Overview');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [orders, setOrders] = useState([
     { id: '1', customer: 'Rajesh Kumar', plan: 'Health Monitor', product: 'Digital Heart Rate Monitor', date: '2026-04-29', status: 'Pending', type: 'Subscription' },
     { id: '2', customer: 'Simran Kumari', plan: 'Daily Checkup', product: 'Smart BP Cuff', date: '2026-04-29', status: 'Out for Delivery', type: 'Subscription' },
@@ -96,12 +98,33 @@ const DigDevicesDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f9fafb] flex font-sans text-slate-900">
+    <div className="min-h-screen bg-[#f9fafb] flex font-sans text-slate-900 overflow-hidden h-screen">
+      {/* Mobile Sidebar Overlay */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsSidebarOpen(false)}
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-100 flex flex-col fixed h-full z-20">
-        <div className="p-6 flex items-center gap-2">
-          <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-teal-100">W</div>
-          <span className="font-bold text-gray-900 tracking-tight">Wellwigen <span className="text-teal-600 font-black">Market</span></span>
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-100 flex flex-col transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        <div className="p-6 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-teal-100">W</div>
+            <span className="font-bold text-gray-900 tracking-tight">Wellwigen <span className="text-teal-600 font-black">Market</span></span>
+          </div>
+          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-2 text-slate-500 hover:bg-gray-100 rounded">
+            <X size={20} />
+          </button>
         </div>
 
         <nav className="flex-1 px-4 space-y-1 mt-4">
@@ -140,7 +163,24 @@ const DigDevicesDashboard = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 ml-64 p-8 min-h-screen">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Mobile Header */}
+        <header className="lg:hidden flex items-center justify-between p-4 border-b border-gray-100 bg-white">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setIsSidebarOpen(true)} className="p-2 -ml-2 text-slate-500">
+              <Menu size={24} />
+            </button>
+            <span className="font-bold text-gray-900 text-sm">Wellwigen</span>
+          </div>
+          <img
+            src={vendorInfo.profileImage || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'}
+            alt="Profile"
+            className="w-8 h-8 rounded-full border border-gray-200 object-cover"
+          />
+        </header>
+
+        {/* Scrollable Main */}
+        <main className="flex-1 overflow-y-auto p-4 lg:p-8">
         {activeTab !== 'Account' && (
           <div className="max-w-7xl mx-auto mb-10">
             <header className="flex justify-between items-start mb-10">
@@ -304,7 +344,8 @@ const DigDevicesDashboard = () => {
             </motion.div>
           )}
         </AnimatePresence>
-      </main>
+        </main>
+      </div>
     </div>
   );
 };

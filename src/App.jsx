@@ -204,6 +204,12 @@ function App() {
 
           <Route path="/vendor/login" element={
             <PageWrapper>
+              <Helmet>
+                <title>Partner & Provider Portal Login | Wellwigen Partner Hub</title>
+                <meta name="description" content="Access the partner login portal for doctors, pharmacists, laboratory technicians, certified fitness trainers, and wellness vendors on the Wellwigen network." />
+                <meta name="keywords" content="doctor portal login, partner store dashboard, lab testing portal access, fitness coach login, provider portal login" />
+                <link rel="canonical" href={window.location.origin + "/vendor/login"} />
+              </Helmet>
               <ResponsiveSection>
                 <VendorLogin />
               </ResponsiveSection>
@@ -225,6 +231,11 @@ function App() {
             path="/terms-and-conditions"
             element={
               <PageWrapper>
+                <Helmet>
+                  <title>Terms & Conditions & Privacy Policy | Wellwigen</title>
+                  <meta name="description" content="Review the Terms & Conditions and Privacy Policy for utilizing the Wellwigen smart wellness platform and telemedicine consultation network." />
+                  <link rel="canonical" href={window.location.origin + "/terms-and-conditions"} />
+                </Helmet>
                 <TermsAndConditions />
                 <Footer />
               </PageWrapper>
@@ -237,13 +248,60 @@ function App() {
             element={
               <PageWrapper>
                 <Helmet>
-                  <title>Wellwigen | AI Health System</title>
+                  <title>Wellwigen | 24/7 Online Doctor Consultation, AI Diet Planner & Fitness Coach</title>
+                  <meta name="description" content="Wellwigen is an AI-powered health and wellness ecosystem. Get 24/7 online doctor consultations, personalized AI meal plans, and certified virtual personal fitness trainers. Sync biometric devices, book home lab tests, and get doorstep medicine delivery." />
+                  <meta name="keywords" content="online doctor consultation, 24/7 online doctor, AI meal planner, AI nutrition app, virtual fitness trainer, online personal training, immediate virtual care, telehealth app, home lab tests, prescription medicine delivery online, AI diet coach, medical health ecosystem, digital clinic" />
+                  <link rel="canonical" href={window.location.origin + "/"} />
+                  {/* Open Graph / Facebook */}
+                  <meta property="og:type" content="website" />
+                  <meta property="og:title" content="Wellwigen | 24/7 Online Doctor Consultation, AI Diet Planner & Fitness Coach" />
+                  <meta property="og:description" content="Access 24/7 online doctor consultations, personalized AI diet plans, certified fitness training, and fast online medicine delivery." />
+                  <meta property="og:url" content="https://wellwigen.com" />
+                  <meta property="og:image" content="https://wellwigen.com/og-image.jpg" />
+                  {/* Twitter */}
+                  <meta name="twitter:card" content="summary_large_image" />
+                  <meta name="twitter:title" content="Wellwigen | 24/7 Online Doctor Consultation, AI Diet Planner & Fitness Coach" />
+                  <meta name="twitter:description" content="Access 24/7 online doctor consultations, personalized AI diet plans, certified fitness training, and fast online medicine delivery." />
+                  {/* Schema Markup */}
+                  <script type="application/ld+json">
+                    {`
+                      {
+                        "@context": "https://schema.org",
+                        "@type": "MedicalBusiness",
+                        "name": "Wellwigen",
+                        "alternateName": "Wellwigen Health & Fitness",
+                        "url": "https://wellwigen.com",
+                        "logo": "https://wellwigen.com/favicon.svg",
+                        "image": "https://wellwigen.com/og-image.jpg",
+                        "description": "Wellwigen is an AI-powered health and wellness platform offering 24/7 online doctor consultations, personalized AI meal plans, and virtual fitness coaching. Access immediate virtual care, certified trainers, home lab tests, and doorstep medicine delivery.",
+                        "telephone": "+919598506627",
+                        "email": "wellwigen@gmail.com",
+                        "address": {
+                          "@type": "PostalAddress",
+                          "streetAddress": "123 Fitness Street, Wellness City",
+                          "addressCountry": "IN"
+                        },
+                        "priceRange": "$$",
+                        "medicalSpecialty": [
+                          "PrimaryCare",
+                          "Dietetics",
+                          "Physiotherapy"
+                        ],
+                        "contactPoint": {
+                          "@type": "ContactPoint",
+                          "telephone": "+919598506627",
+                          "contactType": "customer service",
+                          "email": "wellwigen@gmail.com"
+                        }
+                      }
+                    `}
+                  </script>
                 </Helmet>
 
                 <main>
                   <Hero />
-                  <Ecosystem />
-                  <Pricing />
+                  <Ecosystem isSubSection={true} />
+                  <Pricing isSubSection={true} />
                   <ResponsiveSection>
                     <Dashboard />
                   </ResponsiveSection>
@@ -263,16 +321,208 @@ function App() {
           />
 
           {/* ================= OTHER ROUTES ================= */}
-          <Route path="/services" element={<PageWrapper><ResponsiveSection><Dashboard /></ResponsiveSection><Footer /></PageWrapper>} />
-          <Route path="/ecosystem" element={<PageWrapper><Ecosystem /><Footer /></PageWrapper>} />
-          <Route path="/pricing" element={<PageWrapper><Pricing /><Footer /></PageWrapper>} />
-          <Route path="/testimonial" element={<PageWrapper><Testimonials /><Footer /></PageWrapper>} />
-          <Route path="/contactus" element={<PageWrapper><ContactUs /><Footer /></PageWrapper>} />
-          <Route path="/join-as-trainer" element={<PageWrapper><TrainerForm /><Footer /></PageWrapper>} />
+          <Route path="/services" element={
+            <PageWrapper>
+              <Helmet>
+                <title>Comprehensive Telehealth Services: 24/7 Online Doctor & Fitness | Wellwigen Services</title>
+                <meta name="description" content="Explore Wellwigen's complete digital healthcare ecosystem. Connect with 24/7 online doctor consultations, get a personalized AI meal planner, book home blood sample collections, hire online personal fitness trainers, and order online medicine delivery." />
+                <meta name="keywords" content="telehealth services, 24/7 online doctor, virtual fitness trainer, personalized nutrition advice, home blood collection lab tests, online medicine delivery, immediate virtual care, virtual clinic near me, remote patient monitoring" />
+                <link rel="canonical" href={window.location.origin + "/services"} />
+                <script type="application/ld+json">
+                  {`
+                    {
+                      "@context": "https://schema.org",
+                      "@type": "Service",
+                      "serviceType": "Telehealth and Wellness Services",
+                      "provider": {
+                        "@type": "MedicalBusiness",
+                        "name": "Wellwigen",
+                        "url": "https://wellwigen.com"
+                      },
+                      "hasOfferCatalog": {
+                        "@type": "OfferCatalog",
+                        "name": "Wellwigen Health Services",
+                        "itemListElement": [
+                          {
+                            "@type": "Offer",
+                            "itemOffered": {
+                              "@type": "Service",
+                              "name": "24/7 Online Doctor Consultation",
+                              "description": "Immediate virtual consultations with board-certified physicians."
+                            }
+                          },
+                          {
+                            "@type": "Offer",
+                            "itemOffered": {
+                              "@type": "Service",
+                              "name": "Personalized AI Diet Planner & Nutrition",
+                              "description": "Customized automated meal planning for weight loss and health monitoring."
+                            }
+                          },
+                          {
+                            "@type": "Offer",
+                            "itemOffered": {
+                              "@type": "Service",
+                              "name": "Online Personal Training & Fitness Coach",
+                              "description": "Certified virtual training routines adapted to biometric devices."
+                            }
+                          },
+                          {
+                            "@type": "Offer",
+                            "itemOffered": {
+                              "@type": "Service",
+                              "name": "At-Home Lab Tests & Blood Sample Collection",
+                              "description": "Convenient diagnostic testing in the comfort of your home."
+                            }
+                          },
+                          {
+                            "@type": "Offer",
+                            "itemOffered": {
+                              "@type": "Service",
+                              "name": "Doorstep Prescription Medicine Delivery Online",
+                              "description": "Fast online pharmacy orders delivered directly to your door."
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  `}
+                </script>
+              </Helmet>
+              <ResponsiveSection><Dashboard /></ResponsiveSection>
+              <Footer />
+            </PageWrapper>
+          } />
+          <Route path="/ecosystem" element={
+            <PageWrapper>
+              <Helmet>
+                <title>AI Health Engine & Personalized Bio-Tracking | Wellwigen Ecosystem</title>
+                <meta name="description" content="Learn how the Wellwigen AI Health Engine integrates with wearables and biometric sensors to analyze heart rate variability (HRV) and circadian rhythms to provide personalized preventative healthcare interventions." />
+                <meta name="keywords" content="AI health engine, personalized bio-tracking, HRV health monitoring, biometric analysis, preventive healthcare system, circadian rhythm app, wearable health tech, smart health monitoring" />
+                <link rel="canonical" href={window.location.origin + "/ecosystem"} />
+                <script type="application/ld+json">
+                  {`
+                    {
+                      "@context": "https://schema.org",
+                      "@type": "WebPage",
+                      "name": "Wellwigen AI Health Engine",
+                      "description": "Real-time biometric monitoring and smart health intervention systems."
+                    }
+                  `}
+                </script>
+              </Helmet>
+              <Ecosystem isSubSection={false} />
+              <Footer />
+            </PageWrapper>
+          } />
+          <Route path="/pricing" element={
+            <PageWrapper>
+              <Helmet>
+                <title>Affordable Health Subscriptions & Telemedicine Pricing | Wellwigen Plans</title>
+                <meta name="description" content="View our flexible, flat-rate wellness subscription plans. Gain unlimited access to 24/7 online doctor visits, certified virtual personal fitness trainers, and personalized AI meal plans." />
+                <meta name="keywords" content="telemedicine pricing, health subscription plans, online doctor consultation cost, virtual fitness trainer pricing, personalized meal plan subscription, online medical care plans" />
+                <link rel="canonical" href={window.location.origin + "/pricing"} />
+                <script type="application/ld+json">
+                  {`
+                    {
+                      "@context": "https://schema.org",
+                      "@type": "WebPage",
+                      "name": "Wellwigen Pricing Plans",
+                      "description": "Subscription plans for telemedicine, AI nutrition coaching, and online physical training."
+                    }
+                  `}
+                </script>
+              </Helmet>
+              <Pricing isSubSection={false} />
+              <Footer />
+            </PageWrapper>
+          } />
+          <Route path="/testimonial" element={
+            <PageWrapper>
+              <Helmet>
+                <title>Wellwigen Reviews | Patient Success Stories & Client Testimonials</title>
+                <meta name="description" content="See real reviews from patients and clients who transformed their health using Wellwigen. Read success stories about online doctor consultations, personalized AI diet plans, and virtual fitness coaching." />
+                <meta name="keywords" content="Wellwigen reviews, online doctor reviews, AI meal planner reviews, virtual fitness trainer reviews, digital health success stories, patient testimonials" />
+                <link rel="canonical" href={window.location.origin + "/testimonial"} />
+                <script type="application/ld+json">
+                  {`
+                    {
+                      "@context": "https://schema.org",
+                      "@type": "WebPage",
+                      "name": "Wellwigen Patient Success Stories & Reviews",
+                      "description": "Reviews from users who achieved clinical wellness, weight loss, and fitness with Wellwigen."
+                    }
+                  `}
+                </script>
+              </Helmet>
+              <Testimonials />
+              <Footer />
+            </PageWrapper>
+          } />
+          <Route path="/contactus" element={
+            <PageWrapper>
+              <Helmet>
+                <title>Contact Wellwigen | 24/7 Telehealth Support & Partner Care</title>
+                <meta name="description" content="Get in touch with Wellwigen support. Contact our customer care for help with online doctor booking, partner integrations, virtual trainer signups, or health app support." />
+                <meta name="keywords" content="contact telehealth support, telemedicine customer service, book online doctor consultation, partner with Wellwigen, customer support phone" />
+                <link rel="canonical" href={window.location.origin + "/contactus"} />
+                <script type="application/ld+json">
+                  {`
+                    {
+                      "@context": "https://schema.org",
+                      "@type": "ContactPage",
+                      "name": "Contact Wellwigen Support",
+                      "description": "Support information for telemedicine patients and providers on the Wellwigen platform."
+                    }
+                  `}
+                </script>
+              </Helmet>
+              <ContactUs />
+              <Footer />
+            </PageWrapper>
+          } />
+          <Route path="/join-as-trainer" element={
+            <PageWrapper>
+              <Helmet>
+                <title>Become a Certified Online Personal Trainer | Wellwigen Careers</title>
+                <meta name="description" content="Sign up as a certified fitness coach or trainer on the Wellwigen network. Work remotely, create custom workout plans, track client biometrics, and build your digital training business." />
+                <meta name="keywords" content="online personal trainer jobs, virtual fitness coach sign up, remote personal training career, certified fitness trainer platform, work as fitness trainer online" />
+                <link rel="canonical" href={window.location.origin + "/join-as-trainer"} />
+                <script type="application/ld+json">
+                  {`
+                    {
+                      "@context": "https://schema.org",
+                      "@type": "WebPage",
+                      "name": "Join Wellwigen as a Certified Fitness Coach",
+                      "description": "Onboarding page for professional personal trainers to offer remote fitness coaching."
+                    }
+                  `}
+                </script>
+              </Helmet>
+              <TrainerForm />
+              <Footer />
+            </PageWrapper>
+          } />
 
           {/* ================= REGISTER ================= */}
           <Route path="/register" element={
             <PageWrapper>
+              <Helmet>
+                <title>Sign Up for Wellwigen | Start Your Personalized AI Wellness Journey</title>
+                <meta name="description" content="Sign up for Wellwigen today to access 24/7 online doctor consultations, personalized AI diet plans, sync your biometric devices, and connect with certified fitness coaches." />
+                <meta name="keywords" content="register telemedicine app, sign up AI wellness platform, create personalized fitness profile, join online doctor system" />
+                <link rel="canonical" href={window.location.origin + "/register"} />
+                <script type="application/ld+json">
+                  {`
+                    {
+                      "@context": "https://schema.org",
+                      "@type": "RegisterAction",
+                      "name": "Sign Up for Wellwigen",
+                      "description": "Start your personalized health, telemedicine, and fitness program."
+                    }
+                  `}
+                </script>
+              </Helmet>
               <ResponsiveSection>
                 <ConsultationForm />
               </ResponsiveSection>
@@ -283,6 +533,22 @@ function App() {
           {/* ================= LOGIN ================= */}
           <Route path="/login" element={
             <PageWrapper>
+              <Helmet>
+                <title>Patient Portal Login | Access Your Secure Wellwigen Dashboard</title>
+                <meta name="description" content="Log in to your secure Wellwigen health portal. Access your telemedicine prescriptions, track health metrics, chat with your trainer, and view lab test results." />
+                <meta name="keywords" content="telehealth portal sign in, patient login, access medical records online, patient health dashboard, login to doctor app" />
+                <link rel="canonical" href={window.location.origin + "/login"} />
+                <script type="application/ld+json">
+                  {`
+                    {
+                      "@context": "https://schema.org",
+                      "@type": "WebPage",
+                      "name": "Patient Login - Wellwigen Portal",
+                      "description": "Secure sign-in for patient health tracking and consultations."
+                    }
+                  `}
+                </script>
+              </Helmet>
               <ResponsiveSection>
                 <Login />
               </ResponsiveSection>

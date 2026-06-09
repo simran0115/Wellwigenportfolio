@@ -6,7 +6,7 @@ import DummyPaymentGateway from '../components/DummyPaymentGateway';
 import toast from 'react-hot-toast';
 import apiClient from '../../../services/apiClient';
 
-const PricingPage = () => {
+const PricingPage = ({ isSubSection = false }) => {
   const [billingCycle, setBillingCycle] = useState('monthly');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPlanDetails, setSelectedPlanDetails] = useState(null);
@@ -41,7 +41,9 @@ const PricingPage = () => {
               nextBilling: s.endDate ? new Date(s.endDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'N/A',
               price: `₹${s.price || 499}/mo`
             }));
-            navigate('/dashboard', { replace: true });
+            if (!isSubSection) {
+              navigate('/dashboard', { replace: true });
+            }
           }
         } catch (err) {
           console.error("Error checking active subscription:", err);
@@ -110,6 +112,7 @@ const PricingPage = () => {
 
   return (
     <section
+      id="pricing"
       className="w-full py-20 relative overflow-hidden"
       style={{
         backgroundColor: '#f8fafc',
@@ -138,10 +141,17 @@ const PricingPage = () => {
       <div className="relative z-10 flex flex-col items-center px-4">
         <p className="text-teal-600 text-xs tracking-widest uppercase font-semibold mb-4">Pricing</p>
 
-        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 text-center mb-5 leading-tight">
-          One Subscription.<br />
-          <span className="text-teal-600">Complete Health. For Life.</span>
-        </h1>
+        {isSubSection ? (
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 text-center mb-5 leading-tight">
+            One Subscription.<br />
+            <span className="text-teal-600">Complete Health. For Life.</span>
+          </h2>
+        ) : (
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 text-center mb-5 leading-tight">
+            One Subscription.<br />
+            <span className="text-teal-600">Complete Health. For Life.</span>
+          </h1>
+        )}
 
         <p className="text-gray-500 text-base md:text-lg max-w-2xl text-center mb-10">
           Choose the plan that fits your lifestyle. Get fresh produce, unlimited doctor consultations, and fitness training all in one app.

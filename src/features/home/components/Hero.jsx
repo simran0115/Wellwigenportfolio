@@ -1,6 +1,26 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Activity, Brain, BriefcaseMedical, Utensils, HeartPulse } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+
+const categories = [
+  "Wellwigen",
+  "Yoga Classes",
+  "Tabata Classes",
+  "Jungle Fit Classes",
+  "Personal Online Training"
+];
+
+const sliderImages = [
+  "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=800&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=800&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=800&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=800&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&w=800&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1526506118393-27e4ee640825?q=80&w=800&auto=format&fit=crop"
+];
 
 const steps = [
   { step: "01", title: "Track Health", subtitle: "Wearables & real-time sync", icon: Activity },
@@ -12,6 +32,14 @@ const steps = [
 
 export default function Hero() {
   const navigate = useNavigate();
+  const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentCategoryIndex((prev) => (prev + 1) % categories.length);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <section
@@ -136,39 +164,55 @@ export default function Hero() {
       </svg>
 
       {/* === MAIN CONTENT === */}
-      <div className="pt-32 pb-14 px-4 flex flex-col items-center text-center max-w-4xl mx-auto relative z-10">
-
+      <div className="pt-32 pb-14 px-4 flex flex-col items-center text-center max-w-full mx-auto relative z-10">
+        
         {/* Platform badge */}
         <div className="inline-flex items-center gap-2 bg-white border border-teal-100 text-teal-700 text-xs font-semibold px-4 py-1.5 rounded-full mb-7 shadow-sm">
           <span className="w-1.5 h-1.5 bg-teal-500 rounded-full" />
-          AI-Powered Health Platform
+          AI-Powered Telehealth & Wellness Platform
         </div>
 
         {/* Headline */}
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 leading-tight mb-5">
           Handover Your Health<br />
-          <span className="text-teal-600">to Wellwigen</span>
+          <span className="inline-flex items-center justify-center flex-wrap gap-x-3 mt-1 sm:mt-2">
+            <span>to</span>
+            <span className="text-teal-600 text-left min-w-[220px] sm:min-w-[280px] md:min-w-[420px] relative h-[48px] sm:h-[60px] md:h-[72px] inline-flex items-center">
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={currentCategoryIndex}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                  className="absolute left-0 w-full whitespace-nowrap"
+                >
+                  {categories[currentCategoryIndex]}
+                </motion.span>
+              </AnimatePresence>
+            </span>
+          </span>
         </h1>
 
         {/* Subtext */}
         <p className="text-gray-500 text-lg md:text-xl max-w-2xl mb-9 leading-relaxed">
-          A premium clinical ecosystem that monitors, guides, and adapts to your biology for total peace of mind.
+          Access immediate <strong>online doctor consultations</strong>, automated <strong>AI meal plans</strong>, and certified <strong>virtual fitness training</strong> in a single integrated telehealth platform.
         </p>
 
         {/* CTA Buttons */}
         <div className="flex flex-wrap gap-3 justify-center mb-10">
-          <button
-            onClick={() => navigate("/register")}
-            className="px-7 py-3 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors shadow-sm"
+          <Link
+            to="/register"
+            className="px-7 py-3 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors shadow-sm flex items-center justify-center"
           >
             Get Started Free
-          </button>
-          <button
-            onClick={() => navigate("/ecosystem")}
-            className="px-7 py-3 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+          </Link>
+          <Link
+            to="/ecosystem"
+            className="px-7 py-3 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center"
           >
             See How It Works →
-          </button>
+          </Link>
         </div>
 
         {/* Social proof */}
@@ -179,13 +223,24 @@ export default function Hero() {
                 key={i}
                 className="w-8 h-8 rounded-full border-2 border-white shadow-sm"
                 src={`https://i.pravatar.cc/32?img=${i}`}
-                alt={`user${i}`}
+                alt={`Wellwigen active user avatar ${i}`}
               />
             ))}
           </div>
           <span className="text-sm text-gray-500">
             Join <strong className="text-gray-800">6,000+</strong> users already on Wellwigen
           </span>
+        </div>
+      </div>
+
+      {/* === IMAGE SLIDER === */}
+      <div className="w-full overflow-hidden relative z-10 mb-16">
+        <div className="flex animate-marquee gap-4 px-4">
+          {[...sliderImages, ...sliderImages].map((imgUrl, idx) => (
+            <div key={idx} className="w-32 h-20 sm:w-48 sm:h-32 md:w-64 md:h-40 flex-shrink-0 rounded-2xl overflow-hidden shadow-md">
+              <img src={imgUrl} alt="Wellness Activity" className="w-full h-full object-cover" />
+            </div>
+          ))}
         </div>
       </div>
 

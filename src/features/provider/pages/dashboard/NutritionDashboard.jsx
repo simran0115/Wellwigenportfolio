@@ -786,7 +786,7 @@ const NutritionDashboard = () => {
                   {Object.keys(cart).length > 0 && (
                     <motion.div 
                       initial={{ y: 100 }} animate={{ y: 0 }}
-                      className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-400px)] max-w-2xl bg-slate-900 text-white p-4 rounded-lg shadow-xl flex items-center justify-between border border-slate-700"
+                      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] sm:w-[calc(100%-2rem)] lg:w-[calc(100%-420px)] max-w-2xl bg-slate-900 text-white p-4 rounded-lg shadow-xl flex items-center justify-between border border-slate-700"
                     >
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 bg-blue-600 rounded flex items-center justify-center"><ShoppingBasket size={20} /></div>

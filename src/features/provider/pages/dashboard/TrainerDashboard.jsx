@@ -371,7 +371,8 @@ const PaymentsView = () => (
           <h3 className="text-sm font-semibold text-gray-900">Recent Transactions</h3>
           <button className="text-sm font-semibold text-[#6941c6] hover:text-purple-800 flex items-center gap-1">Download CSV <Download size={14} /></button>
        </div>
-       <table className="w-full text-left">
+       <div className="overflow-x-auto">
+       <table className="w-full text-left min-w-[480px]">
           <thead>
              <tr className="border-b border-gray-100">
                 <th className="py-3 px-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Date</th>
@@ -398,6 +399,7 @@ const PaymentsView = () => (
              ))}
           </tbody>
        </table>
+       </div>
     </div>
   </motion.div>
 );
@@ -474,6 +476,19 @@ const TrainerDashboard = () => {
 
   return (
     <div className="flex h-screen bg-[#f8f7f5] font-sans text-slate-900 overflow-hidden">
+      {/* Mobile Sidebar Overlay */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsSidebarOpen(false)}
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
       <aside className={`
         fixed inset-y-0 left-0 z-50 w-64 bg-[#f8f9fa] border-r border-gray-200 flex flex-col transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0

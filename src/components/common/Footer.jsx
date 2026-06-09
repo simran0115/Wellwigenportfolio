@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
 
 const Footer = () => {
@@ -9,9 +10,9 @@ const Footer = () => {
 
                     {/* Brand */}
                     <div>
-                        <a href="/" className="text-2xl sm:text-3xl font-bold text-white mb-6 block">
-                            Wellwigen<span className="text-teal-500">Fitness</span>
-                        </a>
+                        <Link to="/" className="text-2xl sm:text-3xl font-bold text-white mb-6 block">
+                            Wellwigen<span className="text-teal-500"> Health</span>
+                        </Link>
                         <p className="text-gray-400 text-sm sm:text-base mb-6">
                             Empowering you to live a healthier, happier life through personalized fitness solutions.
                         </p>
@@ -32,13 +33,13 @@ const Footer = () => {
                     <div>
                         <h4 className="font-semibold text-white mb-6">Quick Links</h4>
                         <ul className="space-y-3 text-sm sm:text-base text-gray-400">
-                            <li><a href="/" className="hover:text-teal-500 transition-colors">Home</a></li>
-                            <li><a href="#about" className="hover:text-teal-500 transition-colors">About Us</a></li>
-                            <li><a href="/services" className="hover:text-teal-500 transition-colors">Services</a></li>
-                            <li><a href="/join-as-trainer" className="hover:text-teal-500 transition-colors">Become a Trainer</a></li>
-                            <li><a href="/provider/onboarding" className="hover:text-teal-500 transition-colors">Join as Provider</a></li>
-                            <li><a href="/vendor/login" className="hover:text-teal-500 transition-colors">Provider Login</a></li>
-                            <li><a href="/terms-and-conditions" className="hover:text-teal-500 transition-colors">Terms & Conditions</a></li>
+                            <li><Link to="/" className="hover:text-teal-500 transition-colors">Home</Link></li>
+                            <li><Link to="/testimonial" className="hover:text-teal-500 transition-colors">About Us</Link></li>
+                            <li><Link to="/services" className="hover:text-teal-500 transition-colors">Services</Link></li>
+                            <li><Link to="/join-as-trainer" className="hover:text-teal-500 transition-colors">Become a Trainer</Link></li>
+                            <li><Link to="/provider/onboarding" className="hover:text-teal-500 transition-colors">Join as Provider</Link></li>
+                            <li><Link to="/vendor/login" className="hover:text-teal-500 transition-colors">Provider Login</Link></li>
+                            <li><Link to="/terms-and-conditions" className="hover:text-teal-500 transition-colors">Terms & Conditions</Link></li>
                         </ul>
                     </div>
 
@@ -46,12 +47,12 @@ const Footer = () => {
                     <div>
                         <h4 className="font-semibold text-white mb-6">Services</h4>
                         <ul className="space-y-3 text-sm sm:text-base text-gray-400">
-                            <li><a href="/services" className="hover:text-teal-500 transition-colors">Doctors Consultation</a></li>
-                            <li><a href="/services" className="hover:text-teal-500 transition-colors">Fitness Training</a></li>
-                            <li><a href="/services" className="hover:text-teal-500 transition-colors">Lab Tests</a></li>
-                            <li><a href="/services" className="hover:text-teal-500 transition-colors">Medicine Delivery</a></li>
-                            <li><a href="/services" className="hover:text-teal-500 transition-colors">Nutrition & Food</a></li>
-                            <li><a href="/services" className="hover:text-teal-500 transition-colors">Fruit Marketplace</a></li>
+                            <li><Link to="/services" className="hover:text-teal-500 transition-colors">Doctors Consultation</Link></li>
+                            <li><Link to="/services" className="hover:text-teal-500 transition-colors">Fitness Training</Link></li>
+                            <li><Link to="/services" className="hover:text-teal-500 transition-colors">Lab Tests</Link></li>
+                            <li><Link to="/services" className="hover:text-teal-500 transition-colors">Medicine Delivery</Link></li>
+                            <li><Link to="/services" className="hover:text-teal-500 transition-colors">Nutrition & Food</Link></li>
+                            <li><Link to="/services" className="hover:text-teal-500 transition-colors">Fruit Marketplace</Link></li>
                         </ul>
                     </div>
 
@@ -79,7 +80,7 @@ const Footer = () => {
                 </div>
 
                 <div className="border-t border-white/10 pt-8 text-center text-sm sm:text-base text-gray-500">
-                    <p>&copy; {new Date().getFullYear()} Wellwigen Fitness. All rights reserved.</p>
+                    <p>&copy; {new Date().getFullYear()} Wellwigen. All rights reserved.</p>
                 </div>
             </div>
         </footer>

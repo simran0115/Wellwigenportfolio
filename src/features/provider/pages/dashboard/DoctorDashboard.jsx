@@ -19,7 +19,9 @@ import {
   TrendingUp,
   FileText,
   UserCircle,
-  Zap
+  Zap,
+  X,
+  Menu
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -129,6 +131,19 @@ const DoctorDashboard = () => {
     <div className="flex h-screen bg-[#fcfaf6] font-sans text-slate-900 overflow-hidden">
       <Toaster position="top-right" />
 
+      {/* Mobile Sidebar Overlay */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsSidebarOpen(false)}
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar - Fully Operational */}
       <aside className={`
         fixed inset-y-0 left-0 z-50 w-64 bg-[#f8f9fa] border-r border-gray-200 flex flex-col transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0
@@ -139,6 +154,9 @@ const DoctorDashboard = () => {
             <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white font-bold text-sm">W</div>
             <span className="font-bold text-gray-900 tracking-tight text-sm">Wellwigen <span className="text-blue-600 font-semibold">MD</span></span>
           </div>
+          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-2 text-slate-500 hover:bg-white rounded">
+            <X size={20} />
+          </button>
         </div>
 
         <nav className="flex-1 px-4 space-y-1 mt-4 overflow-y-auto">
@@ -176,8 +194,23 @@ const DoctorDashboard = () => {
         </div>
       </aside>
 
-      {/* Main Content Area - No Top Navbar */}
-      <main className="flex-1 overflow-y-auto p-8">
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Mobile Header */}
+        <header className="lg:hidden flex items-center justify-between p-4 border-b border-gray-100 bg-white">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setIsSidebarOpen(true)} className="p-2 -ml-2 text-slate-500">
+              <Menu size={24} />
+            </button>
+            <span className="font-bold text-gray-900 text-sm">Wellwigen MD</span>
+          </div>
+          <div className="w-8 h-8 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold border border-blue-100">
+            MD
+          </div>
+        </header>
+
+        {/* Scrollable Content */}
+        <main className="flex-1 overflow-y-auto p-4 lg:p-8">
         <AnimatePresence mode="wait">
           {activeTab === 'Overview' || activeTab === 'Schedule' ? (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-7xl mx-auto">
@@ -313,7 +346,8 @@ const DoctorDashboard = () => {
             </div>
           )}
         </AnimatePresence>
-      </main>
+        </main>
+      </div>
     </div>
   );
 };
