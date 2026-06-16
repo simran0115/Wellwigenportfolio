@@ -2,7 +2,7 @@ import { getToken } from 'firebase/messaging';
 import { messaging } from '../config/firebase.js';
 
 // Get the backend URL from environment or use default
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 export const requestNotificationPermission = async (userToken, userType = 'user') => {
   try {
@@ -40,7 +40,7 @@ const sendTokenToServer = async (fcmToken, userAuthToken, userType) => {
   }
 
   try {
-    const response = await fetch(`${API_URL}/api/notifications/token`, {
+    const response = await fetch(`${API_URL}/notifications/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
