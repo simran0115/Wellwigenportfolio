@@ -3,7 +3,7 @@ import { Bell, Check, Trash2, X } from "lucide-react";
 import { onMessage } from "firebase/messaging";
 import { messaging } from "../../config/firebase";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 const NotificationBell = () => {
   const [notifications, setNotifications] = useState([]);
@@ -26,7 +26,7 @@ const NotificationBell = () => {
 
     const fetchNotifications = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/notifications`, {
+        const response = await fetch(`${API_URL}/notifications`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -77,7 +77,7 @@ const NotificationBell = () => {
     const token = getToken();
     if (!token) return;
     try {
-      const res = await fetch(`${API_URL}/api/notifications/${id}/read`, {
+      const res = await fetch(`${API_URL}/notifications/${id}/read`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -94,7 +94,7 @@ const NotificationBell = () => {
     const token = getToken();
     if (!token) return;
     try {
-      const res = await fetch(`${API_URL}/api/notifications/read-all`, {
+      const res = await fetch(`${API_URL}/notifications/read-all`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` }
       });

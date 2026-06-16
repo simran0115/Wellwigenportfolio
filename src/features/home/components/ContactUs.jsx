@@ -50,11 +50,35 @@ const ContactUs = () => {
     setLoading(true);
     setStatus({ type: '', message: '' });
     try {
-      await addDoc(collection(db, 'messages'), {
+      console.log('1. Starting contact form submission...');
+      
+      // 1. Send email via backend first
+      console.log('2. Sending request to backend:', `${import.meta.env.VITE_API_URL}/user/contact`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/user/contact`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      console.log('3. Backend response status:', response.status);
+      if (!response.ok) {
+        throw new Error('Failed to send email via backend');
+      }
+
+      // 2. Save to Firebase (Run asynchronously to prevent hanging UI)
+      console.log('4. Saving to Firebase messages collection in background...');
+      addDoc(collection(db, 'messages'), {
         ...formData,
         createdAt: serverTimestamp(),
         read: false,
+      }).then(() => {
+        console.log('5. Firebase save complete.');
+      }).catch(err => {
+        console.warn('Firebase save failed or hanging:', err);
       });
+
       setStatus({ type: 'success', message: 'Message sent! We will get back to you shortly.' });
       setFormData({ name: '', email: '', subject: '', message: '' });
     } catch (error) {
