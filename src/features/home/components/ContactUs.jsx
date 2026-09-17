@@ -51,36 +51,49 @@ const ContactUs = () => {
     setStatus({ type: '', message: '' });
     try {
       console.log('1. Starting contact form submission...');
+      let recorded = false;
       
-      // 1. Send email via backend first
-      console.log('2. Sending request to backend:', `${import.meta.env.VITE_API_URL}/user/contact`);
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/user/contact`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      console.log('3. Backend response status:', response.status);
-      if (!response.ok) {
-        throw new Error('Failed to send email via backend');
+      // 1. Save directly to Firebase Firestore
+      try {
+        console.log('2. Saving message to Firebase Firestore...');
+        await addDoc(collection(db, 'messages'), {
+          ...formData,
+          createdAt: serverTimestamp(),
+          read: false,
+        });
+        console.log('3. Firebase save successful.');
+        recorded = true;
+      } catch (fbErr) {
+        console.warn('Firebase Firestore save failed:', fbErr);
       }
 
-      // 2. Save to Firebase (Run asynchronously to prevent hanging UI)
-      console.log('4. Saving to Firebase messages collection in background...');
-      addDoc(collection(db, 'messages'), {
-        ...formData,
-        createdAt: serverTimestamp(),
-        read: false,
-      }).then(() => {
-        console.log('5. Firebase save complete.');
-      }).catch(err => {
-        console.warn('Firebase save failed or hanging:', err);
-      });
+      // 2. Send email via backend if VITE_API_URL is configured
+      const apiUrl = import.meta.env.VITE_API_URL;
+      if (apiUrl && !apiUrl.includes('undefined')) {
+        try {
+          console.log('4. Dispatching email to backend API:', `${apiUrl}/user/contact`);
+          const response = await fetch(`${apiUrl}/user/contact`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData),
+          });
+          if (response.ok) {
+            console.log('5. Backend contact email sent successfully.');
+            recorded = true;
+          } else {
+            console.warn('Backend API returned non-OK status:', response.status);
+          }
+        } catch (apiErr) {
+          console.warn('Backend contact API error:', apiErr);
+        }
+      }
 
-      setStatus({ type: 'success', message: 'Message sent! We will get back to you shortly.' });
-      setFormData({ name: '', email: '', subject: '', message: '' });
+      if (recorded) {
+        setStatus({ type: 'success', message: 'Message sent! We will get back to you shortly.' });
+        setFormData({ name: '', email: '', subject: '', message: '' });
+      } else {
+        throw new Error('Unable to record message at this time.');
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       setStatus({ type: 'error', message: 'Failed to send message. Please try again.' });
