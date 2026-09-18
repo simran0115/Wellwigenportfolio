@@ -139,22 +139,17 @@ const ConsultationForm = () => {
     ];
 
     return (
-        <div className="bg-slate-50 text-slate-900 font-sans min-h-screen">
+        <div className="bg-white text-slate-900 font-sans min-h-screen">
             
-            {/* Top Info Banner */}
-            <div className="bg-teal-700 text-white text-xs sm:text-sm font-medium py-2.5 px-4 text-center border-b border-teal-800">
-                <span className="font-semibold text-teal-100">🌿 Welcome to Wellwigen Fitness:</span> Join 10,000+ members transforming their health with personalized care.
-            </div>
-
             {/* HERO & REGISTRATION SPLIT SECTION */}
-            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
                     
                     {/* LEFT COLUMN: Comprehensive Platform Information & Benefits */}
                     <div className="lg:col-span-7 space-y-8 pr-0 lg:pr-4">
                         
                         <div>
-                            <span className="inline-block px-3 py-1 rounded bg-teal-100 text-teal-800 text-xs font-bold uppercase tracking-wider mb-3 border border-teal-200">
+                            <span className="inline-block px-3 py-1 rounded bg-teal-50 text-teal-800 text-xs font-bold uppercase tracking-wider mb-3 border border-teal-200">
                                 Official Registration Portal
                             </span>
                             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
@@ -172,7 +167,7 @@ const ConsultationForm = () => {
                             </h2>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="p-4 bg-white rounded-xl border border-slate-200">
+                                <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
                                     <div className="flex items-center gap-3 mb-2">
                                         <div className="p-2 bg-teal-50 rounded-lg border border-teal-100 text-teal-700">
                                             <Stethoscope className="w-5 h-5" />
@@ -184,7 +179,7 @@ const ConsultationForm = () => {
                                     </p>
                                 </div>
 
-                                <div className="p-4 bg-white rounded-xl border border-slate-200">
+                                <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
                                     <div className="flex items-center gap-3 mb-2">
                                         <div className="p-2 bg-emerald-50 rounded-lg border border-emerald-100 text-emerald-700">
                                             <Utensils className="w-5 h-5" />
@@ -196,7 +191,7 @@ const ConsultationForm = () => {
                                     </p>
                                 </div>
 
-                                <div className="p-4 bg-white rounded-xl border border-slate-200">
+                                <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
                                     <div className="flex items-center gap-3 mb-2">
                                         <div className="p-2 bg-teal-50 rounded-lg border border-teal-100 text-teal-700">
                                             <Dumbbell className="w-5 h-5" />
@@ -208,7 +203,7 @@ const ConsultationForm = () => {
                                     </p>
                                 </div>
 
-                                <div className="p-4 bg-white rounded-xl border border-slate-200">
+                                <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
                                     <div className="flex items-center gap-3 mb-2">
                                         <div className="p-2 bg-emerald-50 rounded-lg border border-emerald-100 text-emerald-700">
                                             <Activity className="w-5 h-5" />
@@ -223,12 +218,12 @@ const ConsultationForm = () => {
                         </div>
 
                         {/* Trust & Verification Metrics */}
-                        <div className="p-5 bg-slate-100 rounded-xl border border-slate-200 grid grid-cols-3 gap-4 text-center">
+                        <div className="p-5 bg-white rounded-xl border border-slate-200 grid grid-cols-3 gap-4 text-center shadow-sm">
                             <div>
                                 <div className="text-xl sm:text-2xl font-extrabold text-slate-900">10,000+</div>
                                 <div className="text-xs text-slate-600 font-medium mt-0.5">Active Members</div>
                             </div>
-                            <div className="border-x border-slate-300">
+                            <div className="border-x border-slate-200">
                                 <div className="text-xl sm:text-2xl font-extrabold text-teal-700">4.9 / 5.0</div>
                                 <div className="text-xs text-slate-600 font-medium mt-0.5">Member Rating</div>
                             </div>
