@@ -48,6 +48,8 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import useAppStore from '../../../store/useAppStore';
 import * as mapService from '../../../services/mapService';
+import { db } from '../../../config/firebase';
+import { collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
@@ -210,20 +212,58 @@ const AdminDashboard = () => {
     razorpayPlanIds: { monthly: "", quarterly: "", annual: "" }
   });
 
+  // Contact Messages State
+  const [messages, setMessages] = useState([]);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState(null);
 
-  // Fetch vendor data on mount and when switching to relevant tabs
+  const fetchMessages = async () => {
+    try {
+      setIsLoadingMessages(true);
+      const q = query(collection(db, 'messages'), orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(q);
+      const msgs = snapshot.docs.map((docSnap) => {
+        const data = docSnap.data();
+        let dateStr = 'Recent';
+        if (data.createdAt?.toDate) {
+          dateStr = data.createdAt.toDate().toLocaleDateString('en-US', {
+            month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
+          });
+        } else if (data.submittedAt) {
+          dateStr = new Date(data.submittedAt).toLocaleDateString('en-US', {
+            month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
+          });
+        }
+        return {
+          id: docSnap.id,
+          ...data,
+          formattedDate: dateStr,
+        };
+      });
+      setMessages(msgs);
+    } catch (err) {
+      console.error('Failed to fetch messages from Firestore:', err);
+    } finally {
+      setIsLoadingMessages(false);
+    }
+  };
+
+  // Fetch vendor & message data on mount and when switching to relevant tabs
   useEffect(() => {
     fetchPendingVendors();
     fetchActiveVendors();
     fetchPlans();
+    fetchMessages();
   }, []);
-
 
   useEffect(() => {
     console.log("🎯 ACTIVE_TAB_CHANGED:", activeTab);
     if (activeTab === 'Vendors') {
       fetchPendingVendors();
       fetchActiveVendors();
+    }
+    if (activeTab === 'Messages') {
+      fetchMessages();
     }
     if (activeTab === 'Dashboard') {
       fetchLocation();
