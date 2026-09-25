@@ -78,11 +78,11 @@ const Navbar = () => {
   const cta = getCtaButton();
 
   const navLinks = [
-    { name: "How it Works", path: "/#howitworks", icon: <Calendar size={18} /> },
-    { name: "Pricing", path: "/#pricing", icon: <CreditCard size={18} /> },
-    { name: "Services", path: "/#services", icon: <Sparkles size={18} /> },
-    { name: "About Us", path: "/#about", icon: <Info size={18} /> },
-    { name: "Contact Us", path: "/contactus", icon: <MessageCircle size={18} /> },
+    { name: "How it Works", path: "/#howitworks", icon: <Calendar size={18} strokeWidth={1.25} /> },
+    { name: "Pricing", path: "/#pricing", icon: <CreditCard size={18} strokeWidth={1.25} /> },
+    { name: "Services", path: "/#services", icon: <Sparkles size={18} strokeWidth={1.25} /> },
+    { name: "About Us", path: "/#about", icon: <Info size={18} strokeWidth={1.25} /> },
+    { name: "Contact Us", path: "/contactus", icon: <MessageCircle size={18} strokeWidth={1.25} /> },
   ];
 
   return (
@@ -117,7 +117,7 @@ const Navbar = () => {
                   key={link.name}
                   to={link.path}
                   onClick={(e) => handleNavClick(e, link.path)}
-                  className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition ${
+                  className={`flex items-center gap-2 px-4 py-2 text-sm font-light tracking-wide rounded-lg transition ${
                     isActive
                       ? "bg-teal-500 text-white shadow"
                       : "text-gray-700 hover:text-teal-500 hover:bg-gray-100"
@@ -165,7 +165,7 @@ const Navbar = () => {
                   key={link.name}
                   to={link.path}
                   onClick={(e) => handleNavClick(e, link.path)}
-                  className={`flex items-center gap-3 w-full text-left px-3 py-2 rounded-lg text-sm ${
+                  className={`flex items-center gap-3 w-full text-left px-3 py-2 rounded-lg text-sm font-light tracking-wide ${
                     isActive
                       ? "bg-teal-100 text-teal-600"
                       : "text-gray-700 hover:bg-gray-100"
