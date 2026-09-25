@@ -7,28 +7,14 @@ const categories = [
   "Yoga Classes",
   "Tabata Classes",
   "Jungle Fit Classes",
-  "Personal Online Training"
-];
-
-const sliderImages = [
-  "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=800&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=800&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=800&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=800&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&w=800&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1526506118393-27e4ee640825?q=80&w=800&auto=format&fit=crop"
+  "Online Training"
 ];
 
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.15,
-      delayChildren: 0.1
-    }
+    transition: { staggerChildren: 0.15, delayChildren: 0.1 }
   }
 };
 
@@ -46,10 +32,8 @@ export default function Hero() {
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   const { scrollY } = useScroll();
   
-  // Parallax effects
+  // Parallax background
   const bgY = useTransform(scrollY, [0, 500], [0, 150]);
-  const sliderX1 = useTransform(scrollY, [0, 1000], [0, -300]);
-  const sliderX2 = useTransform(scrollY, [0, 1000], [0, 300]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -60,123 +44,146 @@ export default function Hero() {
 
   return (
     <section
-      className="w-full relative overflow-hidden"
+      className="w-full relative overflow-hidden min-h-[90vh] flex items-center"
       style={{
         backgroundColor: "#ffffff",
         backgroundImage: "radial-gradient(circle, rgba(13, 148, 136, 0.1) 1px, transparent 1px)",
         backgroundSize: "24px 24px",
       }}
     >
-      <motion.div style={{ y: bgY }} className="absolute inset-0 pointer-events-none">
+      <motion.div style={{ y: bgY }} className="absolute inset-0 pointer-events-none z-0">
         {/* === SVG HEALTH VECTORS === */}
-        <svg className="absolute top-20 right-0 w-80 opacity-[0.07]" viewBox="0 0 320 60" fill="none">
+        <svg className="absolute top-20 right-10 w-64 opacity-[0.06]" viewBox="0 0 320 60" fill="none">
           <path d="M0,30 L55,30 L70,6 L85,54 L100,14 L115,46 L130,30 L320,30" stroke="#0d9488" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        <svg className="absolute top-28 left-14 opacity-[0.08]" width="30" height="30" viewBox="0 0 30 30" fill="none">
-          <rect x="11" y="2" width="8" height="26" rx="2" fill="#0d9488" />
-          <rect x="2" y="11" width="26" height="8" rx="2" fill="#0d9488" />
-        </svg>
-        <svg className="absolute top-1/3 right-14 opacity-[0.06] w-20" viewBox="0 0 80 96" fill="none">
+        <svg className="absolute bottom-32 left-10 opacity-[0.08] w-20" viewBox="0 0 80 96" fill="none">
           <path d="M40 6L10 18V44C10 62 23 79 40 88C57 79 70 62 70 44V18L40 6Z" stroke="#0d9488" strokeWidth="2" fill="none" />
-          <path d="M26 46l10 10 18-20" stroke="#0d9488" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </motion.div>
 
-      {/* === MAIN CONTENT === */}
-      <motion.div 
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="pt-32 pb-14 px-4 flex flex-col items-center text-center max-w-full mx-auto relative z-10"
-      >
-        
-        {/* Platform badge */}
-        <motion.div variants={itemVariants} className="inline-flex items-center gap-2 bg-teal-50 border border-teal-100 text-teal-700 text-xs font-semibold px-4 py-1.5 rounded-full mb-7 shadow-sm">
-          <span className="w-1.5 h-1.5 bg-teal-500 rounded-full" />
-          AI-Powered Telehealth & Wellness Platform
-        </motion.div>
-
-        {/* Headline */}
-        <motion.h1 variants={itemVariants} className="text-4xl sm:text-5xl md:text-7xl font-extrabold text-gray-900 leading-tight mb-5 tracking-tight">
-          Transform Your Health<br />
-          <span className="inline-flex items-center justify-center flex-wrap gap-x-3 mt-1 sm:mt-2">
-            <span>with</span>
-            <span className="text-teal-600 text-left min-w-[220px] sm:min-w-[320px] md:min-w-[480px] relative h-[48px] sm:h-[60px] md:h-[84px] inline-flex items-center">
-              <AnimatePresence mode="wait">
-                <motion.span
-                  key={currentCategoryIndex}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                  className="absolute left-0 w-full whitespace-nowrap"
-                >
-                  {categories[currentCategoryIndex]}
-                </motion.span>
-              </AnimatePresence>
-            </span>
-          </span>
-        </motion.h1>
-
-        {/* Subtext */}
-        <motion.p variants={itemVariants} className="text-gray-500 text-lg md:text-xl max-w-2xl mb-9 leading-relaxed">
-          Access immediate <strong>online doctor consultations</strong>, automated <strong>AI meal plans</strong>, and certified <strong>virtual fitness training</strong> in a single integrated telehealth platform.
-        </motion.p>
-
-        {/* CTA Buttons */}
-        <motion.div variants={itemVariants} className="flex flex-wrap gap-4 justify-center mb-10">
-          <Link
-            to="/register"
-            className="px-8 py-3.5 bg-teal-600 text-white text-sm font-bold rounded-lg hover:bg-teal-700 transition-colors shadow-lg shadow-teal-600/30 flex items-center justify-center hover:-translate-y-1 transform duration-200"
+      <div className="max-w-[1300px] mx-auto px-4 sm:px-6 lg:px-12 relative z-10 w-full pt-32 pb-20">
+        <div className="grid lg:grid-cols-2 gap-16 items-center">
+          
+          {/* === LEFT CONTENT === */}
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="flex flex-col items-start text-left"
           >
-            Get Started Free
-          </Link>
-          <Link
-            to="/ecosystem"
-            className="px-8 py-3.5 bg-white border border-gray-200 text-gray-700 text-sm font-bold rounded-lg hover:bg-gray-50 transition-colors shadow-sm flex items-center justify-center hover:-translate-y-1 transform duration-200"
-          >
-            See How It Works →
-          </Link>
-        </motion.div>
-
-        {/* Social proof */}
-        <motion.div variants={itemVariants} className="flex items-center gap-3">
-          <div className="flex -space-x-2">
-            {[1, 2, 3].map((i) => (
-              <img
-                key={i}
-                className="w-10 h-10 rounded-full border-2 border-white shadow-sm"
-                src={`https://i.pravatar.cc/40?img=${i}`}
-                alt={`Wellwigen active user avatar ${i}`}
-              />
-            ))}
-          </div>
-          <span className="text-sm text-gray-500 font-medium">
-            Join <strong className="text-gray-900">6,000+</strong> users already on Wellwigen
-          </span>
-        </motion.div>
-      </motion.div>
-
-      {/* === IMAGE SLIDER (PARALLAX + MARQUEE) === */}
-      <motion.div 
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1, delay: 0.5 }}
-        className="w-full overflow-hidden relative z-10 mb-16 space-y-4"
-      >
-        <motion.div style={{ x: sliderX1 }} className="flex animate-marquee gap-4 px-4 w-[200%]">
-          {[...sliderImages, ...sliderImages].map((imgUrl, idx) => (
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              key={`row1-${idx}`} 
-              className="w-48 h-32 md:w-72 md:h-48 flex-shrink-0 rounded-[24px] overflow-hidden shadow-xl"
-            >
-              <img src={imgUrl} alt="Wellness Activity" className="w-full h-full object-cover" />
+            {/* Platform badge */}
+            <motion.div variants={itemVariants} className="inline-flex items-center gap-2 bg-teal-50 border border-teal-100 text-teal-700 text-xs font-bold px-4 py-1.5 rounded-full mb-8 shadow-sm">
+              <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse" />
+              AI-Powered Telehealth & Wellness
             </motion.div>
-          ))}
-        </motion.div>
-      </motion.div>
 
+            {/* Headline */}
+            <motion.h1 variants={itemVariants} className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-gray-900 leading-[1.1] mb-6 tracking-tight">
+              Transform <br/> Your Health <br/>
+              <span className="flex items-center gap-x-3 mt-2">
+                <span className="text-gray-900">with</span>
+                <span className="text-teal-600 relative h-[60px] sm:h-[72px] lg:h-[84px] inline-flex items-center min-w-[300px]">
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={currentCategoryIndex}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
+                      className="absolute left-0 w-full whitespace-nowrap"
+                    >
+                      {categories[currentCategoryIndex]}
+                    </motion.span>
+                  </AnimatePresence>
+                </span>
+              </span>
+            </motion.h1>
+
+            {/* Subtext */}
+            <motion.p variants={itemVariants} className="text-gray-500 text-lg sm:text-xl max-w-lg mb-10 leading-relaxed font-medium">
+              Access immediate <strong className="text-gray-700">online doctor consultations</strong>, automated <strong className="text-gray-700">AI meal plans</strong>, and certified <strong className="text-gray-700">virtual fitness training</strong> in a single platform.
+            </motion.p>
+
+            {/* CTA Buttons */}
+            <motion.div variants={itemVariants} className="flex flex-wrap gap-4 mb-12">
+              <Link
+                to="/register"
+                className="px-8 py-4 bg-teal-600 text-white text-base font-bold rounded-xl hover:bg-teal-700 transition-all shadow-xl shadow-teal-600/20 flex items-center justify-center hover:-translate-y-1"
+              >
+                Get Started Free
+              </Link>
+              <Link
+                to="/ecosystem"
+                className="px-8 py-4 bg-white border-2 border-gray-100 text-gray-700 text-base font-bold rounded-xl hover:border-teal-100 hover:bg-teal-50 transition-all shadow-sm flex items-center justify-center hover:-translate-y-1"
+              >
+                See How It Works →
+              </Link>
+            </motion.div>
+
+            {/* Social proof */}
+            <motion.div variants={itemVariants} className="flex items-center gap-4">
+              <div className="flex -space-x-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <img
+                    key={i}
+                    className="w-12 h-12 rounded-full border-4 border-white shadow-sm object-cover"
+                    src={`https://i.pravatar.cc/48?img=${i}`}
+                    alt={`User ${i}`}
+                  />
+                ))}
+              </div>
+              <div className="flex flex-col">
+                <div className="flex items-center text-amber-400 text-sm">
+                  ★★★★★
+                </div>
+                <span className="text-sm text-gray-500 font-medium mt-0.5">
+                  Trusted by <strong className="text-gray-900">6,000+</strong> users
+                </span>
+              </div>
+            </motion.div>
+          </motion.div>
+
+          {/* === RIGHT CONTENT (Visual Composition) === */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="relative hidden lg:block h-[600px] w-full"
+          >
+            {/* Main large image */}
+            <motion.div 
+              animate={{ y: [0, -15, 0] }}
+              transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+              className="absolute right-0 top-10 w-[400px] h-[480px] rounded-[40px] overflow-hidden shadow-2xl border-8 border-white z-20"
+            >
+              <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=800&auto=format&fit=crop" alt="Yoga" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-teal-900/40 to-transparent"></div>
+            </motion.div>
+
+            {/* Floating small image 1 */}
+            <motion.div 
+              animate={{ y: [0, 15, 0] }}
+              transition={{ repeat: Infinity, duration: 5, ease: "easeInOut", delay: 1 }}
+              className="absolute left-0 bottom-20 w-[240px] h-[240px] rounded-[32px] overflow-hidden shadow-2xl border-4 border-white z-30"
+            >
+              <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=500&auto=format&fit=crop" alt="Fitness" className="w-full h-full object-cover" />
+            </motion.div>
+
+            {/* Floating small image 2 */}
+            <motion.div 
+              animate={{ y: [0, -10, 0] }}
+              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut", delay: 2 }}
+              className="absolute left-10 top-0 w-[200px] h-[200px] rounded-full overflow-hidden shadow-xl border-4 border-white z-10"
+            >
+              <img src="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=500&auto=format&fit=crop" alt="Training" className="w-full h-full object-cover" />
+            </motion.div>
+            
+            {/* Decorative background blob */}
+            <div className="absolute right-10 top-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-teal-100 rounded-full blur-[80px] opacity-60 z-0"></div>
+          </motion.div>
+          
+        </div>
+      </div>
     </section>
   );
 }
