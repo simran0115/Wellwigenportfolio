@@ -8,6 +8,7 @@ import { onMessage } from 'firebase/messaging';
 import { messaging } from './config/firebase.js';
 
 import Navbar from "./components/common/Navbar";
+import FloatingContact from "./components/common/FloatingContact";
 import AdminLayout from "./features/dashboard/layout/AdminLayout";
 import ErrorBoundary from "./components/ErrorBoundary";
 
@@ -558,6 +559,7 @@ function App() {
 
         </Routes>
         </ErrorBoundary>
+        <FloatingContact />
     </div>
   );
 }
