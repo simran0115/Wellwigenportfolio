@@ -2,6 +2,60 @@ import React, { useState, useEffect } from 'react';
 import { Check, Star, Shield, Zap } from 'lucide-react';
 import { subscriptionPlanService } from '../services/subscriptionPlanService';
 
+
+const fallbackPlans = [
+  {
+    _id: "mock_1",
+    name: "Starter Health",
+    tag: "",
+    prices: {
+      monthly: 999,
+      quarterly: 2799,
+      annual: 9999
+    },
+    features: [
+      "2 AI Meal Plans / month",
+      "1 Virtual Consultation",
+      "Basic Health Tracking",
+      "Email Support"
+    ]
+  },
+  {
+    _id: "mock_2",
+    name: "Gold Wellness",
+    tag: "Most Popular",
+    prices: {
+      monthly: 1999,
+      quarterly: 5499,
+      annual: 19999
+    },
+    features: [
+      "Unlimited AI Meal Plans",
+      "4 Virtual Consultations / month",
+      "Advanced Bio-Tracking (HRV)",
+      "24/7 Priority Support",
+      "1 Home Lab Test / year"
+    ]
+  },
+  {
+    _id: "mock_3",
+    name: "Platinum Care",
+    tag: "Best Value",
+    prices: {
+      monthly: 3999,
+      quarterly: 10999,
+      annual: 39999
+    },
+    features: [
+      "Everything in Gold",
+      "Unlimited Virtual Consultations",
+      "Weekly Personal Training",
+      "Quarterly Comprehensive Lab Tests",
+      "Dedicated Health Concierge"
+    ]
+  }
+];
+
 const PricingCards = ({ billingCycle, onSelectPlan, isLoading: isSubmitting }) => {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -9,13 +63,18 @@ const PricingCards = ({ billingCycle, onSelectPlan, isLoading: isSubmitting }) =
   useEffect(() => {
     const fetchPlans = async () => {
       try {
+        
         const res = await subscriptionPlanService.getActivePlans();
-        if (res.success) {
+        if (res.success && res.data && res.data.length > 0) {
           setPlans(res.data);
+        } else {
+          setPlans(fallbackPlans);
         }
       } catch (err) {
-        console.error("Failed to fetch plans:", err);
-      } finally {
+        console.error("Failed to fetch plans, using fallbacks:", err);
+        setPlans(fallbackPlans);
+      }
+ finally {
         setLoading(false);
       }
     };
