@@ -13,7 +13,7 @@ const Footer = () => {
                         <Link to="/" className="text-2xl sm:text-3xl font-bold text-white mb-6 block">
                             Wellwigen<span className="text-teal-500"> Health</span>
                         </Link>
-                        <p className="text-gray-400 text-sm sm:text-base mb-6">
+                        <p className="text-gray-400 text-sm sm:text-base font-light mb-6">
                             Empowering you to live a healthier, happier life through personalized fitness solutions.
                         </p>
                         <div className="flex space-x-4">
@@ -32,7 +32,7 @@ const Footer = () => {
                     {/* Quick Links */}
                     <div>
                         <h4 className="font-semibold text-white mb-6">Quick Links</h4>
-                        <ul className="space-y-3 text-sm sm:text-base text-gray-400">
+                        <ul className="space-y-3 text-sm sm:text-base font-light text-gray-400">
                             <li><Link to="/" className="hover:text-teal-500 transition-colors">Home</Link></li>
                             <li><Link to="/testimonial" className="hover:text-teal-500 transition-colors">About Us</Link></li>
                             <li><Link to="/services" className="hover:text-teal-500 transition-colors">Services</Link></li>
@@ -46,7 +46,7 @@ const Footer = () => {
                     {/* Services */}
                     <div>
                         <h4 className="font-semibold text-white mb-6">Services</h4>
-                        <ul className="space-y-3 text-sm sm:text-base text-gray-400">
+                        <ul className="space-y-3 text-sm sm:text-base font-light text-gray-400">
                             <li><Link to="/services" className="hover:text-teal-500 transition-colors">Doctors Consultation</Link></li>
                             <li><Link to="/services" className="hover:text-teal-500 transition-colors">Fitness Training</Link></li>
                             <li><Link to="/services" className="hover:text-teal-500 transition-colors">Lab Tests</Link></li>
@@ -59,7 +59,7 @@ const Footer = () => {
                     {/* Contact */}
                     <div>
                         <h4 className="font-semibold text-white mb-6">Contact Us</h4>
-                        <ul className="space-y-4 text-sm sm:text-base text-gray-400">
+                        <ul className="space-y-4 text-sm sm:text-base font-light text-gray-400">
                             <li className="flex items-start gap-3">
                                 <MapPin size={18} className="text-teal-500 flex-shrink-0 mt-0.5" />
                                 <span>123 Fitness Street, Wellness City, WC 12345</span>
@@ -79,7 +79,7 @@ const Footer = () => {
 
                 </div>
 
-                <div className="border-t border-white/10 pt-8 text-center text-sm sm:text-base text-gray-500">
+                <div className="border-t border-white/10 pt-8 text-center text-sm sm:text-base font-light text-gray-500">
                     <p>&copy; {new Date().getFullYear()} Wellwigen. All rights reserved.</p>
                 </div>
             </div>
