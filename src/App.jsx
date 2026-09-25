@@ -17,7 +17,6 @@ import Hero from './features/home/components/Hero';
 import Framework from './features/home/components/Framework';
 import FruitMarketplace from "./features/home/components/FruitMarketplace";
 import FitnessClasses from "./features/home/components/FitnessClasses";
-import OriginSection from "./features/home/components/OriginSection";
 // Pricing is now imported from features
 import Dashboard from "./features/dashboard/components/Dashboard";
 import Diet from "./features/dashboard/components/Diet";
@@ -309,7 +308,6 @@ function App() {
                   </ResponsiveSection>
                   <Framework />
                   <FruitMarketplace />
-                  <OriginSection />
                   <Pricing isSubSection={true} />
                   <ResponsiveSection>
                     <Dashboard />
@@ -423,7 +421,6 @@ function App() {
                   `}
                 </script>
               </Helmet>
-              <OriginSection />
               <Footer />
             </PageWrapper>
           } />
