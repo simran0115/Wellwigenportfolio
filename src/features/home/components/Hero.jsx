@@ -72,10 +72,6 @@ export default function Hero() {
             className="flex flex-col items-start text-left"
           >
             {/* Platform badge */}
-            <motion.div variants={itemVariants} className="inline-flex items-center gap-2 bg-teal-50 border border-teal-100 text-teal-700 text-xs font-bold px-4 py-1.5 rounded-full mb-8 shadow-sm">
-              <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse" />
-              AI-Powered Telehealth & Wellness
-            </motion.div>
 
             {/* Headline */}
             <motion.h1 variants={itemVariants} className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-gray-900 leading-[1.2] lg:leading-[1.1] mb-6 tracking-tight">
