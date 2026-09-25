@@ -5,7 +5,7 @@ const Diet = () => {
   const [activeTag, setActiveTag] = useState("");
 
   return (
-    <section className="w-full bg-[#f5f7f8] px-4 sm:px-6 md:px-16 py-16">
+    <section className="w-full bg-[#ffffff] px-4 sm:px-6 md:px-16 py-16">
 
       {/* TOP HEADING */}
       <p className="text-center text-xs sm:text-sm tracking-[0.3em] text-gray-400 mb-2 sm:mb-3">
