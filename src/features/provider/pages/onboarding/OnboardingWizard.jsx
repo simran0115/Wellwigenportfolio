@@ -76,6 +76,7 @@ const OnboardingWizard = () => {
     dummyEmailOtp: '5678'
   });
 
+  const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     type: '',
     businessName: '',
@@ -85,24 +86,41 @@ const OnboardingWizard = () => {
     companyType: 'Individual',
     experience: '1-3 Years',
     licenseNumber: '',
+    gstin: '',
     address: { street: '', city: '', state: '', pincode: '' },
     verificationConsent: false,
-    // Role specific
+    
     specialization: '',
     consultationFee: '',
     hospitalName: '',
+    registrationYear: '',
+    medicalLicenseNo: '',
+    
     labCategory: 'Pathology',
     homeCollection: 'Yes',
+    isoCertified: 'No',
+    nablAccredited: 'No',
+
     shopCategory: 'General Wellness',
     deliveryRadius: '5km',
+    pharmacistName: '',
+    pharmacistLicenseNo: '',
+    
+    certifyingBody: '',
+    yearsOfExperience: '0-2 Years',
+    
+    degreeCertification: '',
+    dietaryFocus: 'General',
+    
+    businessType: 'Retail',
+
     is24x7: 'No',
     testList: '',
-    pharmacistName: '',
     operatingHoursText: '',
     foodCategory: '',
     sourcing: '',
     deliveryType: '',
-    dietaryFocus: '',
+    
     onboardingStep: 1
   });
 
@@ -136,7 +154,51 @@ const OnboardingWizard = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const validateStep = (currentStep) => {
+    let newErrors = {};
+    if (currentStep === 3) {
+      if (!formData.businessName) newErrors.businessName = 'Business/Practice name is required';
+      if (!formData.ownerName) newErrors.ownerName = 'Primary Owner/Contact is required';
+      if (!formData.phone) newErrors.phone = 'Phone Number is required';
+      if (!formData.email) newErrors.email = 'Email Address is required';
+      if (!formData.address?.street) newErrors.street = 'Street address is required';
+      if (!formData.address?.pincode) newErrors.pincode = 'Pincode is required';
+      else if (!/^\d{6}$/.test(formData.address.pincode)) newErrors.pincode = 'Invalid Pincode (6 digits required)';
+      
+      if (!verification.phoneVerified) newErrors.phone = 'Please verify your phone number';
+      if (!verification.emailVerified) newErrors.email = 'Please verify your email address';
+    } else if (currentStep === 4) {
+       if (selectedType === 'DOCTOR') {
+          if (!formData.specialization) newErrors.specialization = 'Specialization is required';
+          if (!formData.medicalLicenseNo) newErrors.medicalLicenseNo = 'Medical License No. is required';
+          if (!formData.consultationFee) newErrors.consultationFee = 'Consultation Fee is required';
+       } else if (selectedType === 'TRAINER') {
+          if (!formData.specialization) newErrors.specialization = 'Specialization is required';
+          if (!formData.certifyingBody) newErrors.certifyingBody = 'Certifying Body is required';
+       } else if (selectedType === 'PHARMACY') {
+          if (!formData.pharmacistName) newErrors.pharmacistName = 'Pharmacist Name is required';
+          if (!formData.pharmacistLicenseNo) newErrors.pharmacistLicenseNo = 'Pharmacist License No. is required';
+       } else if (selectedType === 'LAB') {
+          if (!formData.labCategory) newErrors.labCategory = 'Lab Category is required';
+       } else if (selectedType === 'NUTRITION') {
+          if (!formData.degreeCertification) newErrors.degreeCertification = 'Degree/Certification is required';
+       } else if (selectedType === 'VENDOR') {
+          if (!formData.shopCategory) newErrors.shopCategory = 'Shop Category is required';
+          if (!formData.businessType) newErrors.businessType = 'Business Type is required';
+       }
+    }
+    
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      toast.error('Please complete all required fields correctly.');
+      return false;
+    }
+    return true;
+  };
+
   const nextStep = () => {
+    if (!validateStep(step)) return;
+    setErrors({});
     const next = step + 1;
     setStep(next);
     saveProgress({ ...formData, onboardingStep: next });
@@ -387,33 +449,57 @@ const OnboardingWizard = () => {
                   <p className="text-[11px] text-gray-400 font-black uppercase tracking-[0.2em]">Tell us about your organization.</p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-                  <InputGroup label="Business/Practice Name" placeholder="e.g. LifeCare Clinic" value={formData.businessName} onChange={(v) => updateField('businessName', v)} />
-                  <InputGroup label="Primary Owner/Contact" placeholder="Full legal name" value={formData.ownerName} onChange={(v) => updateField('ownerName', v)} />
-                  
-                  <div className="space-y-2">
-                    <VerifyInput label="Phone Number" placeholder="+91 00000 00000" icon={Smartphone} value={formData.phone} onChange={(v) => updateField('phone', v)} onVerify={sendPhoneOtp} isVerified={verification.phoneVerified} disabled={verification.phoneOtpSent} />
-                    {verification.phoneOtpSent && (
-                      <div className="flex gap-2 p-2 bg-gray-50 border border-gray-100 rounded-lg animate-in fade-in slide-in-from-top-2">
-                        <input type="text" placeholder="Enter OTP (1234)" className="flex-1 bg-white border border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-50 transition-all rounded-lg px-3 py-2 text-xs font-bold outline-none" value={verification.phoneInputOtp} onChange={(e) => setVerification(v => ({ ...v, phoneInputOtp: e.target.value }))} />
-                        <button onClick={verifyPhone} className="bg-gray-900 text-white px-4 py-2 hover:bg-black rounded-md text-[10px] font-black uppercase tracking-widest">Confirm</button>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <VerifyInput label="Email Address" placeholder="name@business.com" icon={Mail} value={formData.email} onChange={(v) => updateField('email', v)} onVerify={sendEmailOtp} isVerified={verification.emailVerified} disabled={verification.emailOtpSent} />
-                    {verification.emailOtpSent && (
-                      <div className="flex gap-2 p-2 bg-gray-50 border border-gray-100 rounded-lg animate-in fade-in slide-in-from-top-2">
-                        <input type="text" placeholder="Enter OTP (5678)" className="flex-1 bg-white border border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-50 transition-all rounded-lg px-3 py-2 text-xs font-bold outline-none" value={verification.emailInputOtp} onChange={(e) => setVerification(v => ({ ...v, emailInputOtp: e.target.value }))} />
-                        <button onClick={verifyEmail} className="bg-gray-900 text-white px-4 py-2 hover:bg-black rounded-md text-[10px] font-black uppercase tracking-widest">Confirm</button>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="md:col-span-2 grid grid-cols-3 gap-4">
-                    <div className="col-span-2"><InputGroup label="Office Address" placeholder="Street, Area, Building" value={formData.address.street} onChange={(v) => updateAddress('street', v)} /></div>
-                    <InputGroup label="Pincode" placeholder="000000" value={formData.address.pincode} onChange={(v) => updateAddress('pincode', v)} />
-                  </div>
+                  {selectedType === 'DOCTOR' && (
+                    <>
+                      <InputGroup label="Medical Specialization" placeholder="e.g. Cardiologist" value={formData.specialization} onChange={(v) => updateField('specialization', v)} error={errors.specialization} />
+                      <InputGroup label="Medical License No." placeholder="MCI-12345" value={formData.medicalLicenseNo} onChange={(v) => updateField('medicalLicenseNo', v)} error={errors.medicalLicenseNo} />
+                      <InputGroup label="Year of Registration" placeholder="YYYY" value={formData.registrationYear} onChange={(v) => updateField('registrationYear', v)} error={errors.registrationYear} />
+                      <InputGroup label="Consultation Fee (₹)" placeholder="e.g. 500" value={formData.consultationFee} onChange={(v) => updateField('consultationFee', v)} error={errors.consultationFee} />
+                      <InputGroup label="Current Hospital/Clinic" placeholder="Name of hospital" value={formData.hospitalName} onChange={(v) => updateField('hospitalName', v)} error={errors.hospitalName} />
+                      <SelectGroup label="Experience" options={['1-3 Years', '3-5 Years', '5-10 Years', '10+ Years']} value={formData.experience} onChange={(v) => updateField('experience', v)} />
+                    </>
+                  )}
+                  {selectedType === 'TRAINER' && (
+                    <>
+                      <InputGroup label="Fitness Specialization" placeholder="e.g. Yoga, Crossfit" value={formData.specialization} onChange={(v) => updateField('specialization', v)} error={errors.specialization} />
+                      <InputGroup label="Certifying Body" placeholder="e.g. ACE, NASM" value={formData.certifyingBody} onChange={(v) => updateField('certifyingBody', v)} error={errors.certifyingBody} />
+                      <SelectGroup label="Years of Experience" options={['0-2 Years', '2-5 Years', '5-10 Years', '10+ Years']} value={formData.yearsOfExperience} onChange={(v) => updateField('yearsOfExperience', v)} error={errors.yearsOfExperience} />
+                      <InputGroup label="Session Fee (₹)" placeholder="e.g. 1000 per hour" value={formData.consultationFee} onChange={(v) => updateField('consultationFee', v)} error={errors.consultationFee} />
+                    </>
+                  )}
+                  {selectedType === 'PHARMACY' && (
+                    <>
+                      <InputGroup label="Pharmacist Name" placeholder="Registered Pharmacist" value={formData.pharmacistName} onChange={(v) => updateField('pharmacistName', v)} error={errors.pharmacistName} />
+                      <InputGroup label="Pharmacist License No." placeholder="LIC-12345" value={formData.pharmacistLicenseNo} onChange={(v) => updateField('pharmacistLicenseNo', v)} error={errors.pharmacistLicenseNo} />
+                      <InputGroup label="GSTIN Number" placeholder="22AAAAA0000A1Z5" value={formData.gstin} onChange={(v) => updateField('gstin', v)} error={errors.gstin} />
+                      <SelectGroup label="Shop Category" options={['General Pharmacy', 'Ayurvedic', 'Homeopathic', 'Surgicals']} value={formData.shopCategory} onChange={(v) => updateField('shopCategory', v)} error={errors.shopCategory} />
+                      <SelectGroup label="Delivery Radius" options={['2km', '5km', '10km', 'No Delivery']} value={formData.deliveryRadius} onChange={(v) => updateField('deliveryRadius', v)} />
+                    </>
+                  )}
+                  {selectedType === 'LAB' && (
+                    <>
+                      <SelectGroup label="Lab Category" options={['Pathology', 'Radiology', 'Comprehensive', 'Specialized']} value={formData.labCategory} onChange={(v) => updateField('labCategory', v)} error={errors.labCategory} />
+                      <InputGroup label="GSTIN Number" placeholder="22AAAAA0000A1Z5" value={formData.gstin} onChange={(v) => updateField('gstin', v)} error={errors.gstin} />
+                      <SelectGroup label="NABL Accredited?" options={['Yes', 'No', 'In Process']} value={formData.nablAccredited} onChange={(v) => updateField('nablAccredited', v)} />
+                      <SelectGroup label="Home Collection" options={['Yes, Free', 'Yes, Paid', 'No']} value={formData.homeCollection} onChange={(v) => updateField('homeCollection', v)} />
+                    </>
+                  )}
+                  {selectedType === 'VENDOR' && (
+                    <>
+                      <SelectGroup label="Business Type" options={['Retail', 'Wholesale', 'Manufacturer', 'Distributor']} value={formData.businessType} onChange={(v) => updateField('businessType', v)} error={errors.businessType} />
+                      <InputGroup label="Shop/Product Category" placeholder="e.g. Health Supplements" value={formData.shopCategory} onChange={(v) => updateField('shopCategory', v)} error={errors.shopCategory} />
+                      <InputGroup label="GSTIN Number" placeholder="22AAAAA0000A1Z5" value={formData.gstin} onChange={(v) => updateField('gstin', v)} error={errors.gstin} />
+                      <SelectGroup label="Delivery Radius" options={['Local', 'City-wide', 'State-wide', 'National']} value={formData.deliveryRadius} onChange={(v) => updateField('deliveryRadius', v)} />
+                    </>
+                  )}
+                  {selectedType === 'NUTRITION' && (
+                    <>
+                      <InputGroup label="Degree / Certification" placeholder="e.g. BSc Nutrition, Registered Dietitian" value={formData.degreeCertification} onChange={(v) => updateField('degreeCertification', v)} error={errors.degreeCertification} />
+                      <SelectGroup label="Dietary Focus" options={['General', 'Vegan', 'Keto', 'Diabetes Friendly', 'Gluten Free', 'Sports Nutrition']} value={formData.dietaryFocus} onChange={(v) => updateField('dietaryFocus', v)} error={errors.dietaryFocus} />
+                      <InputGroup label="Consultation Fee (₹)" placeholder="e.g. 500" value={formData.consultationFee} onChange={(v) => updateField('consultationFee', v)} error={errors.consultationFee} />
+                      <SelectGroup label="Experience" options={['0-2 Years', '2-5 Years', '5-10 Years', '10+ Years']} value={formData.experience} onChange={(v) => updateField('experience', v)} />
+                    </>
+                  )}
                 </div>
                 <div className="flex gap-4 pt-6">
                   <button onClick={prevStep} className="px-8 py-3 border border-gray-200 rounded-xl text-xs font-bold text-gray-500 hover:border-gray-300 hover:text-gray-900 hover:bg-gray-50 transition-all uppercase tracking-widest">Previous</button>
@@ -430,46 +516,56 @@ const OnboardingWizard = () => {
                   <p className="text-[11px] text-gray-400 font-black uppercase tracking-[0.2em]">Specific details for {currentConfig?.label} practice.</p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                  
                   {selectedType === 'DOCTOR' && (
                     <>
-                      <SelectGroup label="Specialization" options={['General Medicine', 'Cardiology', 'Dermatology', 'Neurology', 'Pediatrics', 'Dentistry']} value={formData.specialization} onChange={(v) => updateField('specialization', v)} />
-                      <SelectGroup label="Experience" options={['1-3 Years', '4-7 Years', '8-12 Years', '12+ Years']} value={formData.experience} onChange={(v) => updateField('experience', v)} />
-                      <InputGroup label="Consultation Fee (₹)" placeholder="e.g. 500" value={formData.consultationFee} onChange={(v) => updateField('consultationFee', v)} />
-                      <InputGroup label="Primary Clinic/Hospital" placeholder="Where you practice" value={formData.hospitalName} onChange={(v) => updateField('hospitalName', v)} />
+                      <InputGroup label="Medical Specialization" placeholder="e.g. Cardiologist" value={formData.specialization} onChange={(v) => updateField('specialization', v)} error={errors.specialization} />
+                      <InputGroup label="Medical License No." placeholder="MCI-12345" value={formData.medicalLicenseNo} onChange={(v) => updateField('medicalLicenseNo', v)} error={errors.medicalLicenseNo} />
+                      <InputGroup label="Year of Registration" placeholder="YYYY" value={formData.registrationYear} onChange={(v) => updateField('registrationYear', v)} error={errors.registrationYear} />
+                      <InputGroup label="Consultation Fee (₹)" placeholder="e.g. 500" value={formData.consultationFee} onChange={(v) => updateField('consultationFee', v)} error={errors.consultationFee} />
+                      <InputGroup label="Current Hospital/Clinic" placeholder="Name of hospital" value={formData.hospitalName} onChange={(v) => updateField('hospitalName', v)} error={errors.hospitalName} />
+                      <SelectGroup label="Experience" options={['1-3 Years', '3-5 Years', '5-10 Years', '10+ Years']} value={formData.experience} onChange={(v) => updateField('experience', v)} />
                     </>
                   )}
-                  {selectedType === 'LAB' && (
+                  {selectedType === 'TRAINER' && (
                     <>
-                      <SelectGroup label="Lab Category" options={['Pathology', 'Radiology', 'Multi-Specialty', 'Blood Bank']} value={formData.labCategory} onChange={(v) => updateField('labCategory', v)} />
-                      <SelectGroup label="Home Sample Collection" options={['Yes', 'No']} value={formData.homeCollection} onChange={(v) => updateField('homeCollection', v)} />
-                      <div className="md:col-span-2">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Available Test Packages</label>
-                        <textarea className="w-full bg-white border border-gray-200 rounded-lg p-3.5 text-xs font-semibold text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-50 transition-all outline-none shadow-sm" rows={4} placeholder="e.g. CBC, Full Body Checkup, Thyroid..." value={formData.testList} onChange={(e) => updateField('testList', e.target.value)} />
-                      </div>
-                    </>
-                  )}
-                  {selectedType === 'VENDOR' && (
-                    <>
-                      <SelectGroup label="Shop Focus" options={['General Wellness', 'Supplements', 'Organic Foods', 'Beauty & Care']} value={formData.shopCategory} onChange={(v) => updateField('shopCategory', v)} />
-                      <InputGroup label="GST Number" placeholder="22AAAAA0000A1Z5" value={formData.gstNo} onChange={(v) => updateField('gstNo', v)} />
-                      <SelectGroup label="Local Delivery Radius" options={['3km', '5km', '10km', 'Statewide', 'National']} value={formData.deliveryRadius} onChange={(v) => updateField('deliveryRadius', v)} />
-                      <InputGroup label="Warehouse/Store Location" placeholder="Main operating city" value={formData.warehouse} onChange={(v) => updateField('warehouse', v)} />
+                      <InputGroup label="Fitness Specialization" placeholder="e.g. Yoga, Crossfit" value={formData.specialization} onChange={(v) => updateField('specialization', v)} error={errors.specialization} />
+                      <InputGroup label="Certifying Body" placeholder="e.g. ACE, NASM" value={formData.certifyingBody} onChange={(v) => updateField('certifyingBody', v)} error={errors.certifyingBody} />
+                      <SelectGroup label="Years of Experience" options={['0-2 Years', '2-5 Years', '5-10 Years', '10+ Years']} value={formData.yearsOfExperience} onChange={(v) => updateField('yearsOfExperience', v)} error={errors.yearsOfExperience} />
+                      <InputGroup label="Session Fee (₹)" placeholder="e.g. 1000 per hour" value={formData.consultationFee} onChange={(v) => updateField('consultationFee', v)} error={errors.consultationFee} />
                     </>
                   )}
                   {selectedType === 'PHARMACY' && (
                     <>
-                      <InputGroup label="Registered Pharmacist Name" placeholder="Name on license" value={formData.pharmacistName} onChange={(v) => updateField('pharmacistName', v)} />
-                      <SelectGroup label="24/7 Availability" options={['No', 'Yes']} value={formData.is24x7} onChange={(v) => updateField('is24x7', v)} />
-                      <InputGroup label="Operating Hours" placeholder="e.g. 9AM - 11PM" value={formData.operatingHoursText} onChange={(v) => updateField('operatingHoursText', v)} />
-                      <SelectGroup label="Drug License Type" options={['Retail (Form 20/21)', 'Wholesale']} value={formData.drugLicenseType} onChange={(v) => updateField('drugLicenseType', v)} />
+                      <InputGroup label="Pharmacist Name" placeholder="Registered Pharmacist" value={formData.pharmacistName} onChange={(v) => updateField('pharmacistName', v)} error={errors.pharmacistName} />
+                      <InputGroup label="Pharmacist License No." placeholder="LIC-12345" value={formData.pharmacistLicenseNo} onChange={(v) => updateField('pharmacistLicenseNo', v)} error={errors.pharmacistLicenseNo} />
+                      <InputGroup label="GSTIN Number" placeholder="22AAAAA0000A1Z5" value={formData.gstin} onChange={(v) => updateField('gstin', v)} error={errors.gstin} />
+                      <SelectGroup label="Shop Category" options={['General Pharmacy', 'Ayurvedic', 'Homeopathic', 'Surgicals']} value={formData.shopCategory} onChange={(v) => updateField('shopCategory', v)} error={errors.shopCategory} />
+                      <SelectGroup label="Delivery Radius" options={['2km', '5km', '10km', 'No Delivery']} value={formData.deliveryRadius} onChange={(v) => updateField('deliveryRadius', v)} />
+                    </>
+                  )}
+                  {selectedType === 'LAB' && (
+                    <>
+                      <SelectGroup label="Lab Category" options={['Pathology', 'Radiology', 'Comprehensive', 'Specialized']} value={formData.labCategory} onChange={(v) => updateField('labCategory', v)} error={errors.labCategory} />
+                      <InputGroup label="GSTIN Number" placeholder="22AAAAA0000A1Z5" value={formData.gstin} onChange={(v) => updateField('gstin', v)} error={errors.gstin} />
+                      <SelectGroup label="NABL Accredited?" options={['Yes', 'No', 'In Process']} value={formData.nablAccredited} onChange={(v) => updateField('nablAccredited', v)} />
+                      <SelectGroup label="Home Collection" options={['Yes, Free', 'Yes, Paid', 'No']} value={formData.homeCollection} onChange={(v) => updateField('homeCollection', v)} />
+                    </>
+                  )}
+                  {selectedType === 'VENDOR' && (
+                    <>
+                      <SelectGroup label="Business Type" options={['Retail', 'Wholesale', 'Manufacturer', 'Distributor']} value={formData.businessType} onChange={(v) => updateField('businessType', v)} error={errors.businessType} />
+                      <InputGroup label="Shop/Product Category" placeholder="e.g. Health Supplements" value={formData.shopCategory} onChange={(v) => updateField('shopCategory', v)} error={errors.shopCategory} />
+                      <InputGroup label="GSTIN Number" placeholder="22AAAAA0000A1Z5" value={formData.gstin} onChange={(v) => updateField('gstin', v)} error={errors.gstin} />
+                      <SelectGroup label="Delivery Radius" options={['Local', 'City-wide', 'State-wide', 'National']} value={formData.deliveryRadius} onChange={(v) => updateField('deliveryRadius', v)} />
                     </>
                   )}
                   {selectedType === 'NUTRITION' && (
                     <>
-                      <SelectGroup label="Food Category" options={['Fresh Fruits', 'Organic Veggies', 'Healthy Meals', 'Superfoods']} value={formData.foodCategory} onChange={(v) => updateField('foodCategory', v)} />
-                      <SelectGroup label="Sourcing Mode" options={['Direct from Farmers', 'Local Markets', 'Warehouse Sync', 'Imported']} value={formData.sourcing} onChange={(v) => updateField('sourcing', v)} />
-                      <SelectGroup label="Delivery Speed" options={['Instant (30-60m)', 'Same Day', 'Scheduled Only']} value={formData.deliveryType} onChange={(v) => updateField('deliveryType', v)} />
-                      <SelectGroup label="Dietary Focus" options={['Vegan', 'Keto', 'Diabetes Friendly', 'Gluten Free', 'General']} value={formData.dietaryFocus} onChange={(v) => updateField('dietaryFocus', v)} />
+                      <InputGroup label="Degree / Certification" placeholder="e.g. BSc Nutrition, Registered Dietitian" value={formData.degreeCertification} onChange={(v) => updateField('degreeCertification', v)} error={errors.degreeCertification} />
+                      <SelectGroup label="Dietary Focus" options={['General', 'Vegan', 'Keto', 'Diabetes Friendly', 'Gluten Free', 'Sports Nutrition']} value={formData.dietaryFocus} onChange={(v) => updateField('dietaryFocus', v)} error={errors.dietaryFocus} />
+                      <InputGroup label="Consultation Fee (₹)" placeholder="e.g. 500" value={formData.consultationFee} onChange={(v) => updateField('consultationFee', v)} error={errors.consultationFee} />
+                      <SelectGroup label="Experience" options={['0-2 Years', '2-5 Years', '5-10 Years', '10+ Years']} value={formData.experience} onChange={(v) => updateField('experience', v)} />
                     </>
                   )}
                 </div>
@@ -566,40 +662,42 @@ const OnboardingWizard = () => {
 
 /* --- Refined UI Components --- */
 
-const InputGroup = ({ label, type = "text", placeholder, value, onChange }) => (
-  <div className="space-y-1.5">
-    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">{label}</label>
+const InputGroup = ({ label, type = "text", placeholder, value, onChange, error }) => (
+  <div className="space-y-1.5 w-full">
+    <label className={`text-[10px] font-black uppercase tracking-widest ml-1 ${error ? 'text-red-500' : 'text-gray-500'}`}>{label}</label>
     <input 
       type={type} 
       placeholder={placeholder}
       value={value || ""}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full bg-white border border-gray-200 rounded-lg px-3.5 py-2.5 text-xs font-semibold text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-50 transition-all outline-none placeholder:text-gray-300 shadow-sm"
+      className={`w-full bg-white border rounded-lg px-3.5 py-2.5 text-xs font-semibold text-gray-900 transition-all outline-none placeholder:text-gray-300 shadow-sm ${error ? 'border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-50' : 'border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-50'}`}
     />
+    {error && <span className="text-[9px] text-red-500 font-bold ml-1 block">{error}</span>}
   </div>
 );
 
-const SelectGroup = ({ label, options, value, onChange }) => (
-  <div className="space-y-1.5">
-    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">{label}</label>
+const SelectGroup = ({ label, options, value, onChange, error }) => (
+  <div className="space-y-1.5 w-full">
+    <label className={`text-[10px] font-black uppercase tracking-widest ml-1 ${error ? 'text-red-500' : 'text-gray-500'}`}>{label}</label>
     <div className="relative">
       <select 
         value={value || options[0]}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-white border border-gray-200 rounded-lg px-3.5 py-2.5 text-xs font-semibold text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-50 transition-all outline-none appearance-none cursor-pointer shadow-sm"
+        className={`w-full bg-white border rounded-lg px-3.5 py-2.5 text-xs font-semibold text-gray-900 transition-all outline-none appearance-none cursor-pointer shadow-sm ${error ? 'border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-50' : 'border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-50'}`}
       >
         {options.map(o => <option key={o} value={o}>{o}</option>)}
       </select>
       <ChevronRight size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 rotate-90 text-gray-400 pointer-events-none" />
     </div>
+    {error && <span className="text-[9px] text-red-500 font-bold ml-1 block">{error}</span>}
   </div>
 );
 
-const VerifyInput = ({ label, placeholder, value, onChange, onVerify, isVerified, disabled, icon: Icon }) => (
-  <div className="space-y-1.5">
-    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">{label}</label>
+const VerifyInput = ({ label, placeholder, value, onChange, onVerify, isVerified, disabled, icon: Icon, error }) => (
+  <div className="space-y-1.5 w-full">
+    <label className={`text-[10px] font-black uppercase tracking-widest ml-1 ${error ? 'text-red-500' : 'text-gray-500'}`}>{label}</label>
     <div className="relative">
-      <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+      <div className={`absolute left-3.5 top-1/2 -translate-y-1/2 ${error ? 'text-red-400' : 'text-gray-400'}`}>
         <Icon size={14} />
       </div>
       <input 
@@ -608,8 +706,7 @@ const VerifyInput = ({ label, placeholder, value, onChange, onVerify, isVerified
         value={value || ""}
         onChange={(e) => onChange(e.target.value)}
         disabled={isVerified || disabled}
-        className={`w-full bg-white border border-gray-200 rounded-lg pl-9 pr-24 py-2.5 text-xs font-semibold text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-50 transition-all outline-none shadow-sm 
-          ${isVerified ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : ''}`}
+        className={`w-full bg-white border rounded-lg pl-9 pr-24 py-2.5 text-xs font-semibold text-gray-900 transition-all outline-none shadow-sm ${error && !isVerified ? 'border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-50' : 'border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-50'} ${isVerified ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : ''}`}
       />
       {!isVerified && (
         <button 
@@ -626,6 +723,7 @@ const VerifyInput = ({ label, placeholder, value, onChange, onVerify, isVerified
         </div>
       )}
     </div>
+    {error && <span className="text-[9px] text-red-500 font-bold ml-1 block">{error}</span>}
   </div>
 );
 
