@@ -282,10 +282,7 @@ function Login() {
                  New to the platform?{' '}
                  <a href="/provider/onboarding" className="text-teal-600 font-bold hover:underline">Apply for an account</a>
                </p>
-               <p className="text-[12px] text-gray-500 font-medium">
-                 Looking for user login?{' '}
-                 <span onClick={() => navigate("/login")} className="text-blue-600 font-bold hover:underline cursor-pointer">User Portal</span>
-               </p>
+               
              </div>
           </div>
         </div>
