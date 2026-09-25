@@ -98,9 +98,9 @@ export default function Hero() {
 
         {/* Headline */}
         <motion.h1 variants={itemVariants} className="text-4xl sm:text-5xl md:text-7xl font-extrabold text-gray-900 leading-tight mb-5 tracking-tight">
-          Handover Your Health<br />
+          Transform Your Health<br />
           <span className="inline-flex items-center justify-center flex-wrap gap-x-3 mt-1 sm:mt-2">
-            <span>to</span>
+            <span>with</span>
             <span className="text-teal-600 text-left min-w-[220px] sm:min-w-[320px] md:min-w-[480px] relative h-[48px] sm:h-[60px] md:h-[84px] inline-flex items-center">
               <AnimatePresence mode="wait">
                 <motion.span
