@@ -269,7 +269,7 @@ const OnboardingWizard = () => {
           <AnimatePresence mode="wait">
             {/* Step 1: Selection */}
             {step === 1 && (
-              <motion.div key="s1" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-12">
+              <motion.div key="s1" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8">
                 <div className="space-y-3">
                   <h2 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight mb-2">How will you <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-600">serve?</span></h2>
                   <p className="text-gray-500 font-medium text-lg">Select your primary role in the Wellwigen health ecosystem.</p>
@@ -381,21 +381,21 @@ const OnboardingWizard = () => {
 
             {/* Step 3: Business Information */}
             {step === 3 && (
-              <motion.div key="s3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-10">
+              <motion.div key="s3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
                 <div className="space-y-2">
                   <h2 className="text-3xl font-black text-gray-900 tracking-tight">Business Profile</h2>
                   <p className="text-[11px] text-gray-400 font-black uppercase tracking-[0.2em]">Tell us about your organization.</p>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
                   <InputGroup label="Business/Practice Name" placeholder="e.g. LifeCare Clinic" value={formData.businessName} onChange={(v) => updateField('businessName', v)} />
                   <InputGroup label="Primary Owner/Contact" placeholder="Full legal name" value={formData.ownerName} onChange={(v) => updateField('ownerName', v)} />
                   
                   <div className="space-y-2">
                     <VerifyInput label="Phone Number" placeholder="+91 00000 00000" icon={Smartphone} value={formData.phone} onChange={(v) => updateField('phone', v)} onVerify={sendPhoneOtp} isVerified={verification.phoneVerified} disabled={verification.phoneOtpSent} />
                     {verification.phoneOtpSent && (
-                      <div className="flex gap-2 p-2 bg-blue-50 rounded-xl animate-in fade-in slide-in-from-top-2">
-                        <input type="text" placeholder="Enter OTP (1234)" className="flex-1 bg-white border border-blue-200 rounded-lg px-3 py-2 text-xs font-bold outline-none" value={verification.phoneInputOtp} onChange={(e) => setVerification(v => ({ ...v, phoneInputOtp: e.target.value }))} />
-                        <button onClick={verifyPhone} className="bg-blue-600 text-white px-4 rounded-lg text-[10px] font-black uppercase tracking-widest">Confirm</button>
+                      <div className="flex gap-2 p-2 bg-gray-50 border border-gray-100 rounded-lg animate-in fade-in slide-in-from-top-2">
+                        <input type="text" placeholder="Enter OTP (1234)" className="flex-1 bg-white border border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-50 transition-all rounded-lg px-3 py-2 text-xs font-bold outline-none" value={verification.phoneInputOtp} onChange={(e) => setVerification(v => ({ ...v, phoneInputOtp: e.target.value }))} />
+                        <button onClick={verifyPhone} className="bg-gray-900 text-white px-4 py-2 hover:bg-black rounded-md text-[10px] font-black uppercase tracking-widest">Confirm</button>
                       </div>
                     )}
                   </div>
@@ -403,9 +403,9 @@ const OnboardingWizard = () => {
                   <div className="space-y-2">
                     <VerifyInput label="Email Address" placeholder="name@business.com" icon={Mail} value={formData.email} onChange={(v) => updateField('email', v)} onVerify={sendEmailOtp} isVerified={verification.emailVerified} disabled={verification.emailOtpSent} />
                     {verification.emailOtpSent && (
-                      <div className="flex gap-2 p-2 bg-blue-50 rounded-xl animate-in fade-in slide-in-from-top-2">
-                        <input type="text" placeholder="Enter OTP (5678)" className="flex-1 bg-white border border-blue-200 rounded-lg px-3 py-2 text-xs font-bold outline-none" value={verification.emailInputOtp} onChange={(e) => setVerification(v => ({ ...v, emailInputOtp: e.target.value }))} />
-                        <button onClick={verifyEmail} className="bg-blue-600 text-white px-4 rounded-lg text-[10px] font-black uppercase tracking-widest">Confirm</button>
+                      <div className="flex gap-2 p-2 bg-gray-50 border border-gray-100 rounded-lg animate-in fade-in slide-in-from-top-2">
+                        <input type="text" placeholder="Enter OTP (5678)" className="flex-1 bg-white border border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-50 transition-all rounded-lg px-3 py-2 text-xs font-bold outline-none" value={verification.emailInputOtp} onChange={(e) => setVerification(v => ({ ...v, emailInputOtp: e.target.value }))} />
+                        <button onClick={verifyEmail} className="bg-gray-900 text-white px-4 py-2 hover:bg-black rounded-md text-[10px] font-black uppercase tracking-widest">Confirm</button>
                       </div>
                     )}
                   </div>
@@ -416,20 +416,20 @@ const OnboardingWizard = () => {
                   </div>
                 </div>
                 <div className="flex gap-4 pt-6">
-                  <button onClick={prevStep} className="px-10 py-4 border border-gray-100 rounded-2xl text-xs font-bold text-gray-400 hover:text-gray-900 transition-all">Previous</button>
-                  <button onClick={nextStep} disabled={!verification.phoneVerified || !verification.emailVerified} className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-bold text-xs hover:bg-blue-700 shadow-2xl shadow-blue-100 disabled:opacity-30 disabled:cursor-not-allowed">Save & Continue</button>
+                  <button onClick={prevStep} className="px-8 py-3 border border-gray-200 rounded-xl text-xs font-bold text-gray-500 hover:border-gray-300 hover:text-gray-900 hover:bg-gray-50 transition-all uppercase tracking-widest">Previous</button>
+                  <button onClick={nextStep} disabled={!verification.phoneVerified || !verification.emailVerified} className="flex-1 py-3 bg-gray-900 text-white rounded-xl font-bold text-xs hover:bg-black shadow-lg shadow-gray-200 disabled:opacity-30 uppercase tracking-widest disabled:cursor-not-allowed">Save & Continue</button>
                 </div>
               </motion.div>
             )}
 
             {/* Step 4: Professional Qualifications */}
             {step === 4 && (
-              <motion.div key="s4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-10">
+              <motion.div key="s4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
                 <div className="space-y-2">
                   <h2 className="text-3xl font-black text-gray-900 tracking-tight">Qualifications</h2>
                   <p className="text-[11px] text-gray-400 font-black uppercase tracking-[0.2em]">Specific details for {currentConfig?.label} practice.</p>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
                   {selectedType === 'DOCTOR' && (
                     <>
                       <SelectGroup label="Specialization" options={['General Medicine', 'Cardiology', 'Dermatology', 'Neurology', 'Pediatrics', 'Dentistry']} value={formData.specialization} onChange={(v) => updateField('specialization', v)} />
@@ -444,7 +444,7 @@ const OnboardingWizard = () => {
                       <SelectGroup label="Home Sample Collection" options={['Yes', 'No']} value={formData.homeCollection} onChange={(v) => updateField('homeCollection', v)} />
                       <div className="md:col-span-2">
                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Available Test Packages</label>
-                        <textarea className="w-full bg-gray-50 border border-gray-100 rounded-2xl p-5 text-xs font-bold text-gray-900 focus:bg-white outline-none focus:ring-4 focus:ring-blue-50 transition-all" rows={4} placeholder="e.g. CBC, Full Body Checkup, Thyroid..." value={formData.testList} onChange={(e) => updateField('testList', e.target.value)} />
+                        <textarea className="w-full bg-white border border-gray-200 rounded-lg p-3.5 text-xs font-semibold text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-50 transition-all outline-none shadow-sm" rows={4} placeholder="e.g. CBC, Full Body Checkup, Thyroid..." value={formData.testList} onChange={(e) => updateField('testList', e.target.value)} />
                       </div>
                     </>
                   )}
@@ -474,15 +474,15 @@ const OnboardingWizard = () => {
                   )}
                 </div>
                 <div className="flex gap-4 pt-6">
-                  <button onClick={prevStep} className="px-10 py-4 border border-gray-100 rounded-2xl text-xs font-bold text-gray-400 hover:text-gray-900 transition-all">Previous</button>
-                  <button onClick={nextStep} className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-bold text-xs hover:bg-blue-700 shadow-2xl shadow-blue-100">Save & Next</button>
+                  <button onClick={prevStep} className="px-8 py-3 border border-gray-200 rounded-xl text-xs font-bold text-gray-500 hover:border-gray-300 hover:text-gray-900 hover:bg-gray-50 transition-all uppercase tracking-widest">Previous</button>
+                  <button onClick={nextStep} className="flex-1 py-3 bg-gray-900 text-white rounded-xl font-bold text-xs hover:bg-black shadow-lg shadow-gray-200 uppercase tracking-widest">Save & Next</button>
                 </div>
               </motion.div>
             )}
 
             {/* Step 5: Documentation */}
             {step === 5 && (
-              <motion.div key="s5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-10">
+              <motion.div key="s5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
                 <div className="space-y-2">
                   <h2 className="text-3xl font-black text-gray-900 tracking-tight">Legal Documents</h2>
                   <p className="text-[11px] text-gray-400 font-black uppercase tracking-[0.2em]">Required certifications for {currentConfig?.label}.</p>
@@ -499,20 +499,20 @@ const OnboardingWizard = () => {
                   </div>
                 </div>
                 <div className="flex gap-4 pt-6">
-                  <button onClick={prevStep} className="px-10 py-4 border border-gray-100 rounded-2xl text-xs font-bold text-gray-400 hover:text-gray-900 transition-all">Previous</button>
-                  <button onClick={nextStep} className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-bold text-xs hover:bg-blue-700 shadow-2xl shadow-blue-100">Save & Continue</button>
+                  <button onClick={prevStep} className="px-8 py-3 border border-gray-200 rounded-xl text-xs font-bold text-gray-500 hover:border-gray-300 hover:text-gray-900 hover:bg-gray-50 transition-all uppercase tracking-widest">Previous</button>
+                  <button onClick={nextStep} className="flex-1 py-3 bg-gray-900 text-white rounded-xl font-bold text-xs hover:bg-black shadow-lg shadow-gray-200 uppercase tracking-widest">Save & Continue</button>
                 </div>
               </motion.div>
             )}
 
             {/* Step 6: Terms */}
             {step === 6 && (
-              <motion.div key="s6" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-10">
+              <motion.div key="s6" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
                 <div className="space-y-2">
                   <h2 className="text-3xl font-black text-gray-900 tracking-tight">Legal & Consent</h2>
                   <p className="text-[11px] text-gray-400 font-black uppercase tracking-[0.2em]">Platform agreements.</p>
                 </div>
-                <div className="bg-white rounded-3xl p-10 border border-gray-100 shadow-sm space-y-6">
+                <div className="bg-white rounded-2xl p-6 md:p-8 border border-gray-200 shadow-sm space-y-5">
                   <div className="space-y-4 max-h-[300px] overflow-y-auto pr-4 text-xs font-medium text-gray-600 leading-relaxed scrollbar-hide">
                     <p>1. Wellwigen is a platform connecting health providers to users. We do not provide medical services directly.</p>
                     <p>2. Providers are responsible for the accuracy of their credentials and service quality.</p>
@@ -526,20 +526,20 @@ const OnboardingWizard = () => {
                   </label>
                 </div>
                 <div className="flex gap-4 pt-6">
-                  <button onClick={prevStep} className="px-10 py-4 border border-gray-100 rounded-2xl text-xs font-bold text-gray-400 hover:text-gray-900 transition-all">Back</button>
-                  <button onClick={nextStep} disabled={!formData.verificationConsent} className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-bold text-xs hover:bg-blue-700 shadow-2xl shadow-blue-100 disabled:opacity-30">Review Application</button>
+                  <button onClick={prevStep} className="px-8 py-3 border border-gray-200 rounded-xl text-xs font-bold text-gray-500 hover:border-gray-300 hover:text-gray-900 hover:bg-gray-50 transition-all uppercase tracking-widest">Back</button>
+                  <button onClick={nextStep} disabled={!formData.verificationConsent} className="flex-1 py-3 bg-gray-900 text-white rounded-xl font-bold text-xs hover:bg-black shadow-lg shadow-gray-200 disabled:opacity-30 uppercase tracking-widest">Review Application</button>
                 </div>
               </motion.div>
             )}
 
             {/* Step 7: Review */}
             {step === 7 && (
-              <motion.div key="s7" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-10">
+              <motion.div key="s7" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-8">
                 <div className="space-y-2">
                   <h2 className="text-3xl font-black text-gray-900 tracking-tight">Final Review</h2>
                   <p className="text-[11px] text-gray-400 font-black uppercase tracking-[0.2em]">Check your details before submitting.</p>
                 </div>
-                <div className="bg-white rounded-3xl p-10 border border-gray-100 shadow-sm space-y-2">
+                <div className="bg-white rounded-2xl p-6 md:p-8 border border-gray-200 shadow-sm space-y-2">
                   <SummaryItem label="Practice Category" value={currentConfig?.label} />
                   <SummaryItem label="Business Name" value={formData.businessName} />
                   <SummaryItem label="Primary Owner" value={formData.ownerName} />
@@ -549,8 +549,8 @@ const OnboardingWizard = () => {
                   <SummaryItem label="License No." value={formData.licenseNumber} />
                 </div>
                 <div className="flex gap-4 pt-4">
-                  <button onClick={prevStep} className="px-10 py-4 border border-gray-100 rounded-2xl text-xs font-bold text-gray-400 hover:text-gray-900 transition-all">Back</button>
-                  <button onClick={handleFinalSubmit} disabled={isLoading} className="flex-1 py-5 bg-emerald-600 text-white rounded-2xl font-bold text-base hover:bg-emerald-700 shadow-2xl shadow-emerald-100 transition-all flex justify-center items-center gap-2">
+                  <button onClick={prevStep} className="px-8 py-3 border border-gray-200 rounded-xl text-xs font-bold text-gray-500 hover:border-gray-300 hover:text-gray-900 hover:bg-gray-50 transition-all uppercase tracking-widest">Back</button>
+                  <button onClick={handleFinalSubmit} disabled={isLoading} className="flex-1 py-3.5 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-black shadow-lg shadow-gray-200 transition-all flex justify-center items-center gap-2 uppercase tracking-widest">
                     {isLoading ? 'Finalizing...' : 'Submit Application Now'} <ChevronRight size={20} />
                   </button>
                 </div>
@@ -568,38 +568,38 @@ const OnboardingWizard = () => {
 
 const InputGroup = ({ label, type = "text", placeholder, value, onChange }) => (
   <div className="space-y-1.5">
-    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
+    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">{label}</label>
     <input 
       type={type} 
       placeholder={placeholder}
       value={value || ""}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-xs font-bold text-gray-900 focus:bg-white focus:ring-4 focus:ring-blue-50/50 transition-all outline-none placeholder:text-gray-300"
+      className="w-full bg-white border border-gray-200 rounded-lg px-3.5 py-2.5 text-xs font-semibold text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-50 transition-all outline-none placeholder:text-gray-300 shadow-sm"
     />
   </div>
 );
 
 const SelectGroup = ({ label, options, value, onChange }) => (
   <div className="space-y-1.5">
-    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
+    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">{label}</label>
     <div className="relative">
       <select 
         value={value || options[0]}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-xs font-bold text-gray-900 focus:bg-white focus:ring-4 focus:ring-blue-50/50 transition-all outline-none appearance-none cursor-pointer"
+        className="w-full bg-white border border-gray-200 rounded-lg px-3.5 py-2.5 text-xs font-semibold text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-50 transition-all outline-none appearance-none cursor-pointer shadow-sm"
       >
         {options.map(o => <option key={o} value={o}>{o}</option>)}
       </select>
-      <ChevronRight size={14} className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-gray-400 pointer-events-none" />
+      <ChevronRight size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 rotate-90 text-gray-400 pointer-events-none" />
     </div>
   </div>
 );
 
 const VerifyInput = ({ label, placeholder, value, onChange, onVerify, isVerified, disabled, icon: Icon }) => (
   <div className="space-y-1.5">
-    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
+    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">{label}</label>
     <div className="relative">
-      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300">
+      <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
         <Icon size={14} />
       </div>
       <input 
@@ -608,20 +608,20 @@ const VerifyInput = ({ label, placeholder, value, onChange, onVerify, isVerified
         value={value || ""}
         onChange={(e) => onChange(e.target.value)}
         disabled={isVerified || disabled}
-        className={`w-full bg-gray-50 border border-gray-100 rounded-xl pl-10 pr-24 py-3 text-xs font-bold text-gray-900 focus:bg-white focus:ring-4 transition-all outline-none 
-          ${isVerified ? 'border-emerald-200 bg-emerald-50/20 text-emerald-700' : 'focus:ring-blue-50/50'}`}
+        className={`w-full bg-white border border-gray-200 rounded-lg pl-9 pr-24 py-2.5 text-xs font-semibold text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-50 transition-all outline-none shadow-sm 
+          ${isVerified ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : ''}`}
       />
       {!isVerified && (
         <button 
           onClick={onVerify}
-          className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-blue-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-md shadow-blue-100"
+          className="absolute right-1.5 top-1/2 -translate-y-1/2 px-3 py-1 bg-gray-900 text-white rounded-md text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-all shadow-sm"
         >
           Verify
         </button>
       )}
       {isVerified && (
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-600 flex items-center gap-1.5">
-          <CheckCircle2 size={16} />
+        <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-600 flex items-center gap-1.5">
+          <CheckCircle2 size={14} />
           <span className="text-[9px] font-black uppercase tracking-widest">Verified</span>
         </div>
       )}

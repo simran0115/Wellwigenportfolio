@@ -37,7 +37,7 @@ const contactInfo = [
 ];
 
 const inputClass =
-  'w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 outline-none transition-colors text-sm text-gray-800 placeholder-gray-400';
+  'w-full px-3.5 py-2.5 rounded-lg border border-gray-200 bg-white shadow-sm focus:border-teal-500 focus:ring-2 focus:ring-teal-50 outline-none transition-all text-xs font-semibold text-gray-900 placeholder-gray-300';
 
 const ContactUs = () => {
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
