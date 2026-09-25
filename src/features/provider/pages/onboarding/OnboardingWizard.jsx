@@ -31,6 +31,16 @@ import { useProviderStore } from '../../store/useProviderStore';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
+
+const ROLE_IMAGES = {
+  DOCTOR: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=800&auto=format&fit=crop',
+  TRAINER: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=800&auto=format&fit=crop',
+  PHARMACY: 'https://images.unsplash.com/photo-1576602976047-174e57a47881?q=80&w=800&auto=format&fit=crop',
+  LAB: 'https://images.unsplash.com/photo-1614935151651-0bea6508db6b?q=80&w=800&auto=format&fit=crop',
+  NUTRITION: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&auto=format&fit=crop',
+  VENDOR: 'https://images.unsplash.com/photo-1511317559916-56d5ddb62563?q=80&w=800&auto=format&fit=crop'
+};
+
 const OnboardingWizard = () => {
   const [step, setStep] = useState(1);
   const [selectedType, setSelectedType] = useState(null);
@@ -249,14 +259,6 @@ const OnboardingWizard = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 text-left">
                   {Object.entries(PROVIDER_CONFIG).map(([key, config]) => {
-                    const roleImages = {
-                      DOCTOR: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=800&auto=format&fit=crop',
-                      TRAINER: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=800&auto=format&fit=crop',
-                      PHARMACY: 'https://images.unsplash.com/photo-1576602976047-174e57a47881?q=80&w=800&auto=format&fit=crop',
-                      LAB: 'https://images.unsplash.com/photo-1614935151651-0bea6508db6b?q=80&w=800&auto=format&fit=crop',
-                      NUTRITION: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&auto=format&fit=crop',
-                      VENDOR: 'https://images.unsplash.com/photo-1511317559916-56d5ddb62563?q=80&w=800&auto=format&fit=crop'
-                    };
                     return (
                       <button 
                         key={key} 
@@ -266,7 +268,7 @@ const OnboardingWizard = () => {
                         {/* Background Image */}
                         <div className="absolute inset-0">
                           <img 
-                            src={roleImages[key]} 
+                            src={ROLE_IMAGES[key]} 
                             alt={config.label}
                             className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-in-out"
                           />
@@ -306,37 +308,55 @@ const OnboardingWizard = () => {
 
             {/* Step 2: Roadmap */}
             {step === 2 && (
-              <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-10 max-w-3xl">
+              <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8 max-w-3xl">
                 <div className="flex items-center gap-2 text-teal-600 mb-2 cursor-pointer group w-max" onClick={prevStep}>
                   <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> 
                   <span className="text-[11px] font-black uppercase tracking-widest">Change Role</span>
                 </div>
                 
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <h2 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight">Setup your <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-600">workspace.</span></h2>
                   <p className="text-base text-gray-500 font-medium leading-relaxed max-w-xl">You are applying as a <strong className="text-gray-900">{currentConfig?.label}</strong>. {currentConfig?.instructions}</p>
                 </div>
                 
-                <div className="relative bg-white rounded-[2rem] p-8 md:p-12 border border-gray-100 shadow-xl shadow-gray-200/20 overflow-hidden">
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-teal-50 rounded-full blur-3xl opacity-60 -translate-y-1/2 translate-x-1/2"></div>
-                  
-                  <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-10 relative z-10">Application Roadmap</h3>
-                  
-                  <div className="space-y-8 relative z-10">
-                    {currentConfig?.onboardingSteps.map((s, i) => (
-                      <div key={i} className="flex gap-6 items-start group">
-                        <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-sm font-black text-gray-400 group-hover:bg-teal-500 group-hover:text-white group-hover:border-teal-400 group-hover:shadow-lg group-hover:shadow-teal-500/30 transition-all duration-300">
-                          {i + 1}
+                <div className="relative bg-white rounded-[2rem] border border-gray-100 shadow-xl shadow-gray-200/20 overflow-hidden flex flex-col sm:flex-row min-h-[320px]">
+                  {/* Left Side: Roadmap */}
+                  <div className="p-8 sm:p-10 flex-1 relative z-10">
+                    <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-6">Application Roadmap</h3>
+                    <div className="space-y-5">
+                      {currentConfig?.onboardingSteps.map((s, i) => (
+                        <div key={i} className="flex gap-4 items-start group">
+                          <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-xs font-black text-gray-400 group-hover:bg-teal-500 group-hover:text-white group-hover:border-teal-400 group-hover:shadow-lg group-hover:shadow-teal-500/30 transition-all duration-300">
+                            {i + 1}
+                          </div>
+                          <div className="pt-2.5">
+                            <p className="text-sm font-bold text-gray-900 group-hover:text-teal-700 transition-colors">{s}</p>
+                          </div>
                         </div>
-                        <div className="pt-3.5">
-                          <p className="text-sm font-bold text-gray-900 group-hover:text-teal-700 transition-colors">{s}</p>
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Right Side: Role Visual Context */}
+                  <div className="hidden sm:block sm:w-5/12 relative">
+                    <img src={ROLE_IMAGES[selectedType]} alt={currentConfig?.label} className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-white via-white/40 to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 via-gray-900/10 to-transparent"></div>
+                    <div className="absolute bottom-6 left-6 right-6">
+                       <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-white mb-3 border border-white/30 shadow-lg">
+                          {selectedType === 'VENDOR' && <Store size={22} strokeWidth={2.5} />}
+                          {selectedType === 'DOCTOR' && <Stethoscope size={22} strokeWidth={2.5} />}
+                          {selectedType === 'LAB' && <FlaskConical size={22} strokeWidth={2.5} />}
+                          {selectedType === 'PHARMACY' && <Pill size={22} strokeWidth={2.5} />}
+                          {selectedType === 'NUTRITION' && <Apple size={22} strokeWidth={2.5} />}
+                          {selectedType === 'TRAINER' && <Dumbbell size={22} strokeWidth={2.5} />}
+                       </div>
+                       <h4 className="text-white font-black text-xl drop-shadow-md tracking-tight">{currentConfig?.label}</h4>
+                    </div>
                   </div>
                 </div>
                 
-                <button onClick={nextStep} className="w-full py-5 bg-gray-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-gray-200 flex justify-center items-center gap-3 group">
+                <button onClick={nextStep} className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-gray-200 flex justify-center items-center gap-3 group">
                   Begin Application <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
                 </button>
               </motion.div>
