@@ -29,7 +29,7 @@ import {
 import { PROVIDER_TYPES, PROVIDER_CONFIG } from '../../constants/providerTypes';
 import { useProviderStore } from '../../store/useProviderStore';
 import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 
 const ROLE_IMAGES = {
@@ -42,10 +42,27 @@ const ROLE_IMAGES = {
 };
 
 const OnboardingWizard = () => {
-  const [step, setStep] = useState(1);
-  const [selectedType, setSelectedType] = useState(null);
   const { saveProgress, registerProvider, isLoading, provider } = useProviderStore();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const initialStep = parseInt(searchParams.get('step')) || 1;
+  const initialRole = searchParams.get('role') || null;
+
+  const [step, setStep] = useState(initialStep);
+  const [selectedType, setSelectedType] = useState(initialRole);
+
+  // Keep URL perfectly in sync with the wizard state
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (step > 1) params.set('step', step);
+    if (selectedType) params.set('role', selectedType);
+    
+    // Only update if it actually changed to avoid unnecessary re-renders
+    if (searchParams.get('step') !== params.get('step') || searchParams.get('role') !== params.get('role')) {
+      setSearchParams(params, { replace: true });
+    }
+  }, [step, selectedType, setSearchParams, searchParams]);
 
   // Verification State
   const [verification, setVerification] = useState({
