@@ -156,7 +156,7 @@ export default function Hero() {
               transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
               className="absolute right-0 top-10 w-[400px] h-[480px] rounded-[40px] overflow-hidden shadow-2xl border-8 border-white z-20"
             >
-              <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=800&auto=format&fit=crop" alt="Yoga" className="w-full h-full object-cover" />
+              <img src="/images/virtual_fitness_hero.jpg" alt="Yoga" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-teal-900/40 to-transparent"></div>
             </motion.div>
 
