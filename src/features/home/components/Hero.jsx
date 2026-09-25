@@ -178,8 +178,35 @@ export default function Hero() {
               <img src="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=500&auto=format&fit=crop" alt="Training" className="w-full h-full object-cover" />
             </motion.div>
             
-            {/* Decorative background blob */}
-            <div className="absolute right-10 top-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-teal-100 rounded-full blur-[80px] opacity-60 z-0"></div>
+            {/* Decorative background blob & vectors */}
+            <div className="absolute right-10 top-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-teal-100/80 rounded-full blur-[80px] opacity-60 z-0"></div>
+            
+            {/* Vector 1: Dotted Square */}
+            <svg className="absolute top-10 right-0 w-32 h-32 opacity-20 z-0" fill="none" viewBox="0 0 100 100">
+              <pattern id="dotsPattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                <circle fill="#0d9488" cx="2" cy="2" r="2"></circle>
+              </pattern>
+              <rect x="0" y="0" width="100%" height="100%" fill="url(#dotsPattern)"></rect>
+            </svg>
+
+            {/* Vector 2: Floating Ring */}
+            <motion.svg 
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 25, ease: "linear" }}
+              className="absolute bottom-10 right-20 w-24 h-24 opacity-30 z-0" 
+              viewBox="0 0 100 100" 
+              fill="none" 
+              stroke="#0d9488" 
+              strokeWidth="4" 
+              strokeDasharray="10 10"
+            >
+              <circle cx="50" cy="50" r="40"></circle>
+            </motion.svg>
+
+            {/* Vector 3: Plus sign group */}
+            <svg className="absolute top-1/3 right-1/4 w-12 h-12 opacity-30 z-0" viewBox="0 0 24 24" fill="none" stroke="#0d9488" strokeWidth="2">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
           </motion.div>
           
         </div>

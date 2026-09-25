@@ -81,7 +81,7 @@ export default function FitnessClasses() {
                 <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white mb-4 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
                   <ArrowUpRight size={20} />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-2">{cls.title}</h3>
+                <h3 className="text-2xl font-extrabold text-white mb-3 tracking-tight"><span className="bg-teal-500/90 px-4 py-1.5 rounded-xl inline-block backdrop-blur-md shadow-lg border border-teal-400/30">{cls.title}</span></h3>
                 <p className="text-gray-300 text-sm leading-relaxed transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
                   {cls.desc}
                 </p>
