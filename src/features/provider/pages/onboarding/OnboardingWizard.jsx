@@ -229,7 +229,7 @@ const OnboardingWizard = () => {
           </div>
         )}
 
-        <main className={`max-w-4xl mx-auto px-6 py-12 lg:py-20 ${step === 1 ? 'text-center lg:text-left' : ''}`}>
+        <main className={`max-w-7xl mx-auto px-6 py-12 lg:py-20 ${step === 1 ? 'text-center lg:text-left' : ''}`}>
           
           {/* Header Branding (only if no sidebar) */}
           {step === 1 && (
@@ -247,23 +247,59 @@ const OnboardingWizard = () => {
                   <h2 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight mb-2">How will you <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-600">serve?</span></h2>
                   <p className="text-gray-500 font-medium text-lg">Select your primary role in the Wellwigen health ecosystem.</p>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-left">
-                  {Object.entries(PROVIDER_CONFIG).map(([key, config]) => (
-                    <button key={key} onClick={() => handleTypeSelect(key)} className="p-6 bg-white border border-gray-100 rounded-2xl hover:border-blue-600 hover:shadow-2xl hover:shadow-blue-50 transition-all text-left flex items-start gap-5 group shadow-sm">
-                      <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
-                        {key === 'VENDOR' && <Store size={24} />}
-                        {key === 'DOCTOR' && <Stethoscope size={24} />}
-                        {key === 'LAB' && <FlaskConical size={24} />}
-                        {key === 'PHARMACY' && <Pill size={24} />}
-                        {key === 'NUTRITION' && <Apple size={24} />}
-                        {key === 'TRAINER' && <Dumbbell size={24} />}
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-gray-900 text-base">{config.label}</h3>
-                        <p className="text-[10px] text-gray-400 mt-1 leading-relaxed font-black uppercase tracking-widest">{config.description}</p>
-                      </div>
-                    </button>
-                  ))}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 text-left">
+                  {Object.entries(PROVIDER_CONFIG).map(([key, config]) => {
+                    const roleImages = {
+                      DOCTOR: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=800&auto=format&fit=crop',
+                      TRAINER: 'https://images.unsplash.com/photo-1571019614242-c5c5adee9f50?q=80&w=800&auto=format&fit=crop',
+                      PHARMACY: 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?q=80&w=800&auto=format&fit=crop',
+                      LAB: 'https://images.unsplash.com/photo-1579154204601-01588f18a1a1?q=80&w=800&auto=format&fit=crop',
+                      NUTRITION: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=800&auto=format&fit=crop',
+                      VENDOR: 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=800&auto=format&fit=crop'
+                    };
+                    return (
+                      <button 
+                        key={key} 
+                        onClick={() => handleTypeSelect(key)} 
+                        className="group relative h-72 rounded-[2rem] overflow-hidden text-left focus:outline-none focus:ring-4 focus:ring-blue-500/50 shadow-lg hover:shadow-2xl transition-all duration-500"
+                      >
+                        {/* Background Image */}
+                        <div className="absolute inset-0">
+                          <img 
+                            src={roleImages[key]} 
+                            alt={config.label}
+                            className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-in-out"
+                          />
+                        </div>
+                        
+                        {/* Gradient Overlays */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-gray-900/10 via-gray-900/40 to-gray-900/95 transition-opacity duration-500 group-hover:opacity-90"></div>
+                        <div className="absolute inset-0 bg-blue-900/40 mix-blend-multiply opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                        {/* Content */}
+                        <div className="absolute inset-0 p-8 flex flex-col justify-end z-10">
+                          <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white mb-4 border border-white/30 group-hover:bg-blue-500 group-hover:border-blue-400 transition-colors duration-300 shadow-xl">
+                            {key === 'VENDOR' && <Store size={26} strokeWidth={2.5} />}
+                            {key === 'DOCTOR' && <Stethoscope size={26} strokeWidth={2.5} />}
+                            {key === 'LAB' && <FlaskConical size={26} strokeWidth={2.5} />}
+                            {key === 'PHARMACY' && <Pill size={26} strokeWidth={2.5} />}
+                            {key === 'NUTRITION' && <Apple size={26} strokeWidth={2.5} />}
+                            {key === 'TRAINER' && <Dumbbell size={26} strokeWidth={2.5} />}
+                          </div>
+                          
+                          <div className="transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
+                            <h3 className="font-black text-white text-2xl mb-1 tracking-tight">{config.label}</h3>
+                            <p className="text-xs text-gray-200 leading-relaxed font-bold uppercase tracking-wider opacity-90">{config.description}</p>
+                          </div>
+                          
+                          {/* Animated Arrow */}
+                          <div className="absolute bottom-8 right-8 w-10 h-10 bg-white text-blue-600 rounded-full flex items-center justify-center opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500 shadow-lg">
+                            <ChevronRight size={20} strokeWidth={3} />
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </motion.div>
             )}
