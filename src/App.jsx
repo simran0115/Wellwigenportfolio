@@ -16,6 +16,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import Hero from './features/home/components/Hero';
 import Framework from './features/home/components/Framework';
 import FruitMarketplace from "./features/home/components/FruitMarketplace";
+import FitnessClasses from "./features/home/components/FitnessClasses";
 import OriginSection from "./features/home/components/OriginSection";
 // Pricing is now imported from features
 import Dashboard from "./features/dashboard/components/Dashboard";
@@ -311,6 +312,9 @@ function App() {
                     <Dashboard />
                   </ResponsiveSection>
                   <ResponsiveSection>
+                    <FitnessClasses />
+                  </ResponsiveSection>
+                  <ResponsiveSection>
                     <Diet />
                   </ResponsiveSection>
                   <ResponsiveSection>
@@ -394,7 +398,10 @@ function App() {
                   `}
                 </script>
               </Helmet>
-              <ResponsiveSection><Dashboard /></ResponsiveSection>
+              <ResponsiveSection><Dashboard />
+                  </ResponsiveSection>
+                  <ResponsiveSection>
+                    <FitnessClasses /></ResponsiveSection>
               <Footer />
             </PageWrapper>
           } />
