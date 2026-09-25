@@ -242,6 +242,33 @@ const ContactUs = () => {
         message={status.message}
         onClose={() => setStatus({ type: '', message: '' })}
       />
+    
+        {/* FAQ Section */}
+        <div className="mt-32 max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <h3 className="text-3xl font-extrabold text-gray-900">Frequently Asked Questions</h3>
+            <p className="text-gray-500 mt-4">Find quick answers to common questions about our programs and platform.</p>
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+              <h4 className="font-bold text-gray-900 mb-2">How do the AI meal plans work?</h4>
+              <p className="text-gray-500 text-sm leading-relaxed">Our AI analyzes your body metrics and goals (like weight loss or muscle gain) to generate daily meal plans tailored specifically to your biological needs.</p>
+            </div>
+            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+              <h4 className="font-bold text-gray-900 mb-2">Are the virtual fitness classes live?</h4>
+              <p className="text-gray-500 text-sm leading-relaxed">Yes! You can join live sessions with our expert trainers, or access our massive library of recorded on-demand classes at your convenience.</p>
+            </div>
+            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+              <h4 className="font-bold text-gray-900 mb-2">Do I need wearables to use Wellwigen?</h4>
+              <p className="text-gray-500 text-sm leading-relaxed">While not strictly required, syncing a wearable device allows our AI to track your real-time baseline and provide much more accurate clinical analysis.</p>
+            </div>
+            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+              <h4 className="font-bold text-gray-900 mb-2">How fast do I get lab reports?</h4>
+              <p className="text-gray-500 text-sm leading-relaxed">Home lab test samples are collected the same day, and comprehensive digital reports with AI insights are usually available on your dashboard within 24-48 hours.</p>
+            </div>
+          </div>
+        </div>
+
     </section>
   );
 };

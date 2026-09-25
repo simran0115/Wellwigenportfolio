@@ -1,19 +1,27 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Apple, ShoppingBasket, Truck } from "lucide-react";
+import { Apple, ShoppingBasket, Truck, Plus } from "lucide-react";
+
+const fruits = [
+  { name: "Organic Avocados", price: "$12/box", img: "https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?q=80&w=300&auto=format&fit=crop" },
+  { name: "Fresh Berries Mix", price: "$15/box", img: "https://images.unsplash.com/photo-1488459716781-31db52582fe9?q=80&w=300&auto=format&fit=crop" },
+  { name: "Citrus Oranges", price: "$10/box", img: "https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?q=80&w=300&auto=format&fit=crop" },
+  { name: "Green Apples", price: "$8/box", img: "https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?q=80&w=300&auto=format&fit=crop" },
+];
 
 export default function FruitMarketplace() {
   return (
     <section className="w-full bg-white py-24 px-4 sm:px-6 lg:px-16 overflow-hidden relative">
       <div className="max-w-[1200px] mx-auto">
         
-        <div className="bg-[#f8fafc] rounded-[40px] overflow-hidden border border-gray-100 shadow-2xl relative flex flex-col lg:flex-row items-center">
+        {/* Main Container - Removed shadow-2xl, kept a soft minimal border */}
+        <div className="bg-[#f8fafc] rounded-[40px] overflow-hidden border border-gray-100 relative flex flex-col lg:flex-row items-center p-4">
           
           {/* Background decorative shape */}
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-teal-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 opacity-60"></div>
           
           {/* Text Content */}
-          <div className="w-full lg:w-1/2 p-10 md:p-16 relative z-10">
+          <div className="w-full lg:w-1/2 p-6 md:p-12 relative z-10">
             <motion.div 
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -29,51 +37,60 @@ export default function FruitMarketplace() {
                 <span className="text-teal-600">Delivered Daily.</span>
               </h2>
               
-              <p className="text-gray-600 text-lg mb-8 leading-relaxed max-w-lg">
+              <p className="text-gray-500 text-base md:text-lg mb-8 leading-relaxed max-w-lg">
                 Fuel your fitness journey and complement your AI meal plans with farm-fresh, organic fruits delivered straight to your door every morning.
               </p>
-
-              <div className="flex flex-col sm:flex-row gap-6 mb-10">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center flex-shrink-0">
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
+                <div className="flex gap-4">
+                  <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0 text-teal-600">
                     <Truck size={20} />
                   </div>
                   <div>
-                    <h4 className="text-gray-900 font-bold text-sm">Daily Morning Delivery</h4>
+                    <h4 className="font-bold text-gray-900 text-sm">Daily Morning Delivery</h4>
                     <p className="text-gray-500 text-xs mt-1">Freshly picked and delivered by 7 AM.</p>
                   </div>
                 </div>
-                
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center flex-shrink-0">
+                <div className="flex gap-4">
+                  <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0 text-orange-600">
                     <ShoppingBasket size={20} />
                   </div>
                   <div>
-                    <h4 className="text-gray-900 font-bold text-sm">AI Synced Portions</h4>
+                    <h4 className="font-bold text-gray-900 text-sm">AI Synced Portions</h4>
                     <p className="text-gray-500 text-xs mt-1">Automatically matched to your diet plan.</p>
                   </div>
                 </div>
               </div>
-
-              <button className="px-8 py-3.5 bg-teal-600 text-white rounded-full font-bold shadow-lg shadow-teal-600/30 hover:bg-teal-700 hover:-translate-y-1 transition-all duration-300">
+              
+              <button className="bg-teal-600 text-white px-8 py-3.5 rounded-full font-bold shadow-lg shadow-teal-200 hover:bg-teal-700 hover:-translate-y-1 transition-all duration-300">
                 Start Fruit Subscription
               </button>
             </motion.div>
           </div>
-
-          {/* Image Content */}
-          <div className="w-full lg:w-1/2 h-[400px] lg:h-[600px] relative">
-            <motion.img 
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?q=80&w=1200&auto=format&fit=crop"
-              alt="Fresh Organic Fruits"
-              className="absolute inset-0 w-full h-full object-cover rounded-b-[40px] lg:rounded-bl-none lg:rounded-r-[40px]"
-            />
-            {/* Gradient Overlay for blending */}
-            <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-[#f8fafc] via-transparent to-transparent opacity-80 pointer-events-none"></div>
+          
+          {/* Visual Content - Grid of multiple fruits */}
+          <div className="w-full lg:w-1/2 p-6 md:p-12 relative z-10">
+            <div className="grid grid-cols-2 gap-4">
+              {fruits.map((fruit, idx) => (
+                <motion.div 
+                  key={idx}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="bg-white rounded-2xl p-3 border border-gray-100 shadow-sm hover:shadow-md transition-shadow group"
+                >
+                  <div className="relative w-full h-32 rounded-xl overflow-hidden mb-3">
+                    <img src={fruit.img} alt={fruit.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <button className="absolute bottom-2 right-2 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-teal-600 shadow-sm hover:bg-teal-500 hover:text-white transition-colors">
+                      <Plus size={16} />
+                    </button>
+                  </div>
+                  <h4 className="font-bold text-gray-900 text-sm">{fruit.name}</h4>
+                  <p className="text-teal-600 text-xs font-semibold">{fruit.price}</p>
+                </motion.div>
+              ))}
+            </div>
           </div>
           
         </div>

@@ -16,6 +16,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import Hero from './features/home/components/Hero';
 import Framework from './features/home/components/Framework';
 import FruitMarketplace from "./features/home/components/FruitMarketplace";
+import HealthPrograms from "./features/home/components/HealthPrograms";
 import FitnessClasses from "./features/home/components/FitnessClasses";
 import VerifiedTrainers from "./features/home/components/VerifiedTrainers";
 // Pricing is now imported from features
@@ -313,6 +314,9 @@ function App() {
                   </ResponsiveSection>
                   <Framework />
                   <FruitMarketplace />
+                  <ResponsiveSection>
+                    <HealthPrograms />
+                  </ResponsiveSection>
                   <Pricing isSubSection={true} />
                   <ResponsiveSection>
                     <Dashboard />
