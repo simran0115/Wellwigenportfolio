@@ -250,12 +250,12 @@ const OnboardingWizard = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 text-left">
                   {Object.entries(PROVIDER_CONFIG).map(([key, config]) => {
                     const roleImages = {
-                      DOCTOR: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=800&auto=format&fit=crop',
-                      TRAINER: 'https://images.unsplash.com/photo-1571019614242-c5c5adee9f50?q=80&w=800&auto=format&fit=crop',
-                      PHARMACY: 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?q=80&w=800&auto=format&fit=crop',
-                      LAB: 'https://images.unsplash.com/photo-1579154204601-01588f18a1a1?q=80&w=800&auto=format&fit=crop',
-                      NUTRITION: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=800&auto=format&fit=crop',
-                      VENDOR: 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=800&auto=format&fit=crop'
+                      DOCTOR: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=800&auto=format&fit=crop',
+                      TRAINER: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=800&auto=format&fit=crop',
+                      PHARMACY: 'https://images.unsplash.com/photo-1576602976047-174e57a47881?q=80&w=800&auto=format&fit=crop',
+                      LAB: 'https://images.unsplash.com/photo-1614935151651-0bea6508db6b?q=80&w=800&auto=format&fit=crop',
+                      NUTRITION: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&auto=format&fit=crop',
+                      VENDOR: 'https://images.unsplash.com/photo-1511317559916-56d5ddb62563?q=80&w=800&auto=format&fit=crop'
                     };
                     return (
                       <button 
