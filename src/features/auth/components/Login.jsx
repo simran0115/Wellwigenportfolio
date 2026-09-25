@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Modal from '../../../components/common/Modal';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, HeartPulse, Activity } from 'lucide-react';
+import { motion } from 'framer-motion';
 import useAppStore from '../../../store/useAppStore';
 import apiClient from '../../../services/apiClient';
 import { requestNotificationPermission } from '../../../services/notificationService';
@@ -99,83 +100,126 @@ const Login = () => {
     const statusMessage = auth.error || auth.success || '';
 
     return (
-        <section className="py-24 bg-gradient-to-b from-light to-white relative overflow-hidden">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                <div className="bg-white rounded-[2.5rem] shadow-2xl p-8 md:p-16 border border-gray-100">
-                    <div className="text-center mb-12">
-                        <h2 className="text-3xl md:text-4xl font-bold text-dark mb-4">
-                            Login to <span className="text-primary">Wellwigen Fitness</span>
+        <section className="min-h-screen bg-white flex flex-col md:flex-row relative overflow-hidden">
+            
+            {/* Left Side: Brand Visual */}
+            <div className="hidden md:flex w-full md:w-1/2 lg:w-5/12 bg-gray-900 relative flex-col justify-between p-12 overflow-hidden">
+                <img 
+                    src="https://images.unsplash.com/photo-1571019614242-c5c5adee9f50?q=80&w=1400&auto=format&fit=crop" 
+                    alt="Fitness Lifestyle" 
+                    className="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-overlay"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-gray-900/50 via-teal-900/50 to-gray-900/90 z-0"></div>
+                
+                <div className="relative z-10 flex items-center gap-3">
+                    <div className="w-10 h-10 bg-teal-500 rounded-xl flex items-center justify-center text-white shadow-lg">
+                        <Activity size={22} strokeWidth={2.5} />
+                    </div>
+                    <span className="text-2xl font-extrabold text-white tracking-tight">Wellwigen</span>
+                </div>
+
+                <div className="relative z-10 mt-auto">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2, duration: 0.8 }}
+                    >
+                        <h2 className="text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-6">
+                            Start your <br/>
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-300">
+                                wellness journey.
+                            </span>
                         </h2>
-                        <p className="text-text text-lg">
-                            Enter your credentials to access your account.
+                        <p className="text-gray-300 text-base md:text-lg max-w-sm font-medium leading-relaxed">
+                            Join the smartest fitness ecosystem. Access AI-driven meal plans, virtual training, and clinical insights—all in one place.
+                        </p>
+                    </motion.div>
+                </div>
+            </div>
+
+            {/* Right Side: Login Form */}
+            <div className="w-full md:w-1/2 lg:w-7/12 flex flex-col justify-center px-6 py-12 md:px-16 lg:px-24 xl:px-32 relative bg-white">
+                
+                <div className="max-w-md w-full mx-auto">
+                    <div className="mb-10">
+                        <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-3 tracking-tight">
+                            Welcome Back
+                        </h2>
+                        <p className="text-gray-500 text-sm md:text-base font-medium">
+                            Enter your credentials to access your personal dashboard.
                         </p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-8">
+                    <form onSubmit={handleSubmit} className="space-y-6">
 
-                        {/* Email */}
                         <div className="space-y-2">
-                            <label className="block text-sm font-bold text-dark uppercase tracking-wider">Email*</label>
+                            <label className="block text-[11px] font-extrabold text-gray-500 uppercase tracking-widest ml-1">Email Address</label>
                             <input
                                 type="email"
                                 id="email"
                                 value={formData.email}
                                 onChange={handleChange}
-                                className="w-full px-4 py-4 rounded-xl bg-gray-50 border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                                placeholder="your.email@example.com"
+                                className="w-full px-5 py-4 rounded-2xl bg-gray-50 border border-gray-200 text-sm font-semibold text-gray-900 placeholder-gray-400 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-50 outline-none transition-all"
+                                placeholder="you@example.com"
                                 required
                             />
                         </div>
 
-                        {/* Password */}
                         <div className="space-y-2 relative">
-                            <label className="block text-sm font-bold text-dark uppercase tracking-wider">Password*</label>
+                            <label className="block text-[11px] font-extrabold text-gray-500 uppercase tracking-widest ml-1">Password</label>
                             <input
                                 type={showPassword ? 'text' : 'password'}
                                 id="password"
                                 value={formData.password}
                                 onChange={handleChange}
-                                className="w-full px-4 py-4 rounded-xl bg-gray-50 border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                                placeholder="Enter password"
+                                className="w-full px-5 py-4 rounded-2xl bg-gray-50 border border-gray-200 text-sm font-semibold text-gray-900 placeholder-gray-400 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-50 outline-none transition-all pr-12"
+                                placeholder="••••••••"
                                 required
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition"
+                                className="absolute right-4 top-9 text-gray-400 hover:text-teal-600 transition-colors focus:outline-none"
                             >
                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>
                         </div>
 
-                        {/* Submit */}
-                        <button
-                            type="submit"
-                            disabled={auth.loading}
-                            className="w-full bg-dark text-white font-bold py-5 rounded-xl hover:bg-opacity-90 transition-all shadow-xl text-lg flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                        >
-                            {auth.loading ? 'Logging in...' : 'Login'}
-                        </button>
+                        <div className="pt-2">
+                            <button
+                                type="submit"
+                                disabled={auth.loading}
+                                className="w-full bg-gray-900 text-white font-extrabold py-4 rounded-2xl hover:bg-black transition-all shadow-xl shadow-gray-200 text-xs uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                            >
+                                {auth.loading ? 'Authenticating...' : (
+                                    <>
+                                        Sign In <ArrowRight size={16} />
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </form>
 
-                        <p className="text-center mt-4 text-gray-600">
+                    <div className="mt-10 pt-8 border-t border-gray-100 flex flex-col items-center gap-4 text-center">
+                        <p className="text-[13px] text-gray-500 font-medium">
                             Don't have an account?{' '}
                             <span
-                                className="text-primary cursor-pointer font-semibold"
+                                className="text-teal-600 cursor-pointer font-bold hover:underline"
                                 onClick={() => navigate('/register')}
                             >
-                                Register
+                                Create an account
                             </span>
                         </p>
-                        <p className="text-center mt-2 text-gray-500 text-sm">
+                        <p className="text-[12px] text-gray-400 font-medium">
                             Are you a health provider?{' '}
                             <span
                                 className="text-blue-600 cursor-pointer font-bold hover:underline"
                                 onClick={() => navigate('/vendor/login')}
                             >
-                                Provider Portal
+                                Access Provider Portal
                             </span>
                         </p>
-                    </form>
+                    </div>
                 </div>
             </div>
 
