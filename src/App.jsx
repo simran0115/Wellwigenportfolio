@@ -21,6 +21,7 @@ import FitnessClasses from "./features/home/components/FitnessClasses";
 import Dashboard from "./features/dashboard/components/Dashboard";
 import Diet from "./features/dashboard/components/Diet";
 import Testimonials from './components/Testimonials';
+import AboutUs from "./features/home/components/AboutUs";
 import Metrics from './features/home/components/Metrics';
 import ContactUs from './features/home/components/ContactUs';
 import Footer from './components/common/Footer';
@@ -314,6 +315,9 @@ function App() {
                   </ResponsiveSection>
                   <ResponsiveSection>
                     <Diet />
+                  </ResponsiveSection>
+                  <ResponsiveSection>
+                    <AboutUs />
                   </ResponsiveSection>
                   <ResponsiveSection>
                     <Testimonials />

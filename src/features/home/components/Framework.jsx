@@ -30,7 +30,7 @@ const steps = [
 
 export default function Framework() {
   return (
-    <section className="w-full bg-[#f8fafc] text-gray-900 py-32 relative font-sans overflow-hidden">
+    <section id="howitworks" className="w-full bg-[#f8fafc] text-gray-900 py-32 relative font-sans overflow-hidden">
       
       {/* Top Header */}
       <motion.div 

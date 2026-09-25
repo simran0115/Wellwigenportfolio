@@ -78,7 +78,7 @@ const Navbar = () => {
   const cta = getCtaButton();
 
   const navLinks = [
-    { name: "How it Works", path: "/#ecosystem", icon: <Calendar size={18} /> },
+    { name: "How it Works", path: "/#howitworks", icon: <Calendar size={18} /> },
     { name: "Pricing", path: "/#pricing", icon: <CreditCard size={18} /> },
     { name: "Services", path: "/#services", icon: <Sparkles size={18} /> },
     { name: "About Us", path: "/#about", icon: <Info size={18} /> },

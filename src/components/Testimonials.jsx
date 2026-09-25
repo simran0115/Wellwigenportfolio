@@ -30,9 +30,9 @@ const Testimonials = () => {
   ];
 
   return (
-    <section id="about" className="py-24 bg-white relative overflow-hidden">
+    <section id="testimonials" className="py-24 bg-white relative overflow-hidden">
       {/* Soft background gradient */}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-white to-teal-50/50 rounded-3xl"></div>
+      
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Heading */}
@@ -48,10 +48,10 @@ const Testimonials = () => {
           {testimonials.map((testimonial, index) => (
             <div
               key={index}
-              className="bg-white/70 backdrop-blur-xl p-8 rounded-3xl shadow-lg hover:shadow-2xl transition-transform transform hover:-translate-y-2 relative group"
+              className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow relative group"
             >
               {/* Quote Icon */}
-              <Quote className="absolute top-6 right-6 text-teal-200 w-12 h-12 transform group-hover:scale-110 transition-transform" />
+              <Quote className="absolute top-6 right-6 text-gray-100 w-12 h-12" />
 
               {/* User Info */}
               <div className="flex items-center gap-4 mb-6">

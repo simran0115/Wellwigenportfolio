@@ -10,7 +10,7 @@ const dotGrid = {
 
 const Dashboard = () => {
   return (
-    <section className="w-full text-gray-900 py-24 px-4 sm:px-6 md:px-10 lg:px-16 overflow-hidden relative" style={dotGrid}>
+    <section id="services" className="w-full text-gray-900 py-24 px-4 sm:px-6 md:px-10 lg:px-16 overflow-hidden relative" style={dotGrid}>
       <div className="max-w-[1200px] mx-auto relative z-10">
         
         {/* Header */}
