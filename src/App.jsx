@@ -14,7 +14,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 
 // Home / Website Pages
 import Hero from './features/home/components/Hero';
-import Ecosystem from "./features/home/components/Ecosystem";
+import OriginSection from "./features/home/components/OriginSection";
 // Pricing is now imported from features
 import Dashboard from "./features/dashboard/components/Dashboard";
 import Diet from "./features/dashboard/components/Diet";
@@ -301,7 +301,7 @@ function App() {
 
                 <main>
                   <Hero />
-                  <Ecosystem isSubSection={true} />
+                  <OriginSection />
                   <Pricing isSubSection={true} />
                   <ResponsiveSection>
                     <Dashboard />
@@ -412,7 +412,7 @@ function App() {
                   `}
                 </script>
               </Helmet>
-              <Ecosystem isSubSection={false} />
+              <OriginSection />
               <Footer />
             </PageWrapper>
           } />
