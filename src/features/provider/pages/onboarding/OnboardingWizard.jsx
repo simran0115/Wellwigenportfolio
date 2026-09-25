@@ -244,7 +244,7 @@ const OnboardingWizard = () => {
             {step === 1 && (
               <motion.div key="s1" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-12">
                 <div className="space-y-3">
-                  <h2 className="text-4xl font-black text-gray-900 tracking-tight">How will you serve?</h2>
+                  <h2 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight mb-2">How will you <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-600">serve?</span></h2>
                   <p className="text-gray-500 font-medium text-lg">Select your primary role in the Wellwigen health ecosystem.</p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-left">

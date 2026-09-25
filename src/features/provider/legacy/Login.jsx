@@ -93,66 +93,76 @@ function Login() {
   };
 
   return (
-    <div className="h-screen w-full bg-[#f8fafc] flex items-center justify-center p-4 md:p-8 font-sans selection:bg-blue-100 overflow-hidden">
+    <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden">
+      
+      {/* Background Decorative Orbs */}
+      <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-teal-200/40 rounded-full blur-[120px] mix-blend-multiply -translate-x-1/2 -translate-y-1/2"></div>
+      <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-blue-200/40 rounded-full blur-[120px] mix-blend-multiply translate-x-1/2 translate-y-1/2"></div>
 
-      {/* Main Container */}
-      <div className="w-full max-w-5xl h-full max-h-[700px] grid grid-cols-1 lg:grid-cols-2 bg-white rounded-[2rem] border border-gray-100 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.08)] overflow-hidden">
+      <div className="max-w-6xl w-full bg-white/80 backdrop-blur-2xl rounded-[40px] shadow-2xl overflow-hidden flex flex-col lg:flex-row relative z-10 border border-white">
+        
+        {/* Left Side: Premium Brand Visual */}
+        <div className="w-full lg:w-[45%] bg-gradient-to-br from-gray-900 via-gray-800 to-black p-12 lg:p-16 flex flex-col justify-between relative overflow-hidden text-white">
+          
+          {/* Abstract Dark Mode Shapes */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl translate-x-1/3 -translate-y-1/3"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl -translate-x-1/3 translate-y-1/3"></div>
 
-        {/* Left Side: Illustration & Value Prop */}
-        <div className="hidden lg:flex flex-col justify-between p-12 bg-[#fcfdfe] border-r border-gray-50">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-xl shadow-blue-100">
-              <Activity size={16} strokeWidth={3} />
+          <div className="relative z-10 flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-teal-500/30">
+              <Activity size={22} strokeWidth={2.5} />
             </div>
-            <span className="text-lg font-bold tracking-tight text-gray-900">Wellwigen <span className="text-blue-600">Portal</span></span>
+            <span className="text-xl font-extrabold tracking-tight">Wellwigen <span className="text-teal-400">Portal</span></span>
           </div>
 
-          <div className="space-y-6">
-            <div className="relative">
-              {/* Minimalist Clinical Illustration */}
-              <div className="w-full aspect-square max-w-[240px] bg-blue-50 rounded-full flex items-center justify-center relative mx-auto">
-                <div className="absolute inset-0 border-2 border-dashed border-blue-100 rounded-full animate-[spin_20s_linear_infinite]" />
-                <div className="w-36 h-36 bg-white rounded-3xl shadow-2xl flex items-center justify-center text-blue-600 z-10">
-                  <Stethoscope size={60} strokeWidth={1.5} />
-                </div>
-                <motion.div
-                  animate={{ y: [0, -8, 0] }}
-                  transition={{ duration: 3, repeat: Infinity }}
-                  className="absolute top-6 right-6 w-12 h-12 bg-emerald-500 rounded-2xl shadow-lg shadow-emerald-100 flex items-center justify-center text-white z-20"
-                >
-                  <Heart size={18} fill="currentColor" />
-                </motion.div>
-              </div>
+          <div className="relative z-10 space-y-10 my-16">
+            <div className="relative w-full max-w-[280px] mx-auto lg:mx-0">
+              {/* Glassmorphism Icon Card */}
+              <motion.div 
+                animate={{ y: [-10, 10, -10] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                className="w-40 h-40 bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl flex items-center justify-center text-teal-300 shadow-2xl mx-auto lg:mx-0"
+              >
+                <Stethoscope size={64} strokeWidth={1.5} />
+              </motion.div>
+              
+              <motion.div
+                animate={{ y: [10, -10, 10] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -top-6 -right-6 w-16 h-16 bg-gradient-to-br from-blue-500 to-teal-400 rounded-2xl shadow-xl flex items-center justify-center text-white"
+              >
+                <ShieldCheck size={28} />
+              </motion.div>
             </div>
 
-            <div className="space-y-3 text-center lg:text-left">
-              <h2 className="text-2xl font-bold text-gray-900 tracking-tight leading-tight">
-                Secure access for health professionals.
+            <div className="space-y-4 text-center lg:text-left">
+              <h2 className="text-3xl lg:text-4xl font-extrabold tracking-tight leading-tight">
+                Secure access to the <br /> <span className="text-teal-400">health ecosystem.</span>
               </h2>
-              <p className="text-sm text-gray-500 font-medium leading-relaxed max-w-sm">
-                Manage your clinical data, patient records, and inventory in one secure enterprise environment.
+              <p className="text-base text-gray-400 font-medium leading-relaxed max-w-sm mx-auto lg:mx-0">
+                Manage your clinical data, patient records, and practice inventory in one enterprise-grade environment.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-[9px] font-bold text-gray-400 uppercase tracking-widest">
-            <span className="flex items-center gap-1.5"><ShieldCheck size={12} className="text-emerald-500" /> HIPAA Compliant</span>
-            <span className="flex items-center gap-1.5"><ShieldCheck size={12} className="text-emerald-500" /> SSL Encrypted</span>
+          <div className="relative z-10 flex items-center justify-center lg:justify-start gap-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+            <span className="flex items-center gap-2"><ShieldCheck size={14} className="text-teal-400" /> HIPAA Compliant</span>
+            <span className="flex items-center gap-2"><ShieldCheck size={14} className="text-teal-400" /> SSL Encrypted</span>
           </div>
         </div>
 
         {/* Right Side: Login Form */}
-        <div className="p-8 sm:p-12 flex flex-col justify-center">
-          <div className="max-w-sm mx-auto w-full space-y-8">
+        <div className="w-full lg:w-[55%] p-10 lg:p-20 flex flex-col justify-center">
+          <div className="max-w-sm mx-auto w-full space-y-10">
 
-            <div className="space-y-2">
-              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-                {isForgotPassword ? "Reset Password" : "Sign in"}
+            <div className="space-y-3">
+              <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+                {isForgotPassword ? "Reset Password" : "Welcome Back"}
               </h1>
-              <p className="text-xs text-gray-500 font-medium">
+              <p className="text-sm text-gray-500 font-medium">
                 {isForgotPassword 
-                  ? "Enter your email to receive a password reset link." 
-                  : "Enter your credentials to access your workspace."}
+                  ? "Enter your email to receive a secure reset link." 
+                  : "Sign in to access your professional workspace."}
               </p>
             </div>
 
@@ -164,40 +174,38 @@ function Login() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   onSubmit={handleResetPassword} 
-                  className="space-y-5"
+                  className="space-y-6"
                 >
-                  <div className="space-y-4">
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Business Email</label>
-                      <div className="relative group">
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors">
-                          <Mail size={16} strokeWidth={2} />
-                        </div>
-                        <input
-                          name="email"
-                          type="email"
-                          required
-                          value={form.email}
-                          onChange={handleChange}
-                          className="block w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-900 placeholder-gray-300 focus:border-blue-600 focus:ring-4 focus:ring-blue-50 transition-all outline-none"
-                          placeholder="e.g. dr.smith@wellwigen.com"
-                        />
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest ml-1">Business Email</label>
+                    <div className="relative group">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-600 transition-colors">
+                        <Mail size={18} strokeWidth={2} />
                       </div>
+                      <input
+                        name="email"
+                        type="email"
+                        required
+                        value={form.email}
+                        onChange={handleChange}
+                        className="block w-full pl-12 pr-4 py-3.5 bg-gray-50/50 border border-gray-200 rounded-2xl text-sm font-semibold text-gray-900 placeholder-gray-400 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-50 transition-all outline-none"
+                        placeholder="doctor@clinic.com"
+                      />
                     </div>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-4 pt-2">
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-blue-200 disabled:opacity-50"
+                      className="w-full flex items-center justify-center gap-2 py-4 px-4 bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-white text-[12px] font-extrabold uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-teal-500/20 disabled:opacity-50"
                     >
                       {loading ? 'Sending Link...' : 'Send Reset Link'}
                     </button>
                     <button
                       type="button"
                       onClick={() => setIsForgotPassword(false)}
-                      className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white hover:bg-gray-50 text-gray-600 border border-gray-200 text-[11px] font-bold uppercase tracking-widest rounded-xl transition-all"
+                      className="w-full py-4 px-4 bg-transparent hover:bg-gray-50 text-gray-600 text-[12px] font-extrabold uppercase tracking-widest rounded-2xl transition-all"
                     >
                       Back to Sign In
                     </button>
@@ -210,14 +218,14 @@ function Login() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
                   onSubmit={handleSubmit} 
-                  className="space-y-5"
+                  className="space-y-6"
                 >
-                  <div className="space-y-4">
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Business Email</label>
+                  <div className="space-y-5">
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest ml-1">Business Email</label>
                       <div className="relative group">
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors">
-                          <Mail size={16} strokeWidth={2} />
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-600 transition-colors">
+                          <Mail size={18} strokeWidth={2} />
                         </div>
                         <input
                           name="email"
@@ -225,20 +233,20 @@ function Login() {
                           required
                           value={form.email}
                           onChange={handleChange}
-                          className="block w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-900 placeholder-gray-300 focus:border-blue-600 focus:ring-4 focus:ring-blue-50 transition-all outline-none"
-                          placeholder="e.g. dr.smith@wellwigen.com"
+                          className="block w-full pl-12 pr-4 py-3.5 bg-gray-50/50 border border-gray-200 rounded-2xl text-sm font-semibold text-gray-900 placeholder-gray-400 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-50 transition-all outline-none"
+                          placeholder="doctor@clinic.com"
                         />
                       </div>
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-2">
                       <div className="flex justify-between items-center px-1">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Security Password</label>
-                        <button type="button" onClick={() => setIsForgotPassword(true)} className="text-[10px] font-bold text-blue-600 hover:text-blue-700 uppercase tracking-widest">Forgot?</button>
+                        <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest">Password</label>
+                        <button type="button" onClick={() => setIsForgotPassword(true)} className="text-[11px] font-extrabold text-teal-600 hover:text-teal-700 uppercase tracking-widest">Forgot?</button>
                       </div>
                       <div className="relative group">
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors">
-                          <Lock size={16} strokeWidth={2} />
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-600 transition-colors">
+                          <Lock size={18} strokeWidth={2} />
                         </div>
                         <input
                           name="password"
@@ -246,7 +254,7 @@ function Login() {
                           required
                           value={form.password}
                           onChange={handleChange}
-                          className="block w-full pl-11 pr-12 py-3 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-900 placeholder-gray-300 focus:border-blue-600 focus:ring-4 focus:ring-blue-50 transition-all outline-none"
+                          className="block w-full pl-12 pr-12 py-3.5 bg-gray-50/50 border border-gray-200 rounded-2xl text-sm font-semibold text-gray-900 placeholder-gray-400 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-50 transition-all outline-none"
                           placeholder="••••••••"
                         />
                         <button
@@ -254,7 +262,7 @@ function Login() {
                           onClick={() => setShowPassword(!showPassword)}
                           className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
                         >
-                          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                       </div>
                     </div>
@@ -263,7 +271,7 @@ function Login() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-gray-900 hover:bg-black text-white text-[11px] font-bold uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-gray-200 disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-2 py-4 px-4 bg-gray-900 hover:bg-black text-white text-[12px] font-extrabold uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-gray-200 disabled:opacity-50 mt-4"
                   >
                     {loading ? 'Authenticating...' : (
                       <>
@@ -275,14 +283,14 @@ function Login() {
               )}
             </AnimatePresence>
 
-             <div className="pt-6 border-t border-gray-100 space-y-2">
-               <p className="text-[11px] text-gray-500 font-medium text-center">
+             <div className="pt-8 mt-8 border-t border-gray-100 flex flex-col items-center gap-3">
+               <p className="text-[12px] text-gray-500 font-medium">
                  New to the platform?{' '}
-                 <a href="/provider/onboarding" className="text-blue-600 font-bold hover:underline">Apply for an account</a>
+                 <a href="/provider/onboarding" className="text-teal-600 font-bold hover:underline">Apply for an account</a>
                </p>
-               <p className="text-[11px] text-gray-500 font-medium text-center">
+               <p className="text-[12px] text-gray-500 font-medium">
                  Looking for user login?{' '}
-                 <span onClick={() => navigate("/login")} className="text-teal-600 font-bold hover:underline cursor-pointer">User Portal</span>
+                 <span onClick={() => navigate("/login")} className="text-blue-600 font-bold hover:underline cursor-pointer">User Portal</span>
                </p>
              </div>
           </div>
