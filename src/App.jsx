@@ -169,7 +169,8 @@ function App() {
        !location.pathname.startsWith("/lab") && 
        !location.pathname.startsWith("/pharmacy") && 
        !location.pathname.startsWith("/trainer") && 
-       !location.pathname.startsWith("/dashboard") && <Navbar />}
+       !location.pathname.startsWith("/dashboard") && 
+       !location.pathname.startsWith("/login") && <Navbar />}
 
         <ErrorBoundary>
         <Routes location={location} key={location.pathname}>
@@ -573,10 +574,7 @@ function App() {
                   `}
                 </script>
               </Helmet>
-              <ResponsiveSection>
-                <Login />
-              </ResponsiveSection>
-              <Footer />
+              <Login />
             </PageWrapper>
           } />
 
