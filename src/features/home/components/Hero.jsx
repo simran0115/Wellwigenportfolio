@@ -78,11 +78,11 @@ export default function Hero() {
             </motion.div>
 
             {/* Headline */}
-            <motion.h1 variants={itemVariants} className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-gray-900 leading-[1.1] mb-6 tracking-tight">
-              Transform <br/> Your Health <br/>
-              <span className="flex items-center gap-x-3 mt-2">
+            <motion.h1 variants={itemVariants} className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-gray-900 leading-[1.2] lg:leading-[1.1] mb-6 tracking-tight">
+              Transform <br className="hidden sm:block" /> Your Health <br className="hidden sm:block" />
+              <span className="flex flex-col sm:flex-row sm:items-center gap-x-3 mt-2">
                 <span className="text-gray-900">with</span>
-                <span className="text-teal-600 relative h-[60px] sm:h-[72px] lg:h-[84px] inline-flex items-center min-w-[300px]">
+                <span className="text-teal-600 relative h-[50px] sm:h-[72px] lg:h-[84px] flex items-center overflow-hidden sm:overflow-visible w-full sm:min-w-[350px]">
                   <AnimatePresence mode="wait">
                     <motion.span
                       key={currentCategoryIndex}
@@ -90,7 +90,7 @@ export default function Hero() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -20 }}
                       transition={{ duration: 0.4, ease: "easeOut" }}
-                      className="absolute left-0 w-full whitespace-nowrap"
+                      className="absolute left-0 whitespace-nowrap"
                     >
                       {categories[currentCategoryIndex]}
                     </motion.span>
@@ -100,7 +100,7 @@ export default function Hero() {
             </motion.h1>
 
             {/* Subtext */}
-            <motion.p variants={itemVariants} className="text-gray-500 text-lg sm:text-xl max-w-lg mb-10 leading-relaxed font-medium">
+            <motion.p variants={itemVariants} className="text-gray-500 text-lg sm:text-xl max-w-lg mb-10 leading-relaxed font-light">
               Access immediate <strong className="text-gray-700">online doctor consultations</strong>, automated <strong className="text-gray-700">AI meal plans</strong>, and certified <strong className="text-gray-700">virtual fitness training</strong> in a single platform.
             </motion.p>
 
@@ -136,7 +136,7 @@ export default function Hero() {
                 <div className="flex items-center text-amber-400 text-sm">
                   ★★★★★
                 </div>
-                <span className="text-sm text-gray-500 font-medium mt-0.5">
+                <span className="text-sm text-gray-500 font-light mt-0.5">
                   Trusted by <strong className="text-gray-900">6,000+</strong> users
                 </span>
               </div>

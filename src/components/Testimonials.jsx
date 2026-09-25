@@ -76,7 +76,7 @@ const Testimonials = () => {
               </div>
 
               {/* Testimonial Content */}
-              <p className="text-gray-700 leading-relaxed text-base md:text-lg">
+              <p className="text-gray-700 leading-relaxed text-base md:text-lg font-light">
                 "{testimonial.content}"
               </p>
             </div>
