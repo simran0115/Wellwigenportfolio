@@ -93,13 +93,7 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden">
-      
-      {/* Background Decorative Orbs */}
-      <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-teal-200/40 rounded-full blur-[120px] mix-blend-multiply -translate-x-1/2 -translate-y-1/2"></div>
-      <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-blue-200/40 rounded-full blur-[120px] mix-blend-multiply translate-x-1/2 translate-y-1/2"></div>
-
-      <div className="max-w-6xl w-full bg-white/80 backdrop-blur-2xl rounded-[40px] shadow-2xl overflow-hidden flex flex-col lg:flex-row relative z-10 border border-white">
+    <div className="min-h-screen bg-white flex flex-col lg:flex-row relative overflow-hidden">
         
         {/* Left Side: Premium Brand Visual */}
         <div className="w-full lg:w-[45%] bg-gradient-to-br from-gray-900 via-gray-800 to-black p-12 lg:p-16 flex flex-col justify-between relative overflow-hidden text-white">
@@ -198,7 +192,7 @@ function Login() {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full flex items-center justify-center gap-2 py-4 px-4 bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-white text-[12px] font-extrabold uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-teal-500/20 disabled:opacity-50"
+                      className="w-full flex items-center justify-center gap-2 py-4 px-4 bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-white text-[12px] font-extrabold uppercase tracking-widest rounded-2xl transition-all disabled:opacity-50"
                     >
                       {loading ? 'Sending Link...' : 'Send Reset Link'}
                     </button>
@@ -271,7 +265,7 @@ function Login() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full flex items-center justify-center gap-2 py-4 px-4 bg-gray-900 hover:bg-black text-white text-[12px] font-extrabold uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-gray-200 disabled:opacity-50 mt-4"
+                    className="w-full flex items-center justify-center gap-2 py-4 px-4 bg-gray-900 hover:bg-black text-white text-[12px] font-extrabold uppercase tracking-widest rounded-2xl transition-all disabled:opacity-50 mt-4"
                   >
                     {loading ? 'Authenticating...' : (
                       <>
@@ -295,7 +289,6 @@ function Login() {
              </div>
           </div>
         </div>
-      </div>
     </div>
   );
 }

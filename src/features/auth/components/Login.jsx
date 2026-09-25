@@ -189,7 +189,7 @@ const Login = () => {
                             <button
                                 type="submit"
                                 disabled={auth.loading}
-                                className="w-full bg-gray-900 text-white font-extrabold py-3.5 rounded-xl hover:bg-black transition-all shadow-xl shadow-gray-200 text-xs uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                                className="w-full bg-gray-900 text-white font-extrabold py-3.5 rounded-xl hover:bg-black transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                             >
                                 {auth.loading ? 'Authenticating...' : (
                                     <>

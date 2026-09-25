@@ -217,9 +217,7 @@ function App() {
                 <meta name="keywords" content="doctor portal login, partner store dashboard, lab testing portal access, fitness coach login, provider portal login" />
                 <link rel="canonical" href={window.location.origin + "/vendor/login"} />
               </Helmet>
-              <ResponsiveSection>
-                <VendorLogin />
-              </ResponsiveSection>
+              <VendorLogin />
             </PageWrapper>
           } />
 
