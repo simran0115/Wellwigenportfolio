@@ -52,7 +52,7 @@ export default function Framework() {
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Vertical Line */}
-        <div className="absolute left-[20px] md:left-1/2 top-0 bottom-0 w-[2px] bg-teal-100 md:-translate-x-1/2"></div>
+        <div className="absolute left-[20px] md:left-1/2 top-0 bottom-0 w-[2px] bg-teal-100 -translate-x-1/2"></div>
 
         <div className="flex flex-col gap-24 md:gap-40">
           {steps.map((step, index) => {
@@ -61,17 +61,18 @@ export default function Framework() {
               <div key={step.id} className={`relative flex flex-col md:flex-row items-center w-full ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'}`}>
                 
                 {/* Center Node */}
-                <motion.div 
-                  initial={{ scale: 0 }}
-                  whileInView={{ scale: 1 }}
-                  viewport={{ once: true, margin: "-100px" }}
-                  transition={{ duration: 0.5, type: "spring", bounce: 0.4 }}
-                  className="absolute left-[20px] md:left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10"
-                >
-                  <div className="w-10 h-10 md:w-12 md:h-12 bg-white border-4 border-teal-500 rounded-full flex items-center justify-center shadow-xl">
-                    <span className="text-teal-600 text-xs md:text-sm font-black leading-none tabular-nums text-center w-full h-full flex items-center justify-center relative left-[1px] top-[1px] tracking-tighter">{step.id}</span>
-                  </div>
-                </motion.div>
+                <div className="absolute left-[20px] md:left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 flex items-center justify-center">
+                  <motion.div 
+                    initial={{ scale: 0 }}
+                    whileInView={{ scale: 1 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.5, type: "spring", bounce: 0.4 }}
+                  >
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-white border-4 border-teal-500 rounded-full flex items-center justify-center shadow-xl">
+                      <span className="text-teal-600 text-xs md:text-sm font-black leading-none tabular-nums text-center w-full h-full flex items-center justify-center relative left-[1px] top-[1px] tracking-tighter">{step.id}</span>
+                    </div>
+                  </motion.div>
+                </div>
 
                 {/* Text Content */}
                 <motion.div 
