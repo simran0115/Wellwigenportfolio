@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin, Send, Clock } from 'lucide-react';
 import { db } from '../../../config/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -115,18 +116,18 @@ const ContactUs = () => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
         {/* Header */}
-        <div className="text-center mb-12">
+        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="text-center mb-12">
           <p className="text-teal-600 text-xs tracking-widest uppercase font-semibold mb-3">Contact</p>
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Get in Touch</h2>
           <p className="mt-3 text-gray-500 text-base max-w-lg mx-auto">
             Have a question or want to get started? We'd love to hear from you.
           </p>
-        </div>
+        </motion.div>
 
         <div className="grid lg:grid-cols-5 gap-6">
 
           {/* Left — Contact Info */}
-          <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 flex flex-col gap-6">
+          <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }} className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 flex flex-col gap-6">
             <div>
               <h3 className="text-lg font-bold text-gray-900 mb-1">Contact Information</h3>
               <p className="text-sm text-gray-500">Reach us through any of these channels.</p>
@@ -153,10 +154,10 @@ const ContactUs = () => {
                 We typically respond within a few hours on business days. For urgent matters, please call directly.
               </p>
             </div>
-          </div>
+          </motion.div>
 
           {/* Right — Form */}
-          <div className="lg:col-span-3">
+          <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.4 }} className="lg:col-span-3">
             <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 flex flex-col gap-5">
 
               <div className="grid sm:grid-cols-2 gap-5">
@@ -230,7 +231,7 @@ const ContactUs = () => {
                 )}
               </button>
             </form>
-          </div>
+          </motion.div>
 
         </div>
       </div>
