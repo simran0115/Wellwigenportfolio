@@ -29,7 +29,7 @@ import {
 import { PROVIDER_TYPES, PROVIDER_CONFIG } from '../../constants/providerTypes';
 import { useProviderStore } from '../../store/useProviderStore';
 import toast from 'react-hot-toast';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 
 
 const ROLE_IMAGES = {
@@ -271,10 +271,10 @@ const OnboardingWizard = () => {
       {/* Sidebar Stepper - Only shown from Step 2 onwards */}
       {step > 1 && (
         <div className="hidden lg:flex w-80 bg-white border-r border-gray-100 flex-col p-10 h-screen overflow-y-auto">
-          <div className="flex items-center gap-3 mb-16">
+          <Link to="/" className="flex items-center gap-3 mb-16 cursor-pointer hover:opacity-80 transition-opacity w-max">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-lg shadow-lg shadow-blue-100">W</div>
             <span className="text-xl font-bold tracking-tight text-gray-900">Wellwigen</span>
-          </div>
+          </Link>
 
           <div className="space-y-1">
             {STEPS.map((s) => {
@@ -322,10 +322,10 @@ const OnboardingWizard = () => {
           
           {/* Header Branding (only if no sidebar) */}
           {step === 1 && (
-            <div className="flex items-center justify-center lg:justify-start gap-3 mb-12">
+            <Link to="/" className="flex items-center justify-center lg:justify-start gap-3 mb-12 cursor-pointer hover:opacity-80 transition-opacity w-max mx-auto lg:mx-0">
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-lg shadow-lg shadow-blue-100">W</div>
               <span className="text-xl font-bold tracking-tight text-gray-900">Wellwigen <span className="text-blue-600">Health</span></span>
-            </div>
+            </Link>
           )}
           
           <AnimatePresence mode="wait">
