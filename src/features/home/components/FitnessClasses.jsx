@@ -75,14 +75,16 @@ export default function FitnessClasses() {
                 alt={cls.title} 
                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
               
-              <div className="absolute inset-0 p-6 flex flex-col justify-end">
-                <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white mb-4 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                  <ArrowUpRight size={20} />
+              <div className="absolute inset-x-3 bottom-3 p-5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-left flex flex-col justify-end transform transition-all duration-500 group-hover:bg-white/20">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-xl font-semibold text-white tracking-wide">{cls.title}</h3>
+                  <div className="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center text-white transform scale-0 group-hover:scale-100 transition-all duration-300 shadow-lg">
+                    <ArrowUpRight size={16} />
+                  </div>
                 </div>
-                <h3 className="text-2xl font-extrabold text-white mb-3 tracking-tight"><span className="bg-teal-500/90 px-4 py-1.5 rounded-xl inline-block backdrop-blur-md shadow-lg border border-teal-400/30">{cls.title}</span></h3>
-                <p className="text-gray-300 text-sm leading-relaxed transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                <p className="text-white/80 text-sm leading-relaxed font-light transform h-0 opacity-0 group-hover:h-auto group-hover:opacity-100 group-hover:mt-2 transition-all duration-300">
                   {cls.desc}
                 </p>
               </div>
