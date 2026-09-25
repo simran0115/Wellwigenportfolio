@@ -14,6 +14,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 
 // Home / Website Pages
 import Hero from './features/home/components/Hero';
+import Framework from './features/home/components/Framework';
 import OriginSection from "./features/home/components/OriginSection";
 // Pricing is now imported from features
 import Dashboard from "./features/dashboard/components/Dashboard";
@@ -301,6 +302,7 @@ function App() {
 
                 <main>
                   <Hero />
+                  <Framework />
                   <OriginSection />
                   <Pricing isSubSection={true} />
                   <ResponsiveSection>

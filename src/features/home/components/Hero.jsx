@@ -244,28 +244,7 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* === STEPS GRID === */}
-      <div className="w-full max-w-6xl mx-auto px-4 pb-16 relative z-10">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {steps.map(({ step, title, subtitle, icon: Icon }, index) => (
-            <div
-              key={index}
-              className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex flex-col gap-3"
-            >
-              <span className="text-[10px] text-gray-400 font-semibold tracking-widest uppercase">
-                Step {step}
-              </span>
-              <div className="w-9 h-9 bg-teal-50 rounded-lg flex items-center justify-center">
-                <Icon size={18} className="text-teal-600" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-800">{title}</p>
-                <p className="text-xs text-gray-500 mt-0.5 leading-snug">{subtitle}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+
     </section>
   );
 }
