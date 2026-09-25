@@ -141,7 +141,7 @@ const Login = () => {
             <div className="w-full md:w-1/2 lg:w-7/12 flex flex-col justify-center px-6 py-12 md:px-16 lg:px-24 xl:px-32 relative bg-white">
                 
                 <div className="max-w-md w-full mx-auto">
-                    <div className="mb-10">
+                    <div className="mb-6">
                         <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-3 tracking-tight">
                             Welcome Back
                         </h2>
@@ -150,7 +150,7 @@ const Login = () => {
                         </p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form onSubmit={handleSubmit} className="space-y-4">
 
                         <div className="space-y-2">
                             <label className="block text-[11px] font-extrabold text-gray-500 uppercase tracking-widest ml-1">Email Address</label>
@@ -159,7 +159,7 @@ const Login = () => {
                                 id="email"
                                 value={formData.email}
                                 onChange={handleChange}
-                                className="w-full px-5 py-4 rounded-2xl bg-gray-50 border border-gray-200 text-sm font-semibold text-gray-900 placeholder-gray-400 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-50 outline-none transition-all"
+                                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm font-semibold text-gray-900 placeholder-gray-400 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-50 outline-none transition-all"
                                 placeholder="you@example.com"
                                 required
                             />
@@ -172,14 +172,14 @@ const Login = () => {
                                 id="password"
                                 value={formData.password}
                                 onChange={handleChange}
-                                className="w-full px-5 py-4 rounded-2xl bg-gray-50 border border-gray-200 text-sm font-semibold text-gray-900 placeholder-gray-400 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-50 outline-none transition-all pr-12"
+                                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm font-semibold text-gray-900 placeholder-gray-400 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-50 outline-none transition-all pr-12"
                                 placeholder="••••••••"
                                 required
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-4 top-9 text-gray-400 hover:text-teal-600 transition-colors focus:outline-none"
+                                className="absolute right-4 top-[34px] text-gray-400 hover:text-teal-600 transition-colors focus:outline-none"
                             >
                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>
@@ -189,7 +189,7 @@ const Login = () => {
                             <button
                                 type="submit"
                                 disabled={auth.loading}
-                                className="w-full bg-gray-900 text-white font-extrabold py-4 rounded-2xl hover:bg-black transition-all shadow-xl shadow-gray-200 text-xs uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                                className="w-full bg-gray-900 text-white font-extrabold py-3.5 rounded-xl hover:bg-black transition-all shadow-xl shadow-gray-200 text-xs uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                             >
                                 {auth.loading ? 'Authenticating...' : (
                                     <>
@@ -200,7 +200,7 @@ const Login = () => {
                         </div>
                     </form>
 
-                    <div className="mt-10 pt-8 border-t border-gray-100 flex flex-col items-center gap-4 text-center">
+                    <div className="mt-6 pt-6 border-t border-gray-100 flex flex-col items-center gap-4 text-center">
                         <p className="text-[13px] text-gray-500 font-medium">
                             Don't have an account?{' '}
                             <span
@@ -210,15 +210,7 @@ const Login = () => {
                                 Create an account
                             </span>
                         </p>
-                        <p className="text-[12px] text-gray-400 font-medium">
-                            Are you a health provider?{' '}
-                            <span
-                                className="text-blue-600 cursor-pointer font-bold hover:underline"
-                                onClick={() => navigate('/vendor/login')}
-                            >
-                                Access Provider Portal
-                            </span>
-                        </p>
+                        
                     </div>
                 </div>
             </div>
