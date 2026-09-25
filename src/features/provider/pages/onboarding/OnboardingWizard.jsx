@@ -306,26 +306,38 @@ const OnboardingWizard = () => {
 
             {/* Step 2: Roadmap */}
             {step === 2 && (
-              <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-10">
-                <div className="flex items-center gap-2 text-blue-600 mb-6 cursor-pointer group" onClick={prevStep}>
+              <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-10 max-w-3xl">
+                <div className="flex items-center gap-2 text-teal-600 mb-2 cursor-pointer group w-max" onClick={prevStep}>
                   <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> 
-                  <span className="text-[10px] font-black uppercase tracking-widest">Change Category</span>
+                  <span className="text-[11px] font-black uppercase tracking-widest">Change Role</span>
                 </div>
-                <div className="space-y-2">
-                  <h2 className="text-3xl font-black text-gray-900 tracking-tight">Onboarding for {currentConfig?.label}</h2>
-                  <p className="text-sm text-gray-500 font-medium leading-relaxed">{currentConfig?.instructions}</p>
+                
+                <div className="space-y-4">
+                  <h2 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight">Setup your <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-600">workspace.</span></h2>
+                  <p className="text-base text-gray-500 font-medium leading-relaxed max-w-xl">You are applying as a <strong className="text-gray-900">{currentConfig?.label}</strong>. {currentConfig?.instructions}</p>
                 </div>
-                <div className="bg-white rounded-3xl p-10 border border-gray-100 shadow-sm space-y-8">
-                  <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Verified Onboarding Roadmap</h3>
-                  {currentConfig?.onboardingSteps.map((s, i) => (
-                    <div key={i} className="flex gap-6 items-center">
-                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-50 border-2 border-blue-600 flex items-center justify-center text-xs font-black text-blue-600">{i + 1}</div>
-                      <p className="text-xs font-bold text-gray-900">{s}</p>
-                    </div>
-                  ))}
+                
+                <div className="relative bg-white rounded-[2rem] p-8 md:p-12 border border-gray-100 shadow-xl shadow-gray-200/20 overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-teal-50 rounded-full blur-3xl opacity-60 -translate-y-1/2 translate-x-1/2"></div>
+                  
+                  <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-10 relative z-10">Application Roadmap</h3>
+                  
+                  <div className="space-y-8 relative z-10">
+                    {currentConfig?.onboardingSteps.map((s, i) => (
+                      <div key={i} className="flex gap-6 items-start group">
+                        <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-sm font-black text-gray-400 group-hover:bg-teal-500 group-hover:text-white group-hover:border-teal-400 group-hover:shadow-lg group-hover:shadow-teal-500/30 transition-all duration-300">
+                          {i + 1}
+                        </div>
+                        <div className="pt-3.5">
+                          <p className="text-sm font-bold text-gray-900 group-hover:text-teal-700 transition-colors">{s}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <button onClick={nextStep} className="w-full py-5 bg-blue-600 text-white rounded-2xl font-bold text-base hover:bg-blue-700 transition-all shadow-2xl shadow-blue-100 flex justify-center items-center gap-2">
-                  Start My Application <ChevronRight size={18} />
+                
+                <button onClick={nextStep} className="w-full py-5 bg-gray-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-gray-200 flex justify-center items-center gap-3 group">
+                  Begin Application <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
                 </button>
               </motion.div>
             )}
