@@ -119,5 +119,26 @@ export const PROVIDER_CONFIG = {
       'Packaging must be eco-friendly where possible and ensure the integrity of the food during transit.',
       'Delivery times for prepared meals must be adhered to strictly to ensure nutritional value and taste.'
     ]
+  },
+  [PROVIDER_TYPES.TRAINER]: {
+    label: 'Fitness Trainer',
+    description: 'Provide virtual & personal fitness training',
+    icon: 'Dumbbell',
+    requiredDocs: ['Fitness Certification', 'Identity Proof'],
+    themeColor: 'teal',
+    instructions: 'Register as a certified fitness instructor to offer personalized workout plans and live sessions.',
+    onboardingSteps: [
+      'Personal & certification details',
+      'Training specialization',
+      'Session pricing setup',
+      'Admin verification (24h)'
+    ],
+    terms: [
+      'Trainers must hold a valid, recognized fitness certification.',
+      'Maintain professionalism during all virtual and physical sessions.',
+      'Workout plans must be tailored to the individual health conditions of the client.',
+      'Platform fees apply to all bookings made through Wellwigen.',
+      'Trainers must log session attendance and progress on the platform.'
+    ]
   }
 };

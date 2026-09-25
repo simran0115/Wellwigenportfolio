@@ -18,6 +18,7 @@ import {
   Building2,
   User,
   Briefcase,
+  Dumbbell,
   Smartphone,
   Mail,
   Lock,
@@ -255,6 +256,7 @@ const OnboardingWizard = () => {
                         {key === 'LAB' && <FlaskConical size={24} />}
                         {key === 'PHARMACY' && <Pill size={24} />}
                         {key === 'NUTRITION' && <Apple size={24} />}
+                        {key === 'TRAINER' && <Dumbbell size={24} />}
                       </div>
                       <div>
                         <h3 className="font-bold text-gray-900 text-base">{config.label}</h3>
