@@ -101,7 +101,7 @@ const Dashboard = () => {
             className="relative md:col-span-7 rounded-[32px] overflow-hidden group shadow-xl h-[450px] flex items-center border border-gray-100"
           >
             <img 
-              src="https://images.unsplash.com/photo-1581093458791-9f3c3900df4b?q=80&w=1500&auto=format&fit=crop" 
+              src="https://images.unsplash.com/photo-1579154204601-01588f351e67?q=80&w=1500&auto=format&fit=crop" 
               alt="Diagnostic Labs" 
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             />
