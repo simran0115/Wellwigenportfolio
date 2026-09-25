@@ -69,7 +69,7 @@ export default function Framework() {
                   className="absolute left-[20px] md:left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10"
                 >
                   <div className="w-10 h-10 md:w-12 md:h-12 bg-white border-4 border-teal-500 rounded-full flex items-center justify-center shadow-xl">
-                    <span className="text-teal-600 text-xs md:text-sm font-black">{step.id}</span>
+                    <span className="text-teal-600 text-xs md:text-sm font-black leading-none tabular-nums text-center w-full h-full flex items-center justify-center relative left-[1px] top-[1px] tracking-tighter">{step.id}</span>
                   </div>
                 </motion.div>
 
