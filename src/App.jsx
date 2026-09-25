@@ -304,15 +304,15 @@ function App() {
 
                 <main>
                   <Hero />
+                  <ResponsiveSection>
+                    <FitnessClasses />
+                  </ResponsiveSection>
                   <Framework />
                   <FruitMarketplace />
                   <OriginSection />
                   <Pricing isSubSection={true} />
                   <ResponsiveSection>
                     <Dashboard />
-                  </ResponsiveSection>
-                  <ResponsiveSection>
-                    <FitnessClasses />
                   </ResponsiveSection>
                   <ResponsiveSection>
                     <Diet />
